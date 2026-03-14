@@ -262,7 +262,7 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
     </table>
   </div>
   <div style="display:flex;gap:8px;margin-top:12px;">
-    <button class="btn-secondary" onclick="goToStep2()" style="flex:1;">← Editar</button>
+    <button class="btn-secondary" onclick="goBackToConfig()" style="flex:1;">← Editar</button>
     <button class="btn-save" onclick="guardarImagen()" style="flex:1;">Guardar imagen</button>
   </div>
 </div>
@@ -673,6 +673,11 @@ function renderSalidas(){
 function goToStep2(){
   if(selected.length!==3)return;
   hide('view-select');show('view-config');hide('view-preview');setStep(2);renderSalidas();
+}
+
+function goBackToConfig(){
+  hide('view-preview');show('view-config');setStep(2);
+  // No llama a renderSalidas() para preservar los datos ingresados
 }
 
 function autoFillAll(){
