@@ -125,11 +125,11 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 .estado-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: 340px; }
-.estado-modal-title { font-size: 24px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
+.estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: min(92vw, 680px); }
+.estado-modal-title { font-size: 26px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
 .estado-modal-sub { font-size: 13px; color: #888; margin-bottom: 16px; text-align: center; }
-.estado-opt { width: 100%; padding: 12px 16px; font-size: 14px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: left; transition: transform 0.1s, opacity 0.1s; }
-.estado-opt:hover { transform: scale(1.02); opacity: 0.9; }
+.estado-opt { width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: left; transition: transform 0.1s, opacity 0.1s; }
+.estado-opt:hover { transform: scale(1.01); opacity: 0.9; }
 .estado-opt:active { transform: scale(0.98); }
 .estado-opt.opt-normal { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
 .estado-opt.opt-normal:hover { background: #0f3d22; }
@@ -137,16 +137,20 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .estado-opt.opt-peligroso:hover { background: #3a2500; }
 .estado-opt.opt-no_predica { background: #2e1a1a; border-color: #A32D2D; color: #F09595; }
 .estado-opt.opt-no_predica:hover { background: #3a2020; }
-.hist-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
-.hist-table th { color: #888; font-weight: 500; padding: 4px 6px; text-align: left; border-bottom: 0.5px solid #444; }
-.hist-table td { padding: 6px 6px; border-bottom: 0.5px solid #333; color: #eee; vertical-align: middle; }
+.hist-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 14px; }
+.hist-table th { color: #888; font-weight: 500; padding: 8px 8px; text-align: left; border-bottom: 0.5px solid #444; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hist-table td { padding: 10px 8px; border-bottom: 0.5px solid #333; color: #eee; vertical-align: middle; }
 .hist-table tr:last-child td { border-bottom: none; }
-.hist-edit-btn { font-size: 11px; padding: 3px 8px; border: 0.5px solid #555; border-radius: 6px; background: #1e1e1e; color: #aaa; cursor: pointer; }
+.hist-edit-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #555; border-radius: 6px; background: #1e1e1e; color: #aaa; cursor: pointer; margin-right: 4px; }
 .hist-edit-btn:hover { border-color: #888; color: #eee; }
+.hist-del-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
+.hist-del-btn:hover { background: #3a2020; }
+.btn-add-entry { width: 100%; padding: 10px; font-size: 13px; border: 1px dashed #555; border-radius: 8px; background: transparent; color: #888; cursor: pointer; margin-bottom: 14px; }
+.btn-add-entry:hover { border-color: #888; color: #eee; }
 .edit-row-form { background: #1e1e1e; border: 0.5px solid #555; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
 .edit-row-title { font-size: 12px; color: #888; margin-bottom: 8px; }
 .modal-divider { border: none; border-top: 0.5px solid #444; margin: 16px 0; }
-.modal-section-title { font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; }
+.modal-section-title { font-size: 15px; font-weight: 500; color: #ccc; letter-spacing: 0.02em; margin-bottom: 12px; }
 .hist-en-prog { font-size: 10px; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; }
 
 
@@ -491,19 +495,56 @@ async function openModal(n) {
   }
 }
 
+let historialRows = [];
+
 function renderHistorial(rows) {
+  historialRows = rows;
   const tbody = document.getElementById('modal-hist-body');
   if (rows.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="color:#888;text-align:center;">Sin registros</td></tr>';
-    return;
+  } else {
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td>${r.conductor}</td>
+        <td>${r.ini || '—'}</td>
+        <td>${r.fin ? r.fin : '<span class="hist-en-prog">en prog.</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="hist-edit-btn" onclick="startEdit(${i}, '${r.rowIndex}', '${r.conductor}', '${r.ini||''}', '${r.fin||''}')">Editar</button>
+          <button class="hist-del-btn" onclick="deleteEntry('${r.rowIndex}')">✕</button>
+        </td>
+      </tr>`).join('');
   }
-  tbody.innerHTML = rows.map((r, i) => `
-    <tr>
-      <td>${r.conductor}</td>
-      <td>${r.ini || '—'}</td>
-      <td>${r.fin ? r.fin : '<span class="hist-en-prog">en prog.</span>'}</td>
-      <td><button class="hist-edit-btn" onclick="startEdit(${i}, '${r.rowIndex}', '${r.conductor}', '${r.ini||''}', '${r.fin||''}')">Editar</button></td>
-    </tr>`).join('');
+  // Botón agregar entrada
+  const histContent = document.getElementById('modal-hist-content');
+  let addBtn = document.getElementById('btn-add-entry');
+  if (!addBtn) {
+    addBtn = document.createElement('button');
+    addBtn.id = 'btn-add-entry';
+    addBtn.className = 'btn-add-entry';
+    addBtn.textContent = '+ Agregar entrada';
+    addBtn.onclick = startAddEntry;
+    histContent.appendChild(addBtn);
+  }
+}
+
+async function deleteEntry(rowIndex) {
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  const url = SCRIPT_URL + '?action=deleteRecord' +
+    '&grupo=' + encodeURIComponent(selectedGrupo) +
+    '&territorio=' + encodeURIComponent(modalTerr) +
+    '&rowIndex=' + encodeURIComponent(rowIndex);
+  await fetch(url);
+  await openModal(modalTerr);
+}
+
+function startAddEntry() {
+  editingRow = null;
+  document.getElementById('modal-edit-form').style.display = '';
+  const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
+  const sel = document.getElementById('edit-cond');
+  sel.innerHTML = '<option value="">— Elegir —</option>' + conductores.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('edit-ini').value = '';
+  document.getElementById('edit-fin').value = '';
 }
 
 function startEdit(idx, rowIndex, conductor, ini, fin) {
@@ -539,23 +580,33 @@ function cancelEdit() {
 }
 
 async function saveEdit() {
-  if (!editingRow) return;
   const conductor = document.getElementById('edit-cond').value;
   const ini = document.getElementById('edit-ini').value;
   const fin = document.getElementById('edit-fin').value;
   if (!conductor) { alert('Elegí un conductor'); return; }
 
-  const url = SCRIPT_URL + '?action=updateRecord' +
-    '&grupo=' + encodeURIComponent(selectedGrupo) +
-    '&territorio=' + encodeURIComponent(modalTerr) +
-    '&rowIndex=' + encodeURIComponent(editingRow) +
-    '&conductor=' + encodeURIComponent(conductor) +
-    '&fechaInicio=' + encodeURIComponent(ini) +
-    '&fechaFin=' + encodeURIComponent(fin);
-  await fetch(url);
+  if (editingRow) {
+    // Editar fila existente
+    const url = SCRIPT_URL + '?action=updateRecord' +
+      '&grupo=' + encodeURIComponent(selectedGrupo) +
+      '&territorio=' + encodeURIComponent(modalTerr) +
+      '&rowIndex=' + encodeURIComponent(editingRow) +
+      '&conductor=' + encodeURIComponent(conductor) +
+      '&fechaInicio=' + encodeURIComponent(ini) +
+      '&fechaFin=' + encodeURIComponent(fin);
+    await fetch(url);
+  } else {
+    // Nueva entrada
+    const url = SCRIPT_URL + '?action=saveRecord' +
+      '&grupo=' + encodeURIComponent(selectedGrupo) +
+      '&territorio=' + encodeURIComponent(modalTerr) +
+      '&conductor=' + encodeURIComponent(conductor) +
+      '&fechaInicio=' + encodeURIComponent(ini) +
+      '&fechaFin=' + encodeURIComponent(fin);
+    await fetch(url);
+  }
 
   cancelEdit();
-  // Recargar historial
   await openModal(modalTerr);
 }
 
