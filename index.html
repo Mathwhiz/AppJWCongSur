@@ -128,7 +128,7 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
 .estado-modal-title { font-size: 26px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
 .estado-modal-sub { font-size: 13px; color: #888; margin-bottom: 16px; text-align: center; }
-.estado-opt { width: auto; display: inline-block; padding: 9px 14px; font-size: 13px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; margin-right: 6px; text-align: center; transition: transform 0.1s, opacity 0.1s; }
+.estado-opt { display: inline-flex; align-items: center; justify-content: center; width: calc(33% - 6px); padding: 9px 8px; font-size: 12px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: center; transition: transform 0.1s, opacity 0.1s; }
 .estado-opt:hover { transform: scale(1.01); opacity: 0.9; }
 .estado-opt:active { transform: scale(0.98); }
 .estado-opt.opt-normal { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
@@ -317,13 +317,15 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
     <hr class="modal-divider">
 
     <!-- Config estado -->
-    <div class="modal-section-title">Estado del territorio</div>
-    <button class="estado-opt opt-normal" onclick="setTerritoryEstado('normal')">Normal — aparece en planificación</button>
-    <button class="estado-opt opt-peligroso" onclick="setTerritoryEstado('peligroso')">Peligroso — aparece con advertencia</button>
-    <button class="estado-opt opt-no_predica" onclick="setTerritoryEstado('no_predica')">No se predica — no aparece</button>
-    <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
-  </div>
-</div>
+        <div class="modal-section-title">Estado del territorio</div>
+        <div style="display:flex;gap:6px;">
+          <button class="estado-opt opt-normal" onclick="setTerritoryEstado('normal')">Normal</button>
+          <button class="estado-opt opt-peligroso" onclick="setTerritoryEstado('peligroso')">Peligroso</button>
+          <button class="estado-opt opt-no_predica" onclick="setTerritoryEstado('no_predica')">No se predica</button>
+        </div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
 
 <!-- PASO 1: Elegir territorios -->
 <div id="view-select" style="display:none;">
