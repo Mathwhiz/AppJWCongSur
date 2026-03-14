@@ -289,10 +289,12 @@ let selected = [];
 let territoriosData = {}; // datos cargados del Sheet
 
 async function fetchGrupo(grupo) {
-  const url = SCRIPT_URL + '?action=getLastDates&grupo=' + encodeURIComponent(grupo);
-  const response = await fetch(url);
-  const text = await response.text();
-  const data = JSON.parse(text);
+  const response = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'getLastDates', grupo: String(grupo) })
+  });
+  const data = await response.json();
   if (data.error) throw new Error(data.error);
   return data;
 }
@@ -447,14 +449,6 @@ function setEstado(n, estado) {
   }
 }
 
-
-  function fmtDate(ds) {
-  if (!ds) return '';
-  const m = ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (m) return `${m[3]}/${m[2]}/${m[1].slice(-2)}`;
-  return ds;
-}
-
 async function guardarRegistros(){
   const btn = document.getElementById('btn-guardar');
   const status = document.getElementById('save-status');
@@ -468,20 +462,20 @@ async function guardarRegistros(){
   cards.forEach(card => {
     const n = card.dataset.terr;
     const estado = card.dataset.estado;
-    const conductor = document.getElementById('reg-cond-' + n)?.value || '—';
+    const conductor = document.getElementById('reg-cond-' + n)?.value || '';
     const ini = fmtDate(document.getElementById('reg-ini-' + n)?.value || '');
     const fin = estado === 'completado' ? fmtDate(document.getElementById('reg-fin-' + n)?.value || '') : '';
     saves.push({ territorio: n, conductor, fechaInicio: ini, fechaFin: fin, estado });
   });
 
-  const sinConductor = saves.some(s => !s.conductor);
+  const sinConductor = saves.some(s => s.estado === 'completado' && !s.conductor);
   if (sinConductor) {
     status.style.color = '#F09595';
-    status.textContent = 'Completá el conductor de cada territorio antes de guardar.';
+    status.textContent = 'Elegí el conductor de cada territorio antes de guardar.';
     btn.disabled = false;
     return;
   }
-  
+
   try {
     for (const s of saves) {
       const url = SCRIPT_URL + '?action=saveRecord' +
@@ -586,11 +580,11 @@ function renderGrid() {
 }
 
 function condSelect(id, grupo) {
-  const conductores = CONDUCTORES_BY_GROUP[grupo] || [];
-  const opts = `<option value="">— Elegir conductor —</option>` + conductores.map(c => `<option value="${c}">${c}</option>`).join('');
+  const conductores = CONDUCTORES_BY_GROUP[grupo] || ['— Elegir —'];
+  const opts = conductores.map((c,i) => `<option value="${i===0?'':c}">${c}</option>`).join('');
   return `<select id="${id}">${opts}</select>`;
 }
-  
+
 function reorderPhone(){
   const diaKey = document.getElementById('dia-phone')?.value || 'tue';
   const c = document.getElementById('salidas-container');
