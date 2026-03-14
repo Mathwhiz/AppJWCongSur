@@ -108,6 +108,9 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .btn-start { padding: 14px 48px; font-size: 16px; font-weight: 500; background: #3B6D11; color: #fff; border: none; border-radius: 12px; cursor: pointer; opacity: 0.3; pointer-events: none; letter-spacing: 0.02em; }
 .btn-start.enabled { opacity: 1; pointer-events: auto; }
 .btn-start.enabled:hover { background: #27500A; }
+.grupo-btn-cong { border-color: #534AB7; color: #AFA9EC; }
+.grupo-btn-cong:hover { border-color: #7F77DD; background: rgba(83,74,183,0.2); color: #7F77DD; }
+.grupo-btn-cong.selected { border: 2px solid #7F77DD; background: rgba(83,74,183,0.25); color: #CECBF6; }
 
 .preview-header-wrap { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
 .preview-title { font-size: 28px; font-weight: 500; color: #97C459; }
@@ -124,7 +127,7 @@ table.preview tr:last-child td { border-bottom: none; }
 table.preview tr:nth-child(odd) td { background: #242424; }
 table.preview tr.tel-row td { background: #0d2420; }
 table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
-.tel-terr { font-size: 11px; font-weight: 500; color: #5DCAA5; letter-spacing: 0.05em; text-transform: uppercase; }
+.tel-terr { font-size: 14px; font-weight: 500; color: #5DCAA5; letter-spacing: 0.05em; text-transform: uppercase; }
 .dia-badge { display: inline-block; font-size: 14px; font-weight: 500; padding: 4px 12px; border-radius: 20px; margin-bottom: 3px; }
 .badge-mar { background: #0c2a45; color: #85B7EB; }
 .badge-jue { background: #2e1e00; color: #FAC775; }
@@ -160,6 +163,7 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
       <button class="grupo-btn" onclick="selectGrupo(this,2)">2</button>
       <button class="grupo-btn" onclick="selectGrupo(this,3)">3</button>
       <button class="grupo-btn" onclick="selectGrupo(this,4)">4</button>
+      <button class="grupo-btn grupo-btn-cong" onclick="selectGrupo(this,'C')" style="font-size:16px;width:88px;">Congr.</button>
     </div>
     <button class="btn-start" id="btn-start" onclick="goToModo()">Empezar →</button>
   </div>
@@ -237,7 +241,7 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
   <div id="salidas-container"></div>
   <div style="display:flex;gap:8px;margin-top:4px;">
     <button class="btn-secondary" onclick="goToStep1()" style="flex:1;">← Volver</button>
-    <button class="btn-primary" onclick="generatePreview()" style="flex:2;">Generar tabla →</button>
+    <button class="btn-primary" onclick="generatePreview()" style="flex:2;font-size:12px;padding:7px 12px;">Generar tabla →</button>
   </div>
 </div>
 
@@ -271,7 +275,8 @@ const CONDUCTORES_BY_GROUP = {
   1: [],
   2: [],
   3: ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'],
-  4: []
+  4: [],
+  C: []
 };
 
 const SPECIAL_TERR = { '11': true, '131': true };
@@ -746,10 +751,10 @@ function generatePreview(){
 
 function guardarImagen(){
   const el = document.querySelector('.card-preview');
-  html2canvas(el, { backgroundColor: '#1e1e1e', scale: 2 }).then(canvas => {
+  html2canvas(el, { backgroundColor: '#1e1e1e', scale: 1.5 }).then(canvas => {
     const link = document.createElement('a');
-    link.download = `salidas-grupo-${selectedGrupo}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `salidas-grupo-${selectedGrupo}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.92);
     link.click();
   });
 }
