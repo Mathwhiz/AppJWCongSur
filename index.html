@@ -8,21 +8,20 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, sans-serif; padding: 1rem; background: #1e1e1e; color: #eee; min-height: 100vh; }
 
-/* Barra de pasos */
 .step-bar { display: flex; gap: 6px; margin-bottom: 20px; }
 .step { flex: 1; height: 3px; border-radius: 2px; background: #444; }
 .step.active { background: #185FA5; }
 .step.done { background: #1D9E75; }
 
-/* Encabezados de sección */
 .section-title { font-size: 22px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
 .section-sub { font-size: 14px; color: #888; margin-bottom: 16px; text-align: center; }
 
-/* Grid territorios */
 .terr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 18px; }
-.terr-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 14px 8px; cursor: pointer; text-align: center; }
+.terr-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 14px 8px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
 .terr-btn:hover { border-color: #666; }
 .terr-btn.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
+.terr-btn.en-progreso { border: 1.5px solid #EF9F27; background: #2e1e00; }
+.terr-btn.en-progreso.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
 .terr-num { font-size: 26px; font-weight: 500; color: #eee; }
 .terr-btn.selected .terr-num { color: #85B7EB; }
 .terr-date { font-size: 11px; color: #888; margin-top: 5px; }
@@ -30,17 +29,22 @@ body { font-family: system-ui, sans-serif; padding: 1rem; background: #1e1e1e; c
 .days-old { color: #F09595; }
 .days-mid { color: #FAC775; }
 .days-new { color: #C0DD97; }
+.badge-progreso { font-size: 10px; font-weight: 500; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; margin-top: 4px; display: inline-block; }
 
-/* Footer paso 1 */
 .step1-footer { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
 .step1-footer span { font-size: 13px; color: #888; }
 
-/* Cards de configuración */
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 14px; }
+.spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #1D9E75; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt { font-size: 14px; color: #888; }
+.error-wrap { background: #2e1a1a; border: 0.5px solid #A32D2D; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 16px; font-size: 13px; color: #F09595; }
+
 .salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
 .salida-card.card-mar { border-left: 3px solid #378ADD; }
 .salida-card.card-thu { border-left: 3px solid #EF9F27; }
 .salida-card.card-fri { border-left: 3px solid #639922; }
-.salida-card.tel-card  { border-left: 3px solid #1D9E75; background: #0d2420; }
+.salida-card.tel-card { border-left: 3px solid #1D9E75; background: #0d2420; }
 .salida-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .salida-label { font-size: 16px; font-weight: 500; color: #eee; }
 .phone-badge { font-size: 13px; background: #0a2e24; color: #5DCAA5; padding: 3px 10px; border-radius: 20px; border: 0.5px solid #1D9E75; }
@@ -53,7 +57,6 @@ select, input[type=text], input[type=date], input[type=time] { width: 100%; font
 select option { background: #2a2a2a; color: #eee; }
 label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 
-/* Botones */
 .btn-primary { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; }
 .btn-primary:hover { background: #0C447C; }
 .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -64,7 +67,6 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .btn-save { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer; }
 .btn-save:hover { background: #0F6E56; }
 
-/* ── Carátula ── */
 .cover { min-height: calc(100vh - 2rem); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; text-align: center; }
 .cover-icon { width: 80px; height: 80px; background: rgba(59,109,17,0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
 .cover-title { font-size: 62px; font-weight: 500; color: #97C459; line-height: 1.1; margin-bottom: 10px; }
@@ -78,7 +80,6 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .btn-start.enabled { opacity: 1; pointer-events: auto; }
 .btn-start.enabled:hover { background: #27500A; }
 
-/* ── Tabla final ── */
 .preview-header-wrap { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
 .preview-title { font-size: 28px; font-weight: 500; color: #97C459; }
 .preview-subtitle { font-size: 14px; color: #639922; }
@@ -139,7 +140,12 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 <div id="view-select" style="display:none;">
   <p class="section-title">Elegí 3 territorios</p>
   <p class="section-sub" id="week-info"></p>
-  <div class="terr-grid" id="terr-grid"></div>
+  <div id="terr-loading" class="loading-wrap">
+    <div class="spinner"></div>
+    <div class="loading-txt">Cargando territorios...</div>
+  </div>
+  <div id="terr-error" style="display:none;"></div>
+  <div class="terr-grid" id="terr-grid" style="display:none;"></div>
   <div class="step1-footer">
     <span id="sel-count">0 de 3 seleccionados</span>
     <button class="btn-secondary" onclick="goToCover()">← Grupo</button>
@@ -187,22 +193,17 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const CONDUCTORES = ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'];
-const TERRITORIES = [
-  {n:'1',last:'2026-02-06'},{n:'2',last:'2026-02-14'},{n:'3',last:'2026-02-14'},
-  {n:'4',last:'2026-02-14'},{n:'5',last:'2026-02-14'},{n:'6',last:'2026-03-10'},
-  {n:'7',last:'2026-02-03'},{n:'8',last:'2026-02-24'},{n:'9',last:'2026-03-10'},
-  {n:'10',last:'2026-02-08'},{n:'11',last:'2025-08-23',special:true},{n:'12',last:'2026-03-12'},
-  {n:'15',last:'2026-03-13'},{n:'16',last:'2026-01-09'},{n:'17',last:'2026-01-07'},
-  {n:'18',last:'2026-01-11'},{n:'19',last:'2026-03-06'},{n:'20',last:'2026-01-20'},
-  {n:'21',last:'2026-02-17'},{n:'22',last:'2026-02-26'},{n:'23',last:'2026-01-29'},
-  {n:'24',last:'2026-02-27'},{n:'25',last:'2026-02-20'},{n:'129',last:'2026-03-05'},
-  {n:'141',last:'2026-03-11'},{n:'146',last:'2026-03-11'},{n:'147',last:'2026-02-12'},
-  {n:'149',last:'2026-01-26'},{n:'150',last:'2026-02-10'},{n:'153',last:'2026-01-28'},
-  {n:'154',last:'2026-01-20'},{n:'167',last:'2026-02-24'},{n:'168',last:'2025-12-09'},
-  {n:'169',last:'2026-02-17'}
-];
-const TERRITORIES_BY_GROUP = { 3: TERRITORIES };
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqfcGLySbIx6I2902w6mdZKSLAPk1-gZirJmY7A4Ua0Vy3bbYtxrwotyLsSMiCrNy1/exec';
+
+const CONDUCTORES_BY_GROUP = {
+  1: ['— Elegir —'],
+  2: ['— Elegir —'],
+  3: ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'],
+  4: ['— Elegir —']
+};
+
+const SPECIAL_TERR = { '11': true, '131': true };
+
 const DIA_CONFIG = [
   { key:'tue', label:'Martes', cls:'dia-martes', cardCls:'card-mar' },
   { key:'thu', label:'Jueves', cls:'dia-jueves', cardCls:'card-thu' },
@@ -213,12 +214,28 @@ const DIA_DEFAULT_HORA = { tue:'17:30', thu:'18:30', fri:'18:30' };
 
 let selectedGrupo = null;
 let selected = [];
+let territoriosData = {}; // datos cargados del Sheet
 
-function selectGrupo(el, n) {
-  document.querySelectorAll('.grupo-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedGrupo = n;
-  document.getElementById('btn-start').classList.add('enabled');
+async function fetchGrupo(grupo) {
+  const response = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'getLastDates', grupo: String(grupo) })
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+function parseSheetDate(ds) {
+  if (!ds) return null;
+  // Formato dd/mm/yy
+  const m = ds.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+  if (m) {
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${m[2]}-${m[1]}`;
+  }
+  return ds;
 }
 
 function getWeekDates() {
@@ -227,40 +244,27 @@ function getWeekDates() {
   function d(o){const x=new Date(monday);x.setDate(monday.getDate()+o);return x.toISOString().slice(0,10);}
   return {mon:d(0),tue:d(1),thu:d(3),fri:d(4),sun:d(6)};
 }
+
 function formatShort(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;}
 function formatShortFull(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;}
-function daysSince(ds){return Math.floor((new Date()-new Date(ds+'T00:00:00'))/86400000);}
+function daysSince(ds){if(!ds)return 9999;return Math.floor((new Date()-new Date(ds+'T00:00:00'))/86400000);}
 function dayClass(d){return d>90?'days-old':d>45?'days-mid':'days-new';}
 
 const WEEK = getWeekDates();
 
-function renderGrid() {
-  const territorios = TERRITORIES_BY_GROUP[selectedGrupo] || [];
-  const sorted = territorios.map(t=>({...t,days:daysSince(t.last)})).sort((a,b)=>b.days-a.days);
-  const g = document.getElementById('terr-grid'); g.innerHTML='';
-  if(territorios.length === 0){
-    g.innerHTML='<p style="color:#888;font-size:13px;grid-column:1/-1;text-align:center;">No hay territorios cargados para este grupo todavía.</p>';
-    document.getElementById('sel-count').textContent='0 de 3 seleccionados';
-    document.getElementById('btn-next1').disabled=true;
-    return;
-  }
-  sorted.forEach(t=>{
-    const btn=document.createElement('button');
-    btn.className='terr-btn'+(selected.includes(t.n)?' selected':'');
-    btn.innerHTML=`<div class="terr-num">${t.n}${t.special?' ⚠':''}</div><div class="terr-date">Últ: ${formatShortFull(t.last)}</div><div class="terr-days ${dayClass(t.days)}">${t.days}d</div>`;
-    btn.onclick=()=>{if(selected.includes(t.n))selected=selected.filter(x=>x!==t.n);else if(selected.length<3)selected.push(t.n);renderGrid();};
-    g.appendChild(btn);
-  });
-  document.getElementById('sel-count').textContent=`${selected.length} de 3 seleccionados`;
-  document.getElementById('btn-next1').disabled=selected.length!==3;
+function selectGrupo(el, n) {
+  document.querySelectorAll('.grupo-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGrupo = n;
+  document.getElementById('btn-start').classList.add('enabled');
 }
 
+function show(id){document.getElementById(id).style.display='';}
+function hide(id){document.getElementById(id).style.display='none';}
 function setStep(n){
   document.getElementById('step-bar').style.display='flex';
   for(let i=1;i<=3;i++) document.getElementById('s'+i).className='step'+(i<n?' done':i===n?' active':'');
 }
-function show(id){document.getElementById(id).style.display='';}
-function hide(id){document.getElementById(id).style.display='none';}
 
 function goToCover(){
   selected=[];
@@ -268,15 +272,92 @@ function goToCover(){
   show('view-cover');
   document.getElementById('step-bar').style.display='none';
 }
-function goToStep1(){
+
+async function goToStep1(){
   hide('view-cover');hide('view-config');hide('view-preview');
   show('view-select'); setStep(1);
   document.getElementById('week-info').textContent=`Semana del ${formatShort(WEEK.mon)} al ${formatShort(WEEK.sun)}`;
-  renderGrid();
+
+  // Mostrar spinner, ocultar grid
+  show('terr-loading');
+  hide('terr-grid');
+  hide('terr-error');
+  selected = [];
+
+  try {
+    const raw = await fetchGrupo(selectedGrupo);
+    // Convertir fechas del Sheet al formato yyyy-mm-dd
+    territoriosData = {};
+    Object.keys(raw).forEach(terr => {
+      const d = raw[terr];
+      territoriosData[terr] = {
+        lastFin: parseSheetDate(d.lastFin),
+        lastIni: parseSheetDate(d.lastIni),
+        enProgreso: d.enProgreso
+      };
+    });
+    hide('terr-loading');
+    show('terr-grid');
+    renderGrid();
+  } catch(err) {
+    hide('terr-loading');
+    const errEl = document.getElementById('terr-error');
+    errEl.innerHTML = `<div class="error-wrap">Error al cargar territorios: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToStep1()">Reintentar</button></div>`;
+    show('terr-error');
+  }
 }
 
-function condSelect(id){
-  return`<select id="${id}"><option value="">— Elegir —</option>${CONDUCTORES.map(c=>`<option>${c}</option>`).join('')}</select>`;
+function renderGrid() {
+  const g = document.getElementById('terr-grid'); g.innerHTML='';
+  if(!territoriosData || Object.keys(territoriosData).length === 0){
+    g.innerHTML='<p style="color:#888;font-size:13px;grid-column:1/-1;text-align:center;">No hay territorios cargados para este grupo.</p>';
+    document.getElementById('sel-count').textContent='0 de 3 seleccionados';
+    document.getElementById('btn-next1').disabled=true;
+    return;
+  }
+
+  // Ordenar: en progreso primero, luego por días sin trabajar desc
+  const lista = Object.keys(territoriosData).map(n => {
+    const d = territoriosData[n];
+    const lastDate = d.lastFin || d.lastIni;
+    return { n, ...d, days: daysSince(lastDate), lastDate };
+  }).sort((a,b) => {
+    if (a.enProgreso && !b.enProgreso) return -1;
+    if (!a.enProgreso && b.enProgreso) return 1;
+    return b.days - a.days;
+  });
+
+  lista.forEach(t => {
+    const isSelected = selected.includes(t.n);
+    const isSpecial = SPECIAL_TERR[t.n];
+    const btn = document.createElement('button');
+    let cls = 'terr-btn';
+    if (isSelected) cls += ' selected';
+    else if (t.enProgreso) cls += ' en-progreso';
+    btn.className = cls;
+
+    const dateLabel = t.lastDate ? `Últ: ${formatShortFull(t.lastDate)}` : 'Sin registro';
+    const daysLabel = t.enProgreso
+      ? '<div class="badge-progreso">en progreso</div>'
+      : `<div class="terr-days ${dayClass(t.days)}">${t.days}d</div>`;
+
+    btn.innerHTML = `<div class="terr-num">${t.n}${isSpecial?' ⚠':''}</div><div class="terr-date">${dateLabel}</div>${daysLabel}`;
+    btn.onclick = () => {
+      if(selected.includes(t.n)) selected=selected.filter(x=>x!==t.n);
+      else if(selected.length<3) selected.push(t.n);
+      renderGrid();
+    };
+    g.appendChild(btn);
+  });
+
+  document.getElementById('sel-count').textContent=`${selected.length} de 3 seleccionados`;
+  document.getElementById('btn-next1').disabled=selected.length!==3;
+}
+
+function condSelect(id, grupo) {
+  const conductores = CONDUCTORES_BY_GROUP[grupo] || ['— Elegir —'];
+  const opts = conductores.map((c,i) => `<option value="${i===0?'':c}">${c}</option>`).join('');
+  return `<select id="${id}">${opts}</select>`;
 }
 
 function reorderPhone(){
@@ -294,8 +375,7 @@ function reorderPhone(){
   for(let i=0;i<terrCards.length;i++){
     if(phoneOrder <= i && !inserted){
       c.insertBefore(phoneCard, terrCards[i]);
-      inserted = true;
-      break;
+      inserted = true; break;
     }
   }
   if(!inserted) c.appendChild(phoneCard);
@@ -315,7 +395,7 @@ function renderSalidas(){
         <span class="dia-label ${cfg.cls}">${cfg.label}</span>
       </div>
       <div class="form-row">
-        <div><label>Conductor</label>${condSelect('cond-'+n)}</div>
+        <div><label>Conductor</label>${condSelect('cond-'+n, selectedGrupo)}</div>
         <div><label>Día</label><input type="date" id="fecha-${n}" value="${fechaVal}"></div>
       </div>
       <div class="form-row">
@@ -336,7 +416,7 @@ function renderSalidas(){
       <span class="phone-badge">Telefónica</span>
     </div>
     <div class="form-row">
-      <div><label>Conductor</label>${condSelect('cond-phone')}</div>
+      <div><label>Conductor</label>${condSelect('cond-phone', selectedGrupo)}</div>
       <div><label>Día</label>
         <select id="dia-phone" onchange="reorderPhone()">
           <option value="tue">Martes</option>
@@ -375,9 +455,7 @@ function clearAll(){
     const fc=document.getElementById('cond-'+n);
     const fh=document.getElementById('hora-'+n);
     const fe=document.getElementById('enc-'+n);
-    if(fc)fc.value='';
-    if(fh)fh.value='';
-    if(fe)fe.value='';
+    if(fc)fc.value='';if(fh)fh.value='';if(fe)fe.value='';
   });
   const cp=document.getElementById('cond-phone');
   const hp=document.getElementById('hora-phone');
