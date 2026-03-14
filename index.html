@@ -128,7 +128,7 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
 .estado-modal-title { font-size: 26px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
 .estado-modal-sub { font-size: 13px; color: #888; margin-bottom: 16px; text-align: center; }
-.estado-opt { width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: left; transition: transform 0.1s, opacity 0.1s; }
+.estado-opt { width: auto; display: inline-block; padding: 9px 14px; font-size: 13px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; margin-right: 6px; text-align: center; transition: transform 0.1s, opacity 0.1s; }
 .estado-opt:hover { transform: scale(1.01); opacity: 0.9; }
 .estado-opt:active { transform: scale(0.98); }
 .estado-opt.opt-normal { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
@@ -150,7 +150,7 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .edit-row-form { background: #1e1e1e; border: 0.5px solid #555; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
 .edit-row-title { font-size: 12px; color: #888; margin-bottom: 8px; }
 .modal-divider { border: none; border-top: 0.5px solid #444; margin: 16px 0; }
-.modal-section-title { font-size: 15px; font-weight: 500; color: #ccc; letter-spacing: 0.02em; margin-bottom: 12px; }
+.modal-section-title { font-size: 15px; font-weight: 500; color: #ccc; letter-spacing: 0.02em; margin-bottom: 12px; text-align: center; }
 .hist-en-prog { font-size: 10px; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; }
 
 
@@ -291,11 +291,11 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
     <div class="estado-modal-title" id="modal-terr-title">Territorio ?</div>
 
     <!-- Historial -->
-    <div class="modal-section-title" style="margin-top:10px;">Historial</div>
+    <div class="modal-section-title" style="margin-top:10px;text-align:center;">Historial</div>
     <div id="modal-hist-loading" style="font-size:13px;color:#888;margin-bottom:10px;">Cargando...</div>
     <div id="modal-hist-content" style="display:none;">
       <table class="hist-table">
-        <thead><tr><th>Conductor</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
+        <thead><tr><th>Conductor</th><th>Inicio</th><th>Fin</th><th style="text-align:right;"></th></tr></thead>
         <tbody id="modal-hist-body"></tbody>
       </table>
     </div>
@@ -303,7 +303,7 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
       <div class="edit-row-form">
         <div class="edit-row-title">Editando fila</div>
         <div class="form-row">
-          <div><label>Conductor</label><select id="edit-cond"></select></div>
+          <div><label>Conductor</label><input type="text" id="edit-cond" list="conductores-list" placeholder="Elegir o escribir..."><datalist id="conductores-list"></datalist></div>
           <div><label>Inicio</label><input type="date" id="edit-ini"></div>
         </div>
         <div><label>Fin</label><input type="date" id="edit-fin" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
@@ -508,7 +508,7 @@ function renderHistorial(rows) {
         <td>${r.conductor}</td>
         <td>${r.ini || '—'}</td>
         <td>${r.fin ? r.fin : '<span class="hist-en-prog">en prog.</span>'}</td>
-        <td style="white-space:nowrap;">
+        <td style="white-space:nowrap;text-align:right;">
           <button class="hist-edit-btn" onclick="startEdit(${i}, '${r.rowIndex}', '${r.conductor}', '${r.ini||''}', '${r.fin||''}')">Editar</button>
           <button class="hist-del-btn" onclick="deleteEntry('${r.rowIndex}')">✕</button>
         </td>
@@ -541,8 +541,10 @@ function startAddEntry() {
   editingRow = null;
   document.getElementById('modal-edit-form').style.display = '';
   const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
-  const sel = document.getElementById('edit-cond');
-  sel.innerHTML = '<option value="">— Elegir —</option>' + conductores.map(c => `<option value="${c}">${c}</option>`).join('');
+  const input = document.getElementById('edit-cond');
+  const dl = document.getElementById('conductores-list');
+  dl.innerHTML = conductores.map(c => `<option value="${c}">`).join('');
+  input.value = '';
   document.getElementById('edit-ini').value = '';
   document.getElementById('edit-fin').value = '';
 }
@@ -580,7 +582,7 @@ function cancelEdit() {
 }
 
 async function saveEdit() {
-  const conductor = document.getElementById('edit-cond').value;
+  const conductor = document.getElementById('edit-cond').value.trim();
   const ini = document.getElementById('edit-ini').value;
   const fin = document.getElementById('edit-fin').value;
   if (!conductor) { alert('Elegí un conductor'); return; }
