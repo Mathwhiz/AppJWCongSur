@@ -75,9 +75,13 @@ table.preview tr:nth-child(even) td { background: #f5f5f5; }
 
 <div id="view-preview" style="display:none;">
   <p class="section-title">Vista previa</p>
-  <div class="preview-wrap">
+  <div class="card-preview">
+    <div class="card-preview-header">
+      <div class="card-preview-top">Congregación Sur</div>
+      <div class="card-preview-main" id="preview-grupo-title">Grupo — Salidas de la semana</div>
+    </div>
     <table class="preview">
-      <thead><tr><th>ENCUENTRO</th><th>Nº Territorio</th><th>Fecha</th><th>Conductor</th><th>Hora</th></tr></thead>
+      <thead><tr><th>ENCUENTRO</th><th>Nº TERRITORIO</th><th>FECHA</th><th>CONDUCTOR</th><th>HORA</th></tr></thead>
       <tbody id="preview-body"></tbody>
     </table>
   </div>
@@ -85,7 +89,6 @@ table.preview tr:nth-child(even) td { background: #f5f5f5; }
     <button class="btn-secondary" onclick="goToStep2()" style="flex:1;">← Editar</button>
     <button class="btn-secondary" onclick="goToStep1()" style="flex:1;">Reiniciar</button>
   </div>
-</div>
 </div>
 
 <script>
@@ -141,6 +144,9 @@ function goToStep1(){show('view-select');hide('view-config');hide('view-preview'
 function condSelect(id){return`<select id="${id}"><option value="">— Elegir —</option>${CONDUCTORES.map(c=>`<option>${c}</option>`).join('')}</select>`;}
 function renderSalidas(){
   const c=document.getElementById('salidas-container');c.innerHTML='';
+  const grupoDiv=document.createElement('div'); grupoDiv.style.marginBottom='12px';
+  grupoDiv.innerHTML=`<label>Grupo</label><select id="sel-grupo"><option value="1">Grupo 1</option><option value="2">Grupo 2</option><option value="3" selected>Grupo 3</option><option value="4">Grupo 4</option></select>`;
+  c.appendChild(grupoDiv);
   selected.forEach((n,i)=>{
     const cfg=DIA_CONFIG[i];const fechaVal=WEEK[cfg.key];
     const div=document.createElement('div');div.className='salida-card';
@@ -160,13 +166,41 @@ function autoFillAll(){
   if(fp)fp.value=WEEK.tue;if(hp)hp.value='17:30';
 }
 function generatePreview(){
-  const rows=[];
+  const grupo = document.getElementById('sel-grupo')?.value || '—';
+  document.getElementById('preview-grupo-title').textContent = `Grupo ${grupo} — Salidas de la semana`;
+
+  const DIA_BADGE = { tue:'<div class="dia-badge badge-mar">Martes</div>', thu:'<div class="dia-badge badge-jue">Jueves</div>', fri:'<div class="dia-badge badge-vie">Viernes</div>' };
+
+  const rows = [];
   selected.forEach((n,i)=>{
-    rows.push({enc:document.getElementById('enc-'+n).value||'—',terr:n,fecha:formatLong(document.getElementById('fecha-'+n).value),cond:document.getElementById('cond-'+n).value||'—',hora:(document.getElementById('hora-'+n).value||'18:30').replace(':','.')});
-    if(i===0)rows.push({enc:document.getElementById('enc-phone').value||'—',terr:'TELEFÓNICA',fecha:formatLong(document.getElementById('fecha-phone').value),cond:document.getElementById('cond-phone').value||'—',hora:(document.getElementById('hora-phone').value||'17:30').replace(':','.')});
+    const diaKey = DIA_CONFIG[i].key;
+    const fechaVal = document.getElementById('fecha-'+n).value;
+    const hora = (document.getElementById('hora-'+n).value||'18:30').replace(':','.');
+    const cond = document.getElementById('cond-'+n).value||'—';
+    const enc = document.getElementById('enc-'+n).value||'—';
+    const fechaFmt = formatShort(fechaVal).replace(/\//g,'-');
+
+    // Telefónica va primero (17:30) cuando es el primer territorio (martes)
+    if(i===0){
+      const horaPhone = (document.getElementById('hora-phone').value||'17:30').replace(':','.');
+      const condPhone = document.getElementById('cond-phone').value||'—';
+      const encPhone = document.getElementById('enc-phone').value||'—';
+      rows.push({enc:encPhone, terr:'TELEFÓNICA', terrSmall:true, badge:DIA_BADGE.tue, fecha:fechaFmt, cond:condPhone, hora:horaPhone, tel:true});
+    }
+
+    rows.push({enc, terr:n, terrSmall:false, badge:DIA_BADGE[diaKey], fecha:fechaFmt, cond, hora});
   });
-  document.getElementById('preview-body').innerHTML=rows.map(r=>`<tr><td>${r.enc}</td><td><strong>${r.terr}</strong></td><td><strong>${r.fecha}</strong></td><td>${r.cond}</td><td><strong>${r.hora}</strong></td></tr>`).join('');
-  hide('view-config');show('view-preview');setStep(3);
+
+  document.getElementById('preview-body').innerHTML = rows.map(r=>`
+    <tr${r.tel?' class="tel-row"':''}>
+      <td>${r.enc}</td>
+      <td><div class="terr-num-big" style="${r.terrSmall?'font-size:12px;':''}">${r.terr}</div></td>
+      <td>${r.badge}<div class="fecha-num">${r.fecha}</div></td>
+      <td><div class="cond-txt">${r.cond}</div></td>
+      <td><div class="hora-txt">${r.hora}</div></td>
+    </tr>`).join('');
+
+  hide('view-config'); show('view-preview'); setStep(3);
 }
 document.getElementById('week-info').textContent=`Semana actual — Martes ${formatShort(WEEK.tue)} · Jueves ${formatShort(WEEK.thu)} · Viernes ${formatShort(WEEK.fri)}`;
 renderGrid();
