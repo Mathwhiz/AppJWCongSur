@@ -6,77 +6,132 @@
 <title>Planificador de Salidas</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; padding: 1rem; background: #fff; color: #111; }
-.section-title { font-size: 13px; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+body { font-family: system-ui, sans-serif; padding: 1rem; background: #1e1e1e; color: #eee; }
+
+/* Barra de pasos */
+.step-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+.step { flex: 1; height: 3px; border-radius: 2px; background: #444; }
+.step.active { background: #185FA5; }
+.step.done { background: #1D9E75; }
+
+/* Títulos de sección */
+.section-title { font-size: 13px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+
+/* Info semana */
+.week-info { font-size: 12px; color: #888; background: #2a2a2a; border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; border: 0.5px solid #333; }
+
+/* Grid territorios */
 .terr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
-.terr-btn { background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 8px 10px; cursor: pointer; text-align: left; }
-.terr-btn:hover { border-color: #aaa; }
-.terr-btn.selected { border: 1.5px solid #185FA5; background: #E6F1FB; }
-.terr-num { font-size: 15px; font-weight: 500; color: #111; }
-.terr-btn.selected .terr-num { color: #185FA5; }
-.terr-date { font-size: 11px; color: #666; margin-top: 2px; }
+.terr-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 8px; padding: 8px 10px; cursor: pointer; text-align: left; }
+.terr-btn:hover { border-color: #666; }
+.terr-btn.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
+.terr-num { font-size: 15px; font-weight: 500; color: #eee; }
+.terr-btn.selected .terr-num { color: #85B7EB; }
+.terr-date { font-size: 11px; color: #888; margin-top: 2px; }
 .terr-days { font-size: 11px; font-weight: 500; margin-top: 2px; }
-.days-old { color: #A32D2D; } .days-mid { color: #BA7517; } .days-new { color: #3B6D11; }
-.salida-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+.days-old { color: #F09595; }
+.days-mid { color: #FAC775; }
+.days-new { color: #C0DD97; }
+
+/* Cards de configuración */
+.salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
 .salida-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.salida-label { font-size: 14px; font-weight: 500; }
-.phone-badge { font-size: 12px; background: #E1F5EE; color: #0F6E56; padding: 2px 8px; border-radius: 20px; }
+.salida-label { font-size: 14px; font-weight: 500; color: #eee; }
+.phone-badge { font-size: 12px; background: #0a2e24; color: #5DCAA5; padding: 2px 8px; border-radius: 20px; border: 0.5px solid #1D9E75; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-select, input[type=text], input[type=date], input[type=time] { width: 100%; font-size: 13px; padding: 6px 8px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #111; }
-label { font-size: 12px; color: #666; display: block; margin-bottom: 3px; }
+select, input[type=text], input[type=date], input[type=time] { width: 100%; font-size: 13px; padding: 6px 8px; border: 0.5px solid #555; border-radius: 8px; background: #1e1e1e; color: #eee; }
+select option { background: #2a2a2a; color: #eee; }
+label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
+.dia-martes { font-size: 18px; font-weight: 500; color: #85B7EB; }
+.dia-jueves { font-size: 18px; font-weight: 500; color: #FAC775; }
+.dia-viernes { font-size: 18px; font-weight: 500; color: #C0DD97; }
+
+/* Botones */
 .btn-primary { padding: 9px 16px; font-size: 13px; font-weight: 500; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; }
 .btn-primary:hover { background: #0C447C; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-secondary { padding: 9px 16px; font-size: 13px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #111; cursor: pointer; }
-.btn-autofill { font-size: 12px; padding: 5px 12px; background: #EAF3DE; color: #3B6D11; border: 0.5px solid #97C459; border-radius: 8px; cursor: pointer; }
-.step-bar { display: flex; gap: 6px; margin-bottom: 16px; }
-.step { flex: 1; height: 3px; border-radius: 2px; background: #ddd; }
-.step.active { background: #185FA5; } .step.done { background: #1D9E75; }
-.week-info { font-size: 12px; color: #666; background: #f5f5f5; border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; }
-.dia-martes { font-size: 18px; font-weight: 500; color: #185FA5; }
-.dia-jueves { font-size: 18px; font-weight: 500; color: #854F0B; }
-.dia-viernes { font-size: 18px; font-weight: 500; color: #3B6D11; }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-secondary { padding: 9px 16px; font-size: 13px; border: 0.5px solid #555; border-radius: 8px; background: #2a2a2a; color: #ccc; cursor: pointer; }
+.btn-secondary:hover { background: #333; }
+.btn-autofill { font-size: 12px; padding: 5px 12px; background: #1a2e0a; color: #97C459; border: 0.5px solid #3B6D11; border-radius: 8px; cursor: pointer; }
+
+/* ── Carátula ── */
+.cover { min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; text-align: center; }
+.cover-icon { width: 56px; height: 56px; background: rgba(59,109,17,0.25); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.cover-title { font-size: 42px; font-weight: 500; color: #97C459; line-height: 1.15; margin-bottom: 6px; }
+.cover-subtitle { font-size: 16px; color: #639922; letter-spacing: 0.04em; margin-bottom: 40px; }
+.grupo-label { font-size: 18px; font-weight: 500; color: #ccc; margin-bottom: 14px; }
+.grupo-grid { display: flex; gap: 10px; margin-bottom: 32px; }
+.grupo-btn { width: 62px; height: 62px; border-radius: 12px; border: 0.5px solid #444; background: #2a2a2a; font-size: 22px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.grupo-btn:hover { border-color: #97C459; background: rgba(59,109,17,0.2); color: #97C459; }
+.grupo-btn.selected { border: 2px solid #97C459; background: rgba(59,109,17,0.25); color: #C0DD97; }
+.btn-start { padding: 11px 36px; font-size: 14px; font-weight: 500; background: #3B6D11; color: #fff; border: none; border-radius: 10px; cursor: pointer; opacity: 0.3; pointer-events: none; }
+.btn-start.enabled { opacity: 1; pointer-events: auto; }
+.btn-start.enabled:hover { background: #27500A; }
 
 /* ── Tabla final ── */
-.card-preview { background: #fff; border: 0.5px solid #ddd; border-radius: 16px; overflow: hidden; }
-.card-preview-header { padding: 14px 18px 12px; border-bottom: 0.5px solid #ddd; }
-.card-preview-top { font-size: 11px; font-weight: 500; color: #666; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 2px; }
-.card-preview-main { font-size: 17px; font-weight: 500; color: #111; }
+.card-preview { background: #2a2a2a; border: 0.5px solid #444; border-radius: 16px; overflow: hidden; }
+.card-preview-header { padding: 14px 18px 12px; border-bottom: 0.5px solid #444; }
+.card-preview-top { font-size: 11px; font-weight: 500; color: #888; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 2px; }
+.card-preview-main { font-size: 17px; font-weight: 500; color: #eee; }
 table.preview { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.preview th { background: #1a1a2e; color: #fff; padding: 9px 10px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; border-right: 0.5px solid rgba(255,255,255,0.1); }
+table.preview th { background: #111; color: #fff; padding: 9px 10px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; border-right: 0.5px solid rgba(255,255,255,0.08); }
 table.preview th:last-child { border-right: none; }
-table.preview td { padding: 9px 10px; text-align: center; border-bottom: 0.5px solid #ddd; color: #111; background: #fff; vertical-align: middle; }
+table.preview td { padding: 9px 10px; text-align: center; border-bottom: 0.5px solid #3a3a3a; color: #eee; background: #2a2a2a; vertical-align: middle; }
 table.preview tr:last-child td { border-bottom: none; }
-table.preview tr:nth-child(even) td { background: #f5f5f5; }
+table.preview tr:nth-child(even) td { background: #242424; }
 table.preview tr.tel-row td:first-child { border-left: 2px solid #1D9E75; }
 .dia-badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; margin-bottom: 3px; }
-.badge-mar { background: #E6F1FB; color: #0C447C; }
-.badge-jue { background: #FAEEDA; color: #633806; }
-.badge-vie { background: #EAF3DE; color: #27500A; }
-.terr-num-big { font-size: 15px; font-weight: 500; }
-.fecha-num { font-size: 13px; font-weight: 500; margin-top: 2px; }
-.cond-txt { font-size: 12px; color: #666; }
-.hora-txt { font-size: 14px; font-weight: 500; }
+.badge-mar { background: #0c2a45; color: #85B7EB; }
+.badge-jue { background: #2e1e00; color: #FAC775; }
+.badge-vie { background: #1a2e0a; color: #C0DD97; }
+.terr-num-big { font-size: 15px; font-weight: 500; color: #eee; }
+.fecha-num { font-size: 13px; font-weight: 500; color: #eee; margin-top: 2px; }
+.cond-txt { font-size: 12px; color: #999; }
+.hora-txt { font-size: 14px; font-weight: 500; color: #eee; }
 </style>
 </head>
 <body>
 <div class="app">
-<div class="step-bar">
-  <div class="step active" id="s1"></div>
+
+<div class="step-bar" id="step-bar" style="display:none;">
+  <div class="step" id="s1"></div>
   <div class="step" id="s2"></div>
   <div class="step" id="s3"></div>
 </div>
 
-<div id="view-select">
+<!-- PASO 0: Carátula -->
+<div id="view-cover">
+  <div class="cover">
+    <div class="cover-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6M12 9v6" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="cover-title">Planificador<br>de Salidas</div>
+    <div class="cover-subtitle">Congregación Sur</div>
+    <div class="grupo-label">¿Con qué grupo trabajás?</div>
+    <div class="grupo-grid">
+      <button class="grupo-btn" onclick="selectGrupo(this,1)">1</button>
+      <button class="grupo-btn" onclick="selectGrupo(this,2)">2</button>
+      <button class="grupo-btn" onclick="selectGrupo(this,3)">3</button>
+      <button class="grupo-btn" onclick="selectGrupo(this,4)">4</button>
+    </div>
+    <button class="btn-start" id="btn-start" onclick="goToStep1()">Empezar →</button>
+  </div>
+</div>
+
+<!-- PASO 1: Elegir territorios -->
+<div id="view-select" style="display:none;">
   <p class="section-title">Elegí 3 territorios</p>
   <div class="week-info" id="week-info"></div>
   <div class="terr-grid" id="terr-grid"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;">
-    <span id="sel-count" style="font-size:13px;color:#666;">0 de 3 seleccionados</span>
+    <span id="sel-count" style="font-size:13px;color:#888;">0 de 3 seleccionados</span>
     <button class="btn-primary" id="btn-next1" onclick="goToStep2()" disabled>Continuar →</button>
   </div>
 </div>
 
+<!-- PASO 2: Configurar salidas -->
 <div id="view-config" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <p class="section-title" style="margin:0;">Configurá cada salida</p>
@@ -89,6 +144,7 @@ table.preview tr.tel-row td:first-child { border-left: 2px solid #1D9E75; }
   </div>
 </div>
 
+<!-- PASO 3: Vista previa -->
 <div id="view-preview" style="display:none;">
   <p class="section-title">Vista previa</p>
   <div class="card-preview">
@@ -103,7 +159,7 @@ table.preview tr.tel-row td:first-child { border-left: 2px solid #1D9E75; }
   </div>
   <div style="display:flex;gap:8px;margin-top:12px;">
     <button class="btn-secondary" onclick="goToStep2()" style="flex:1;">← Editar</button>
-    <button class="btn-secondary" onclick="goToStep1()" style="flex:1;">Reiniciar</button>
+    <button class="btn-secondary" onclick="goToCover()" style="flex:1;">Reiniciar</button>
   </div>
 </div>
 
@@ -123,11 +179,23 @@ const TERRITORIES = [
   {n:'154',last:'2026-01-20'},{n:'167',last:'2026-02-24'},{n:'168',last:'2025-12-09'},
   {n:'169',last:'2026-02-17'}
 ];
+const TERRITORIES_BY_GROUP = { 3: TERRITORIES };
 const DIA_CONFIG = [
   { key:'tue', label:'Martes', cls:'dia-martes' },
   { key:'thu', label:'Jueves', cls:'dia-jueves' },
   { key:'fri', label:'Viernes', cls:'dia-viernes' }
 ];
+
+let selectedGrupo = null;
+let selected = [];
+
+function selectGrupo(el, n) {
+  document.querySelectorAll('.grupo-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGrupo = n;
+  document.getElementById('btn-start').classList.add('enabled');
+}
+
 function getWeekDates() {
   const now = new Date(); const day = now.getDay();
   const monday = new Date(now); monday.setDate(now.getDate()-(day===0?6:day-1));
@@ -135,14 +203,21 @@ function getWeekDates() {
   return {tue:d(1),thu:d(3),fri:d(4)};
 }
 function formatShort(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;}
-function formatLong(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];return`${dias[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getFullYear()).slice(-2)}`;}
 function daysSince(ds){return Math.floor((new Date()-new Date(ds+'T00:00:00'))/86400000);}
 function dayClass(d){return d>90?'days-old':d>45?'days-mid':'days-new';}
-const WEEK=getWeekDates();
-const sorted=TERRITORIES.map(t=>({...t,days:daysSince(t.last)})).sort((a,b)=>b.days-a.days);
-let selected=[];
-function renderGrid(){
-  const g=document.getElementById('terr-grid');g.innerHTML='';
+
+const WEEK = getWeekDates();
+
+function renderGrid() {
+  const territorios = TERRITORIES_BY_GROUP[selectedGrupo] || [];
+  const sorted = territorios.map(t=>({...t,days:daysSince(t.last)})).sort((a,b)=>b.days-a.days);
+  const g = document.getElementById('terr-grid'); g.innerHTML='';
+  if(territorios.length === 0){
+    g.innerHTML='<p style="color:#888;font-size:13px;grid-column:1/-1;">No hay territorios cargados para este grupo todavía.</p>';
+    document.getElementById('sel-count').textContent='0 de 3 seleccionados';
+    document.getElementById('btn-next1').disabled=true;
+    return;
+  }
   sorted.forEach(t=>{
     const btn=document.createElement('button');
     btn.className='terr-btn'+(selected.includes(t.n)?' selected':'');
@@ -153,18 +228,31 @@ function renderGrid(){
   document.getElementById('sel-count').textContent=`${selected.length} de 3 seleccionados`;
   document.getElementById('btn-next1').disabled=selected.length!==3;
 }
-function setStep(n){for(let i=1;i<=3;i++)document.getElementById('s'+i).className='step'+(i<n?' done':i===n?' active':'');}
+
+function setStep(n){
+  document.getElementById('step-bar').style.display='flex';
+  for(let i=1;i<=3;i++) document.getElementById('s'+i).className='step'+(i<n?' done':i===n?' active':'');
+}
 function show(id){document.getElementById(id).style.display='';}
 function hide(id){document.getElementById(id).style.display='none';}
-function goToStep1(){show('view-select');hide('view-config');hide('view-preview');setStep(1);}
+
+function goToCover(){
+  selected=[];
+  hide('view-select');hide('view-config');hide('view-preview');
+  show('view-cover');
+  document.getElementById('step-bar').style.display='none';
+}
+function goToStep1(){
+  hide('view-cover');hide('view-config');hide('view-preview');
+  show('view-select'); setStep(1);
+  document.getElementById('week-info').textContent=`Semana actual — Martes ${formatShort(WEEK.tue)} · Jueves ${formatShort(WEEK.thu)} · Viernes ${formatShort(WEEK.fri)}`;
+  renderGrid();
+}
 function condSelect(id){return`<select id="${id}"><option value="">— Elegir —</option>${CONDUCTORES.map(c=>`<option>${c}</option>`).join('')}</select>`;}
 function renderSalidas(){
   const c=document.getElementById('salidas-container');c.innerHTML='';
-  const grupoDiv=document.createElement('div'); grupoDiv.style.marginBottom='12px';
-  grupoDiv.innerHTML=`<label>Grupo</label><select id="sel-grupo"><option value="1">Grupo 1</option><option value="2">Grupo 2</option><option value="3" selected>Grupo 3</option><option value="4">Grupo 4</option></select>`;
-  c.appendChild(grupoDiv);
   selected.forEach((n,i)=>{
-    const cfg=DIA_CONFIG[i];const fechaVal=WEEK[cfg.key];
+    const cfg=DIA_CONFIG[i]; const fechaVal=WEEK[cfg.key];
     const div=document.createElement('div');div.className='salida-card';
     div.innerHTML=`<div class="salida-header"><span class="salida-label">Territorio ${n}</span><span class="${cfg.cls}">${cfg.label}</span></div><div class="form-row"><div><label>Conductor</label>${condSelect('cond-'+n)}</div><div><label>Día</label><input type="date" id="fecha-${n}" value="${fechaVal}"></div></div><div class="form-row"><div><label>Hora</label><input type="time" id="hora-${n}" value="18:30"></div><div><label>Encuentro / Familia</label><input type="text" id="enc-${n}" placeholder="Ej: Flia. García"></div></div>`;
     c.appendChild(div);
@@ -175,34 +263,36 @@ function renderSalidas(){
     }
   });
 }
-function goToStep2(){if(selected.length!==3)return;hide('view-select');show('view-config');hide('view-preview');setStep(2);renderSalidas();}
+function goToStep2(){
+  if(selected.length!==3)return;
+  hide('view-select');show('view-config');hide('view-preview');setStep(2);renderSalidas();
+}
 function autoFillAll(){
   selected.forEach((n,i)=>{const fd=document.getElementById('fecha-'+n);const fh=document.getElementById('hora-'+n);if(fd)fd.value=WEEK[DIA_CONFIG[i].key];if(fh)fh.value='18:30';});
   const fp=document.getElementById('fecha-phone');const hp=document.getElementById('hora-phone');
   if(fp)fp.value=WEEK.tue;if(hp)hp.value='17:30';
 }
 function generatePreview(){
-  const grupo = document.getElementById('sel-grupo')?.value || '—';
-  document.getElementById('preview-grupo-title').textContent = `Grupo ${grupo} — Salidas de la semana`;
-  const DIA_BADGE = { tue:'<div class="dia-badge badge-mar">Martes</div>', thu:'<div class="dia-badge badge-jue">Jueves</div>', fri:'<div class="dia-badge badge-vie">Viernes</div>' };
-  const rows = [];
+  document.getElementById('preview-grupo-title').textContent=`Grupo ${selectedGrupo} — Salidas de la semana`;
+  const DIA_BADGE={tue:'<div class="dia-badge badge-mar">Martes</div>',thu:'<div class="dia-badge badge-jue">Jueves</div>',fri:'<div class="dia-badge badge-vie">Viernes</div>'};
+  const rows=[];
   selected.forEach((n,i)=>{
-    const diaKey = DIA_CONFIG[i].key;
-    const fechaVal = document.getElementById('fecha-'+n).value;
-    const hora = (document.getElementById('hora-'+n).value||'18:30').replace(':','.');
-    const cond = document.getElementById('cond-'+n).value||'—';
-    const enc = document.getElementById('enc-'+n).value||'—';
-    const fechaFmt = formatShort(fechaVal).replace(/\//g,'-');
+    const diaKey=DIA_CONFIG[i].key;
+    const fechaVal=document.getElementById('fecha-'+n).value;
+    const hora=(document.getElementById('hora-'+n).value||'18:30').replace(':','.');
+    const cond=document.getElementById('cond-'+n).value||'—';
+    const enc=document.getElementById('enc-'+n).value||'—';
+    const fechaFmt=formatShort(fechaVal).replace(/\//g,'-');
     if(i===0){
-      const horaPhone = (document.getElementById('hora-phone').value||'17:30').replace(':','.');
-      const condPhone = document.getElementById('cond-phone').value||'—';
-      const encPhone = document.getElementById('enc-phone').value||'—';
-      const fechaPhone = formatShort(document.getElementById('fecha-phone').value).replace(/\//g,'-');
-      rows.push({enc:encPhone, terr:'TELEFÓNICA', terrSmall:true, badge:DIA_BADGE.tue, fecha:fechaPhone, cond:condPhone, hora:horaPhone, tel:true});
+      const horaPhone=(document.getElementById('hora-phone').value||'17:30').replace(':','.');
+      const condPhone=document.getElementById('cond-phone').value||'—';
+      const encPhone=document.getElementById('enc-phone').value||'—';
+      const fechaPhone=formatShort(document.getElementById('fecha-phone').value).replace(/\//g,'-');
+      rows.push({enc:encPhone,terr:'TELEFÓNICA',terrSmall:true,badge:DIA_BADGE.tue,fecha:fechaPhone,cond:condPhone,hora:horaPhone,tel:true});
     }
-    rows.push({enc, terr:n, terrSmall:false, badge:DIA_BADGE[diaKey], fecha:fechaFmt, cond, hora});
+    rows.push({enc,terr:n,terrSmall:false,badge:DIA_BADGE[diaKey],fecha:fechaFmt,cond,hora});
   });
-  document.getElementById('preview-body').innerHTML = rows.map(r=>`
+  document.getElementById('preview-body').innerHTML=rows.map(r=>`
     <tr${r.tel?' class="tel-row"':''}>
       <td>${r.enc}</td>
       <td><div class="terr-num-big" style="${r.terrSmall?'font-size:12px;':''}">${r.terr}</div></td>
@@ -210,10 +300,8 @@ function generatePreview(){
       <td><div class="cond-txt">${r.cond}</div></td>
       <td><div class="hora-txt">${r.hora}</div></td>
     </tr>`).join('');
-  hide('view-config'); show('view-preview'); setStep(3);
+  hide('view-config');show('view-preview');setStep(3);
 }
-document.getElementById('week-info').textContent=`Semana actual — Martes ${formatShort(WEEK.tue)} · Jueves ${formatShort(WEEK.thu)} · Viernes ${formatShort(WEEK.fri)}`;
-renderGrid();
 </script>
 </body>
 </html>
