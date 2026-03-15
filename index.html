@@ -245,6 +245,13 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 .btn-home { position: fixed; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 12px; border: 0.5px solid #555; background: #2a2a2a; color: #aaa; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: background 0.15s, color 0.15s; }
 .btn-home:hover { background: #333; color: #eee; }
 .btn-home.visible { display: flex; }
+
+/* ── Encabezado tabla final por grupo ── */
+.preview-header-wrap { margin-bottom: 16px; }
+.preview-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.preview-title-line { font-size: 26px; font-weight: 500; line-height: 1.2; }
+.preview-sep { color: #555; margin: 0 6px; }
+  
 </style>
 </head>
 <body>
@@ -442,9 +449,13 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 <!-- PASO 3: Vista previa -->
 <div id="view-preview" class="view" style="display:none;">
   <div class="preview-header-wrap">
-    <span class="preview-title">Salidas</span>
-    <span class="preview-subtitle" id="preview-grupo-label">Grupo · Congregación Sur</span>
+  <div class="preview-tag" id="preview-tag-label">Tabla de Salidas</div>
+  <div class="preview-title-line">
+    <span id="preview-grupo-color"></span>
+    <span class="preview-sep">·</span>
+    <span id="preview-congre-color"></span>
   </div>
+</div>
   <div class="card-preview">
     <div class="card-preview-header">
       <div class="card-preview-top">Congregación Sur</div>
@@ -1512,8 +1523,11 @@ function getDiaBadge(fecha) {
 
 function generatePreview(){
   const grupoLabel = selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo;
-  document.getElementById('preview-grupo-title').textContent=`${grupoLabel} — Salidas de la semana`;
-  document.getElementById('preview-grupo-label').textContent=`${grupoLabel} · Congregación Sur`;
+  const colores = { '1':'#378ADD', '2':'#EF9F27', '3':'#97C459', '4':'#D85A30', 'C':'#7F77DD' };
+  const color = colores[selectedGrupo] || '#eee';
+  document.getElementById('preview-grupo-title').textContent = `${grupoLabel} — Salidas de la semana`;
+  document.getElementById('preview-grupo-color').innerHTML = `<span style="color:${color};font-weight:500;">${grupoLabel}</span>`;
+  document.getElementById('preview-congre-color').innerHTML = `<span style="color:#7F77DD;font-weight:500;">Congregación Sur</span>`;
   const rows = [];
 
   // Telefónica fija de congregación (dos filas arriba del todo)
