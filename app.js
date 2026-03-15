@@ -46,6 +46,8 @@ const DIA_COLORS = {
 ───────────────────────────────────────── */
 function show(id) {
   document.getElementById(id).style.display = '';
+  // Only manage floating buttons when showing a top-level view
+  if (!id.startsWith('view-')) return;
   const homeBtn = document.getElementById('btn-home');
   const mapaBtn = document.getElementById('btn-mapa-float');
   if (homeBtn) {
@@ -507,7 +509,7 @@ function renderSalidaCard(s) {
     </div>
     <div class="form-row">
       <div><label>Conductor</label><select id="sal-cond-${s.id}">${getConductorOptions(selectedGrupo, s.conductor)}</select></div>
-      ${esTel ? '' : `<div style="display:flex;align-items:flex-end;gap:6px;"><div style="flex:1;"><label>Territorio</label><select id="sal-terr-${s.id}">${getTerritoryOptions()}</select></div><button type="button" onclick="addExtraTerritory(${s.id})" style="margin-bottom:1px;padding:6px 9px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">+</button></div><div id="extra-terrs-${s.id}"></div>`}
+      ${esTel ? '' : `<div><div style="display:flex;align-items:flex-end;gap:6px;"><div style="flex:1;"><label>Territorio</label><select id="sal-terr-${s.id}">${getTerritoryOptions()}</select></div><button type="button" onclick="addExtraTerritory(${s.id})" style="margin-bottom:1px;padding:6px 9px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">+</button></div><div id="extra-terrs-${s.id}"></div></div>`}
     </div>
     <div>
       <label>Encuentro / Familia</label>
@@ -520,11 +522,11 @@ function renderSalidaCard(s) {
 function addExtraTerritory(salidaId) {
   const container = document.getElementById('extra-terrs-' + salidaId);
   if (!container) return;
-  const idx = container.children.length + 2; // 1-based, offset by main select
+  const idx = container.children.length + 2;
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:flex-end;gap:6px;margin-top:6px;';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
   const uid = `sal-terr-${salidaId}-x${idx}`;
-  wrap.innerHTML = `<div style="flex:1;"><select id="${uid}" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;">${getTerritoryOptions()}</select></div><button type="button" onclick="this.parentElement.remove()" style="margin-bottom:1px;padding:6px 9px;background:#2e1a1a;color:#F09595;border:0.5px solid #A32D2D;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">−</button>`;
+  wrap.innerHTML = `<select id="${uid}" style="flex:1;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;">${getTerritoryOptions()}</select><button type="button" onclick="this.parentElement.remove()" style="padding:6px 9px;background:#2e1a1a;color:#F09595;border:0.5px solid #A32D2D;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">−</button>`;
   container.appendChild(wrap);
 }
 /* ─────────────────────────────────────────
@@ -578,10 +580,10 @@ function generatePreview() {
       const mainTerr = document.getElementById('sal-terr-' + s.id)?.value || '—';
       const extraContainer = document.getElementById('extra-terrs-' + s.id);
       const extraSelects = extraContainer ? extraContainer.querySelectorAll('select') : [];
-      const allTerrs = [mainTerr, ...[...extraSelects].map(sel => sel.value).filter(v => v && v !== '—')];
-      allTerrs.forEach(terr => {
-        rows.push({ enc, terr, tel:false, badge:getDiaBadge(fecha), fecha:formatShortFull(fecha).replace(/\//g,'-'), cond, hora:hora.replace(':','.') });
-      });
+      const extraTerrs = [...extraSelects].map(sel => sel.value).filter(v => v && v !== '—');
+      const allTerrs = [mainTerr, ...extraTerrs].filter(v => v && v !== '—');
+      const terrLabel = allTerrs.join(', ') || '—';
+      rows.push({ enc, terr: terrLabel, tel:false, badge:getDiaBadge(fecha), fecha:formatShortFull(fecha).replace(/\//g,'-'), cond, hora:hora.replace(':','.') });
     }
   });
   document.getElementById('preview-body').innerHTML = rows.map(r => `
