@@ -53,8 +53,7 @@ function show(id) {
   if (homeBtn) {
     const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
     if (showHome) homeBtn.classList.add('visible');
-    if (id === 'view-config') homeBtn.classList.add('hidden-in-plan');
-    else homeBtn.classList.remove('hidden-in-plan');
+    homeBtn.classList.remove('hidden-in-plan');  // casita visible en todas las vistas
   }
   if (mapaBtn) {
     if (id === 'view-info') {
@@ -65,11 +64,9 @@ function show(id) {
       mapaBtn.onclick = () => openMapaPopup('registrar');
     } else if (id === 'view-config') {
       mapaBtn.classList.add('visible');
-      mapaBtn.classList.add('solo');
       mapaBtn.onclick = () => openMapaPopup('info');
     } else {
       mapaBtn.classList.remove('visible');
-      mapaBtn.classList.remove('solo');
     }
   }
 }
@@ -220,7 +217,7 @@ function goToCover() {
 function goToModo() {
   selected = [];
   document.getElementById('btn-home').classList.remove('visible');
-  document.getElementById('btn-mapa-float')?.classList.remove('visible','solo');
+  document.getElementById('btn-mapa-float')?.classList.remove('visible');
   hide('view-cover'); hide('view-config'); hide('view-preview');
   hide('view-registrar'); hide('view-info'); hide('view-historial');
   const label = document.getElementById('modo-grupo-label');
@@ -263,7 +260,7 @@ function cerrarSesion() {
   });
   document.getElementById('btn-start').classList.remove('enabled');
   document.getElementById('btn-home').classList.remove('visible');
-  document.getElementById('btn-mapa-float')?.classList.remove('visible','solo');
+  document.getElementById('btn-mapa-float')?.classList.remove('visible');
   goToCover();
 }
 
