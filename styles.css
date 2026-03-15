@@ -250,6 +250,7 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 .btn-mapa-float { position: fixed; top: 14px; right: 108px; width: 80px; height: 80px; border-radius: 16px; border: 0.5px solid #4A44A5; background: #1a1a2e; color: #7F77DD; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: background 0.15s, color 0.15s; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 .btn-mapa-float:hover { background: #22224a; color: #a09aff; }
 .btn-mapa-float.visible { display: flex; }
+.btn-mapa-float.solo { right: 14px; }
 .btn-home.hidden-in-plan { display: none !important; }
 
 /* ── Encabezado tabla final por grupo ── */

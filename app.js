@@ -50,7 +50,6 @@ function show(id) {
   if (!id.startsWith('view-')) return;
   const homeBtn = document.getElementById('btn-home');
   const mapaBtn = document.getElementById('btn-mapa-float');
-  console.log('[show]', id, '| mapaBtn found:', !!mapaBtn);
   if (homeBtn) {
     const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
     if (showHome) homeBtn.classList.add('visible');
@@ -66,13 +65,12 @@ function show(id) {
       mapaBtn.onclick = () => openMapaPopup('registrar');
     } else if (id === 'view-config') {
       mapaBtn.classList.add('visible');
+      mapaBtn.classList.add('solo');
       mapaBtn.onclick = () => openMapaPopup('info');
-      console.log('[show] mapaBtn.visible added for view-config, classes:', mapaBtn.className);
     } else {
       mapaBtn.classList.remove('visible');
+      mapaBtn.classList.remove('solo');
     }
-  } else {
-    console.warn('[show] btn-mapa-float NOT FOUND in DOM');
   }
 }
 function hide(id) { document.getElementById(id).style.display = 'none'; }
@@ -222,7 +220,7 @@ function goToCover() {
 function goToModo() {
   selected = [];
   document.getElementById('btn-home').classList.remove('visible');
-  document.getElementById('btn-mapa-float')?.classList.remove('visible');
+  document.getElementById('btn-mapa-float')?.classList.remove('visible','solo');
   hide('view-cover'); hide('view-config'); hide('view-preview');
   hide('view-registrar'); hide('view-info'); hide('view-historial');
   const label = document.getElementById('modo-grupo-label');
@@ -265,7 +263,7 @@ function cerrarSesion() {
   });
   document.getElementById('btn-start').classList.remove('enabled');
   document.getElementById('btn-home').classList.remove('visible');
-  document.getElementById('btn-mapa-float')?.classList.remove('visible');
+  document.getElementById('btn-mapa-float')?.classList.remove('visible','solo');
   goToCover();
 }
 
