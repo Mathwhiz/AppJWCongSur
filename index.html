@@ -107,15 +107,18 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .btn-registrar-prog:disabled { opacity: 0.4; cursor: not-allowed; }
 .reg-prog-status { text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; }
 /* ── Historial de salidas ── */
-.hist-salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.hist-salida-info { flex: 1; min-width: 0; }
-.hist-salida-terr { font-size: 16px; font-weight: 500; color: #eee; }
-.hist-salida-det { font-size: 12px; color: #888; margin-top: 2px; }
-.hist-salida-fecha { font-size: 11px; color: #666; margin-top: 2px; }
-.hist-salida-del { font-size: 12px; padding: 4px 8px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; flex-shrink: 0; }
-.hist-salida-del:hover { background: #3a2020; }
-.hist-semana-group { margin-bottom: 14px; }
-.hist-semana-title { font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 0.5px solid #333; }
+.hist-registro-group { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.hist-registro-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.hist-registro-fecha { font-size: 13px; font-weight: 500; color: #97C459; }
+.hist-registro-del { font-size: 11px; padding: 3px 8px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
+.hist-registro-del:hover { background: #3a2020; }
+.hist-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid #333; }
+.hist-row:last-child { border-bottom: none; }
+.hist-row-terr { font-size: 14px; font-weight: 500; color: #eee; min-width: 60px; }
+.hist-row-dia { font-size: 12px; color: #FAC775; min-width: 70px; }
+.hist-row-cond { font-size: 12px; color: #888; flex: 1; }
+.hist-row-hora { font-size: 12px; color: #aaa; min-width: 40px; text-align: right; }
+.hist-row-tel { color: #5DCAA5; }
 
 
 /* ── Planificador flexible ── */
@@ -237,9 +240,17 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 .pin-btn.pin-del:hover { background: #3a2020; }
 .pin-error { font-size: 13px; color: #F09595; min-height: 20px; margin-top: 4px; }
 .pin-cancel { font-size: 13px; color: #888; background: none; border: none; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+
+/* ── Botón home ── */
+.btn-home { position: fixed; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 12px; border: 0.5px solid #555; background: #2a2a2a; color: #aaa; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: background 0.15s, color 0.15s; }
+.btn-home:hover { background: #333; color: #eee; }
+.btn-home.visible { display: flex; }
 </style>
 </head>
 <body>
+<button class="btn-home" id="btn-home" onclick="goToCover()" title="Inicio">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
 <div class="app">
 
 <div class="step-bar" id="step-bar" style="display:none;">
@@ -807,6 +818,28 @@ async function goToHistorial() {
   }
 }
 
+function fmtHistDate(val) {
+  if (!val) return '—';
+  if (typeof val === 'string' && val.includes('T')) {
+    // ISO date from sheets
+    const d = new Date(val);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+  }
+  return String(val);
+}
+
+function getDiaFromFecha(fecha) {
+  if (!fecha) return '';
+  // puede ser dd/mm/yy
+  const m = fecha.toString().match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+  if (m) {
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    const d = new Date(`${y}-${m[2]}-${m[1]}T00:00:00`);
+    return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];
+  }
+  return '';
+}
+
 function renderHistorialSalidas(rows) {
   const c = document.getElementById('hist-content');
   c.innerHTML = '';
@@ -816,29 +849,55 @@ function renderHistorialSalidas(rows) {
   }
   // Agrupar por fecha de registro
   const grupos = {};
+  const orden = [];
   rows.forEach(r => {
-    const key = r.fechaReg || 'Sin fecha';
-    if (!grupos[key]) grupos[key] = [];
-    grupos[key].push(r);
+    const key = fmtHistDate(r.fechaReg);
+    if (!grupos[key]) { grupos[key] = { rows: [], minRowIndex: r.rowIndex }; orden.push(key); }
+    grupos[key].rows.push(r);
+    if (r.rowIndex < grupos[key].minRowIndex) grupos[key].minRowIndex = r.rowIndex;
   });
-  Object.keys(grupos).forEach(fecha => {
+  orden.forEach(fecha => {
+    const g = grupos[fecha];
     const group = document.createElement('div');
-    group.className = 'hist-semana-group';
-    group.innerHTML = `<div class="hist-semana-title">Registrado el ${fecha}</div>`;
-    grupos[fecha].forEach(r => {
-      const card = document.createElement('div');
-      card.className = 'hist-salida-card';
-      card.innerHTML = `
-        <div class="hist-salida-info">
-          <div class="hist-salida-terr">Terr. ${r.terr} <span style="font-size:13px;color:#888;font-weight:400;">· ${r.hora}</span></div>
-          <div class="hist-salida-det">${r.cond} — ${r.enc}</div>
-          <div class="hist-salida-fecha">${r.fecha}</div>
-        </div>
-        <button class="hist-salida-del" onclick="deleteHistorialSalida(${r.rowIndex}, this)">✕</button>`;
-      group.appendChild(card);
+    group.className = 'hist-registro-group';
+    group.innerHTML = `
+      <div class="hist-registro-header">
+        <span class="hist-registro-fecha">Semana del ${fecha}</span>
+        <button class="hist-registro-del" onclick="deleteHistorialGrupo(${g.minRowIndex}, ${g.rows.length}, this)">Eliminar semana</button>
+      </div>`;
+    g.rows.forEach(r => {
+      const esTel = String(r.terr).toUpperCase().includes('TEL');
+      const dia = getDiaFromFecha(fmtHistDate(r.fecha));
+      const row = document.createElement('div');
+      row.className = 'hist-row';
+      row.innerHTML = `
+        <span class="hist-row-terr ${esTel ? 'hist-row-tel' : ''}">${esTel ? 'Tel.' : 'T.' + r.terr}</span>
+        <span class="hist-row-dia">${dia} ${fmtHistDate(r.fecha)}</span>
+        <span class="hist-row-cond">${r.cond}</span>
+        <span class="hist-row-hora">${r.hora}</span>`;
+      group.appendChild(row);
     });
     c.appendChild(group);
   });
+}
+
+async function deleteHistorialGrupo(startRowIndex, count, btn) {
+  if (!confirm('¿Eliminar todas las salidas de esta semana?')) return;
+  btn.disabled = true;
+  // Eliminar de atrás para adelante para no desplazar índices
+  for (let i = count - 1; i >= 0; i--) {
+    const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + (startRowIndex + i);
+    await fetch(url);
+  }
+  await goToHistorial();
+}
+
+async function deleteHistorialSalida(rowIndex, btn) {
+  if (!confirm('¿Eliminar esta entrada del historial?')) return;
+  btn.disabled = true;
+  const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + rowIndex;
+  await fetch(url);
+  await goToHistorial();
 }
 
 async function deleteHistorialSalida(rowIndex, btn) {
@@ -934,7 +993,14 @@ function selectGrupo(el, n) {
   document.getElementById('btn-start').classList.add('enabled');
 }
 
-function show(id){document.getElementById(id).style.display='';}
+function show(id){
+  document.getElementById(id).style.display='';
+  const homeBtn = document.getElementById('btn-home');
+  if (homeBtn) {
+    const showHome = ['view-modo','view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
+    if (showHome) homeBtn.classList.add('visible');
+  }
+}
 function hide(id){document.getElementById(id).style.display='none';}
 function setStep(n){
   document.getElementById('step-bar').style.display='flex';
