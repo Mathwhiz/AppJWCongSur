@@ -1184,7 +1184,7 @@ async function registrarEnProgreso() {
         '&grupo=' + encodeURIComponent(selectedGrupo) +
         '&territorio=' + encodeURIComponent(t.terr) +
         '&conductor=' + encodeURIComponent(t.cond) +
-        '&fechaInicio=' + encodeURIComponent(fmtDate(t.fecha)) +
+        '&fechaInicio=' + encodeURIComponent(t.fecha) +
         '&fechaFin=';
       await fetch(url);
     }
