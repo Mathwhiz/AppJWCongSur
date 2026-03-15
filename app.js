@@ -50,6 +50,7 @@ function show(id) {
   if (!id.startsWith('view-')) return;
   const homeBtn = document.getElementById('btn-home');
   const mapaBtn = document.getElementById('btn-mapa-float');
+  console.log('[show]', id, '| mapaBtn found:', !!mapaBtn);
   if (homeBtn) {
     const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
     if (showHome) homeBtn.classList.add('visible');
@@ -66,9 +67,12 @@ function show(id) {
     } else if (id === 'view-config') {
       mapaBtn.classList.add('visible');
       mapaBtn.onclick = () => openMapaPopup('info');
+      console.log('[show] mapaBtn.visible added for view-config, classes:', mapaBtn.className);
     } else {
       mapaBtn.classList.remove('visible');
     }
+  } else {
+    console.warn('[show] btn-mapa-float NOT FOUND in DOM');
   }
 }
 function hide(id) { document.getElementById(id).style.display = 'none'; }
