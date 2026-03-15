@@ -755,6 +755,40 @@ function goToModo(){
   document.getElementById('step-bar').style.display='none';
 }
 
+
+async function goToStep1(){
+  hide('view-cover');hide('view-preview');
+  hide('view-modo');hide('view-registrar');hide('view-info');
+  show('view-config'); setStep(1);
+  document.getElementById('week-info').textContent=`Semana del ${formatShort(WEEK.mon)} al ${formatShort(WEEK.sun)}`;
+
+  show('terr-loading');
+  hide('terr-error');
+
+  try {
+    territoriosData = {};
+    const raw = await fetchGrupo(selectedGrupo);
+    Object.keys(raw).forEach(terr => {
+      const d = raw[terr];
+      territoriosData[terr] = {
+        lastFin: parseSheetDate(d.lastFin),
+        lastIni: parseSheetDate(d.lastIni),
+        enProgreso: d.enProgreso
+      };
+    });
+    const cfgUrl = SCRIPT_URL + '?action=getConfig&grupo=' + encodeURIComponent(selectedGrupo);
+    const cfgResp = await fetch(cfgUrl);
+    configData = JSON.parse(await cfgResp.text());
+    hide('terr-loading');
+    renderSalidas();
+  } catch(err) {
+    hide('terr-loading');
+    const errEl = document.getElementById('terr-error');
+    errEl.innerHTML = `<div class="error-wrap">Error al cargar: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToStep1()">Reintentar</button></div>`;
+    show('terr-error');
+  }
+}
+
 async function goToRegistrar(){
   hide('view-modo');
   show('view-registrar');
