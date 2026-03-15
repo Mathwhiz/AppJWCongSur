@@ -1531,6 +1531,11 @@ function generatePreview(){
   document.getElementById('preview-congre-color').innerHTML = `<span style="color:#7F77DD">Congregación Sur</span>`;
   document.querySelector('.card-preview').style.borderColor = color;
   document.querySelector('.card-preview-header').style.borderBottomColor = color;
+  const colorOscuro = { '1':'#0c2a45', '2':'#2e1e00', '3':'#1a2e0a', '4':'#2e1000', 'C':'#1e1a3a' };
+  document.querySelectorAll('table.preview th').forEach(th => {
+  th.style.background = colorOscuro[selectedGrupo] || '#111';
+  th.style.color = color;
+});
   const rows = [];
 
   // Telefónica fija de congregación (dos filas arriba del todo)
