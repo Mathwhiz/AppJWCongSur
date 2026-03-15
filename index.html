@@ -106,6 +106,17 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .btn-registrar-prog:hover { background: #3a2500; }
 .btn-registrar-prog:disabled { opacity: 0.4; cursor: not-allowed; }
 .reg-prog-status { text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; }
+/* ── Historial de salidas ── */
+.hist-salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hist-salida-info { flex: 1; min-width: 0; }
+.hist-salida-terr { font-size: 16px; font-weight: 500; color: #eee; }
+.hist-salida-det { font-size: 12px; color: #888; margin-top: 2px; }
+.hist-salida-fecha { font-size: 11px; color: #666; margin-top: 2px; }
+.hist-salida-del { font-size: 12px; padding: 4px 8px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; flex-shrink: 0; }
+.hist-salida-del:hover { background: #3a2020; }
+.hist-semana-group { margin-bottom: 14px; }
+.hist-semana-title { font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 0.5px solid #333; }
+
 
 /* ── Planificador flexible ── */
 .plan-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -274,6 +285,15 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
         <div class="modo-card-sub">Territorios y configuración</div>
       </div>
     </button>
+    <button class="modo-card" onclick="goToHistorial()" style="max-width:320px;width:100%;">
+      <div class="modo-icon" style="background:rgba(100,100,100,0.15);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div class="modo-card-title" style="color:#ccc;">Ver historial</div>
+        <div class="modo-card-sub">Salidas de semanas anteriores</div>
+      </div>
+    </button>
     <button class="btn-secondary" onclick="goToCover()" style="width:100%;max-width:320px;">&#8592; Volver</button>
   </div>
 </div>
@@ -353,6 +373,17 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
         <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
       </div>
     </div>
+
+
+<!-- HISTORIAL DE SALIDAS -->
+<div id="view-historial" class="view" style="display:none;">
+  <p class="section-title" id="hist-titulo" style="font-size:32px;margin-bottom:4px;">Historial</p>
+  <p class="section-sub" style="margin-bottom:14px;">Salidas registradas</p>
+  <div id="hist-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+  <div id="hist-error" style="display:none;"></div>
+  <div id="hist-content" style="display:none;"></div>
+  <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">← Volver</button>
+</div>
 
 <!-- PASO 1: Planificador flexible -->
 <div id="view-config" class="view" style="display:none;">
@@ -702,6 +733,73 @@ const WEEK = getWeekDates();
 
 const GCOLORS = { 1:'#378ADD', 2:'#EF9F27', 3:'#97C459', 4:'#D85A30', C:'#7F77DD' };
 const GBGS   = { 1:'rgba(55,138,221,0.18)', 2:'rgba(239,159,39,0.18)', 3:'rgba(151,196,89,0.18)', 4:'rgba(216,90,48,0.18)', C:'rgba(127,119,221,0.18)' };
+
+
+async function goToHistorial() {
+  hide('view-modo');
+  show('view-historial');
+  const titulo = document.getElementById('hist-titulo');
+  titulo.textContent = (selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo) + ' — Historial';
+  titulo.style.color = GCOLORS[selectedGrupo] || '#97C459';
+  show('hist-loading');
+  hide('hist-content');
+  hide('hist-error');
+
+  try {
+    const url = SCRIPT_URL + '?action=getHistorial&grupo=' + encodeURIComponent(selectedGrupo);
+    const resp = await fetch(url);
+    const data = JSON.parse(await resp.text());
+    hide('hist-loading');
+    renderHistorialSalidas(data.rows || []);
+    show('hist-content');
+  } catch(err) {
+    hide('hist-loading');
+    document.getElementById('hist-error').innerHTML = `<div class="error-wrap">Error: ${err.message}</div>`;
+    show('hist-error');
+  }
+}
+
+function renderHistorialSalidas(rows) {
+  const c = document.getElementById('hist-content');
+  c.innerHTML = '';
+  if (rows.length === 0) {
+    c.innerHTML = '<div style="text-align:center;color:#888;padding:2rem;font-size:14px;">No hay salidas registradas todavía.</div>';
+    return;
+  }
+  // Agrupar por fecha de registro
+  const grupos = {};
+  rows.forEach(r => {
+    const key = r.fechaReg || 'Sin fecha';
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(r);
+  });
+  Object.keys(grupos).forEach(fecha => {
+    const group = document.createElement('div');
+    group.className = 'hist-semana-group';
+    group.innerHTML = `<div class="hist-semana-title">Registrado el ${fecha}</div>`;
+    grupos[fecha].forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'hist-salida-card';
+      card.innerHTML = `
+        <div class="hist-salida-info">
+          <div class="hist-salida-terr">Terr. ${r.terr} <span style="font-size:13px;color:#888;font-weight:400;">· ${r.hora}</span></div>
+          <div class="hist-salida-det">${r.cond} — ${r.enc}</div>
+          <div class="hist-salida-fecha">${r.fecha}</div>
+        </div>
+        <button class="hist-salida-del" onclick="deleteHistorialSalida(${r.rowIndex}, this)">✕</button>`;
+      group.appendChild(card);
+    });
+    c.appendChild(group);
+  });
+}
+
+async function deleteHistorialSalida(rowIndex, btn) {
+  if (!confirm('¿Eliminar esta entrada del historial?')) return;
+  btn.disabled = true;
+  const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + rowIndex;
+  await fetch(url);
+  await goToHistorial();
+}
 
 function applyGrupoColors() {
   document.querySelectorAll('.grupo-btn').forEach(btn => {
@@ -1189,6 +1287,16 @@ async function registrarEnProgreso() {
       await fetch(url);
     }
     territoriosData = {};
+    // Guardar en historial
+    const salidasParaHistorial = salidas.map(s => ({
+      enc: document.getElementById('sal-enc-' + s.id)?.value || '—',
+      terr: s.tipo === 'tel' ? 'TELEFÓNICA' : (document.getElementById('sal-terr-' + s.id)?.value || '—'),
+      fecha: document.getElementById('sal-fecha-' + s.id)?.value || '',
+      cond: document.getElementById('sal-cond-' + s.id)?.value || '—',
+      hora: (document.getElementById('sal-hora-' + s.id)?.value || '').replace(':','.')
+    }));
+    const histUrl = SCRIPT_URL + '?action=saveHistorial&grupo=' + encodeURIComponent(selectedGrupo) + '&salidas=' + encodeURIComponent(JSON.stringify(salidasParaHistorial));
+    await fetch(histUrl);
     status.style.color = '#5DCAA5';
     status.textContent = `✓ ${territoriosARegistrar.length} territorio(s) registrado(s) como en progreso`;
     btn.disabled = true;
