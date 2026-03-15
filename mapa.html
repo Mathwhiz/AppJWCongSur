@@ -188,10 +188,15 @@ function renderTerritories() {
   });
 }
 
+// ── Normalizar clave: "59A" → "59", "104B" → "104", "92C" → "92"
+function baseNum(num) {
+  return num.replace(/[ABC]$/i, '');
+}
+
 // ── Popup ──
 function openPopup(layer, numero, grupo) {
   const c = GRUPO_COLORS[grupo] || { fill:'#888' };
-  const info = territoriosInfo[numero] || {};
+  const info = territoriosInfo[baseNum(numero)] || {};
   const lastDate = info.lastFin || info.lastIni;
   const dias = lastDate ? daysSince(lastDate) : null;
 
