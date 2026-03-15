@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mapa de Territorios</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Header ── */
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #2a2a2a;
+  border-bottom: 0.5px solid #444;
+  flex-shrink: 0;
+  z-index: 1000;
+}
+.map-back-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 0.5px solid #555;
+  background: #1e1e1e;
+  color: #aaa;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.map-back-btn:hover { background: #333; color: #eee; }
+.map-title { font-size: 16px; font-weight: 500; color: #eee; flex: 1; }
+.map-subtitle { font-size: 11px; color: #888; }
+
+/* ── Filtros ── */
+.map-filters {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #242424;
+  border-bottom: 0.5px solid #444;
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1.5px solid;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+.filter-btn.active { opacity: 1; }
+.filter-btn.inactive { opacity: 0.35; }
+
+/* ── Mapa ── */
+#map {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Leaflet dark override */
+.leaflet-container { background: #1a1a1a; }
+.leaflet-tile { filter: brightness(0.85) saturate(0.8); }
+
+/* ── Popup ── */
+.terr-popup {
+  min-width: 200px;
+}
+.terr-popup-num {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.terr-popup-group {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  opacity: 0.75;
+}
+.terr-popup-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.1);
+}
+.terr-popup-row:last-child { border-bottom: none; }
+.terr-popup-label { color: rgba(255,255,255,0.5); }
+.terr-popup-val { font-weight: 500; }
+.terr-popup-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+/* Leaflet popup custom */
+.leaflet-popup-content-wrapper {
+  background: #2a2a2a !important;
+  border: 0.5px solid #555 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  color: #eee !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+}
+.leaflet-popup-tip-container { display: none; }
+.leaflet-popup-close-button {
+  color: #888 !important;
+  font-size: 18px !important;
+  top: 8px !important;
+  right: 10px !important;
+}
+.leaflet-popup-close-button:hover { color: #eee !important; }
+
+/* ── Loading overlay ── */
+#map-loading {
+  position: absolute;
+  inset: 0;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 9999;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid #333;
+  border-top-color: #1D9E75;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt { font-size: 14px; color: #888; }
+
+/* ── Error ── */
+#map-error {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e1a1a;
+  border: 0.5px solid #A32D2D;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #F09595;
+  z-index: 999;
+  display: none;
+  white-space: nowrap;
+}
+
+/* ── Leyenda ── */
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 10px;
+  background: rgba(30,30,30,0.92);
+  border: 0.5px solid #444;
+  border-radius: 12px;
+  padding: 10px 12px;
+  z-index: 999;
+  font-size: 11px;
+  backdrop-filter: blur(8px);
+}
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+  color: #aaa;
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="map-header">
+  <button class="map-back-btn" onclick="window.location.href='index.html'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div>
+    <div class="map-title">Mapa de Territorios</div>
+    <div class="map-subtitle">Congregación Sur · Santa Rosa</div>
+  </div>
+</div>
+
+<!-- Filtros por grupo -->
+<div class="map-filters">
+  <button class="filter-btn active" id="filter-all"
+    style="border-color:#888;color:#ccc;"
+    onclick="filterGroup('all')">Todos</button>
+  <button class="filter-btn active" id="filter-1"
+    style="border-color:#378ADD;color:#378ADD;"
+    onclick="filterGroup('1')">Grupo 1</button>
+  <button class="filter-btn active" id="filter-2"
+    style="border-color:#EF9F27;color:#EF9F27;"
+    onclick="filterGroup('2')">Grupo 2</button>
+  <button class="filter-btn active" id="filter-3"
+    style="border-color:#97C459;color:#97C459;"
+    onclick="filterGroup('3')">Grupo 3</button>
+  <button class="filter-btn active" id="filter-4"
+    style="border-color:#D85A30;color:#D85A30;"
+    onclick="filterGroup('4')">Grupo 4</button>
+  <button class="filter-btn active" id="filter-C"
+    style="border-color:#7F77DD;color:#7F77DD;"
+    onclick="filterGroup('C')">Congregación</button>
+</div>
+
+<!-- Mapa -->
+<div style="position:relative;flex:1;min-height:0;">
+  <div id="map"></div>
+
+  <!-- Loading -->
+  <div id="map-loading">
+    <div class="spinner"></div>
+    <div class="loading-txt">Cargando territorios...</div>
+  </div>
+
+  <!-- Error toast -->
+  <div id="map-error"></div>
+
+  <!-- Leyenda -->
+  <div class="map-legend">
+    <div class="legend-row"><div class="legend-dot" style="background:#378ADD;"></div>Grupo 1</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#EF9F27;"></div>Grupo 2</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#97C459;"></div>Grupo 3</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#D85A30;"></div>Grupo 4</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#7F77DD;"></div>Congregación</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────
+//  CONFIGURACIÓN
+// ─────────────────────────────────────────────────────────
+
+// URL del KML de Google My Maps (se lee directo desde ahí)
+// Para actualizar: editá en Google My Maps y acá no cambia nada.
+const KML_URL = 'https://www.google.com/maps/d/kml?forcekml=1&mid=1v8ordD3uZ3o3cyGAMAGwY7h1wZSxDYYg';
+
+// URL del Apps Script para cargar datos de territorios (último uso, conductor, etc.)
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqfcGLySbIx6I2902w6mdZKSLAPk1-gZirJmY7A4Ua0Vy3bbYtxrwotyLsSMiCrNy1/exec';
+
+// Colores por grupo  →  el nombre de la CAPA en Google My Maps debe contener
+// "Grupo 1", "Grupo 2", etc. o "Congregación"
+// Si el nombre no matchea, cae en gris (#888)
+const GRUPO_COLORS = {
+  '1': { fill: '#378ADD', border: '#1A5FA5', bg: 'rgba(55,138,221,0.22)'  },
+  '2': { fill: '#EF9F27', border: '#B87200', bg: 'rgba(239,159,39,0.22)'  },
+  '3': { fill: '#97C459', border: '#3B6D11', bg: 'rgba(151,196,89,0.22)'  },
+  '4': { fill: '#D85A30', border: '#8B2E0A', bg: 'rgba(216,90,48,0.22)'   },
+  'C': { fill: '#7F77DD', border: '#4A44A5', bg: 'rgba(127,119,221,0.22)' },
+};
+
+// Centro del mapa: Santa Rosa, La Pampa
+const MAP_CENTER = [-36.617, -64.290];
+const MAP_ZOOM   = 14;
+
+// ─────────────────────────────────────────────────────────
+//  ESTADO
+// ─────────────────────────────────────────────────────────
+let map;
+let allLayers      = [];   // { layer, group, numero }
+let territoriosInfo = {};  // datos del Sheet: { '12': { lastFin, conductor, enProgreso }, ... }
+let activeFilter   = 'all';
+
+// ─────────────────────────────────────────────────────────
+//  INICIALIZAR MAPA
+// ─────────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', {
+    center: MAP_CENTER,
+    zoom: MAP_ZOOM,
+    zoomControl: true,
+    attributionControl: false,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Cargar datos en paralelo
+  Promise.all([
+    loadTerritoriosInfo(),
+    loadKML(),
+  ]).then(() => {
+    document.getElementById('map-loading').style.display = 'none';
+  }).catch(err => {
+    document.getElementById('map-loading').style.display = 'none';
+    // Si el KML no cargó, mostramos error pero el mapa sigue funcionando
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+//  CARGAR INFO DE TERRITORIOS (último uso, conductor, etc.)
+// ─────────────────────────────────────────────────────────
+async function loadTerritoriosInfo() {
+  try {
+    // Cargar todos los grupos en paralelo
+    const grupos = ['1','2','3','4','C'];
+    const resultados = await Promise.all(
+      grupos.map(g =>
+        fetch(SCRIPT_URL + '?action=getLastDates&grupo=' + encodeURIComponent(g))
+          .then(r => r.text())
+          .then(t => ({ grupo: g, data: JSON.parse(t) }))
+          .catch(() => ({ grupo: g, data: {} }))
+      )
+    );
+    resultados.forEach(({ data }) => {
+      Object.keys(data).forEach(terr => {
+        const d = data[terr];
+        if (!territoriosInfo[terr]) territoriosInfo[terr] = {};
+        // Guardar el más reciente si ya existe
+        territoriosInfo[terr] = {
+          lastFin:    d.lastFin    || territoriosInfo[terr].lastFin,
+          lastIni:    d.lastIni    || territoriosInfo[terr].lastIni,
+          enProgreso: d.enProgreso || territoriosInfo[terr].enProgreso,
+          conductor:  d.conductor  || territoriosInfo[terr].conductor,
+        };
+      });
+    });
+  } catch(e) {
+    // Silencioso — el mapa funciona igual, solo sin datos de fechas
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//  CARGAR KML
+// ─────────────────────────────────────────────────────────
+async function loadKML() {
+  // Usamos un proxy CORS para Google My Maps
+  // El KML de Google My Maps no permite fetch directo por CORS,
+  // así que usamos allorigins.win como proxy
+  const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(KML_URL);
+
+  let kmlText;
+  try {
+    const resp = await fetch(proxyUrl);
+    const json = await resp.json();
+    kmlText = json.contents;
+  } catch(e) {
+    showError('No se pudo cargar el mapa. Verificá la conexión.');
+    // Cargar territorios de ejemplo para mostrar algo
+    loadEjemplo();
+    return;
+  }
+
+  if (!kmlText) { showError('KML vacío.'); loadEjemplo(); return; }
+
+  parseAndRenderKML(kmlText);
+}
+
+// ─────────────────────────────────────────────────────────
+//  PARSEAR KML
+// ─────────────────────────────────────────────────────────
+function parseAndRenderKML(kmlText) {
+  const parser = new DOMParser();
+  const kml = parser.parseFromString(kmlText, 'text/xml');
+
+  // Manejar NetworkLink (como el tuyo que apunta a otro KML)
+  const networkLinks = kml.querySelectorAll('NetworkLink');
+  if (networkLinks.length > 0) {
+    // El KML que exportaste es un NetworkLink — ya lo estamos resolviendo
+    // con la URL directa en KML_URL, así que si llegamos acá es el contenido real
+  }
+
+  // Buscar Folders/capas → cada Folder es un grupo
+  const folders = kml.querySelectorAll('Folder, Document');
+  let processedSomething = false;
+
+  folders.forEach(folder => {
+    const folderName = folder.querySelector(':scope > name')?.textContent?.trim() || '';
+    const grupo = detectarGrupo(folderName);
+
+    // Placemarks dentro de este folder
+    folder.querySelectorAll(':scope > Placemark').forEach(pm => {
+      procesarPlacemark(pm, grupo);
+      processedSomething = true;
+    });
+  });
+
+  // También procesar Placemarks raíz
+  kml.querySelectorAll('Document > Placemark').forEach(pm => {
+    const grupo = detectarGrupoDeStyle(pm);
+    procesarPlacemark(pm, grupo);
+    processedSomething = true;
+  });
+
+  if (!processedSomething) {
+    showError('No se encontraron territorios en el mapa.');
+    loadEjemplo();
+  } else {
+    fitAllLayers();
+  }
+}
+
+function detectarGrupo(nombre) {
+  if (!nombre) return null;
+  const n = nombre.toLowerCase();
+  if (n.includes('grupo 1') || n.includes('group 1') || n === '1') return '1';
+  if (n.includes('grupo 2') || n.includes('group 2') || n === '2') return '2';
+  if (n.includes('grupo 3') || n.includes('group 3') || n === '3') return '3';
+  if (n.includes('grupo 4') || n.includes('group 4') || n === '4') return '4';
+  if (n.includes('congreg') || n === 'c') return 'C';
+  return null;
+}
+
+function detectarGrupoDeStyle(pm) {
+  // Intentar detectar grupo por color del estilo
+  const styleUrl = pm.querySelector('styleUrl')?.textContent || '';
+  const fillColor = pm.querySelector('PolyStyle color')?.textContent || '';
+  // Fallback: sin grupo conocido
+  return null;
+}
+
+function procesarPlacemark(pm, grupo) {
+  const nombre = pm.querySelector('name')?.textContent?.trim() || '';
+  // El número de territorio es el nombre (o parte de él)
+  const numero = nombre.replace(/[^0-9]/g, '') || nombre;
+
+  // Detectar grupo del nombre si no viene del folder
+  const grupoFinal = grupo || detectarGrupo(nombre) || detectarGrupoPorNumero(numero);
+  const colors = GRUPO_COLORS[grupoFinal] || { fill: '#888', border: '#555', bg: 'rgba(136,136,136,0.2)' };
+
+  // Polígono
+  const coordsEl = pm.querySelector('Polygon coordinates, LinearRing coordinates, coordinates');
+  if (coordsEl) {
+    const latlngs = parseCoordsKML(coordsEl.textContent);
+    if (latlngs.length > 2) {
+      const polygon = L.polygon(latlngs, {
+        color:       colors.border,
+        fillColor:   colors.fill,
+        fillOpacity: 0.25,
+        weight:      2,
+        opacity:     0.9,
+      });
+
+      // Label en el centro
+      const center = polygon.getBounds().getCenter();
+      const label = L.divIcon({
+        className: '',
+        html: `<div style="
+          background:rgba(30,30,30,0.85);
+          border:1.5px solid ${colors.fill};
+          color:${colors.fill};
+          border-radius:8px;
+          padding:2px 6px;
+          font-size:12px;
+          font-weight:600;
+          font-family:system-ui,sans-serif;
+          white-space:nowrap;
+          backdrop-filter:blur(4px);
+        ">${numero}</div>`,
+        iconAnchor: [0, 0],
+      });
+      const labelMarker = L.marker(center, { icon: label, interactive: false });
+
+      // Popup al tocar
+      polygon.on('click', () => openTerrPopup(polygon, numero, grupoFinal, nombre));
+      polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.45, weight: 2.5 }));
+      polygon.on('mouseout',  () => {
+        if (activeFilter === 'all' || activeFilter === grupoFinal)
+          polygon.setStyle({ fillOpacity: 0.25, weight: 2 });
+      });
+
+      allLayers.push({ polygon, label: labelMarker, group: grupoFinal, numero });
+      polygon.addTo(map);
+      labelMarker.addTo(map);
+    }
+  }
+
+  // Punto (si es un marcador solo)
+  const pointEl = pm.querySelector('Point coordinates');
+  if (pointEl && !coordsEl) {
+    const parts = pointEl.textContent.trim().split(',');
+    if (parts.length >= 2) {
+      const lat = parseFloat(parts[1]);
+      const lng = parseFloat(parts[0]);
+      const marker = L.circleMarker([lat, lng], {
+        radius: 10,
+        color: colors.border,
+        fillColor: colors.fill,
+        fillOpacity: 0.8,
+        weight: 2,
+      });
+      marker.on('click', () => openTerrPopup(marker, numero, grupoFinal, nombre));
+      allLayers.push({ polygon: marker, label: null, group: grupoFinal, numero });
+      marker.addTo(map);
+    }
+  }
+}
+
+function detectarGrupoPorNumero(num) {
+  // Si conocés qué números pertenecen a cada grupo, podés hardcodearlos acá
+  // Por ahora devuelve null (sin grupo conocido)
+  return null;
+}
+
+function parseCoordsKML(text) {
+  return text.trim().split(/\s+/)
+    .map(c => {
+      const parts = c.split(',');
+      if (parts.length < 2) return null;
+      return [parseFloat(parts[1]), parseFloat(parts[0])];
+    })
+    .filter(c => c && !isNaN(c[0]) && !isNaN(c[1]));
+}
+
+// ─────────────────────────────────────────────────────────
+//  POPUP DE TERRITORIO
+// ─────────────────────────────────────────────────────────
+function openTerrPopup(layer, numero, grupo, nombreOriginal) {
+  const colors = GRUPO_COLORS[grupo] || { fill: '#888' };
+  const info = territoriosInfo[numero] || {};
+  const grupoLabel = grupo === 'C' ? 'Congregación' : grupo ? 'Grupo ' + grupo : 'Sin grupo';
+
+  const lastDate = info.lastFin || info.lastIni;
+  const dias = lastDate ? daysSince(lastDate) : null;
+  const conductor = info.conductor || '—';
+
+  let diasHtml = '—';
+  if (dias !== null) {
+    const color = dias > 90 ? '#F09595' : dias > 45 ? '#FAC775' : '#C0DD97';
+    diasHtml = `<span style="color:${color};font-weight:600;">${dias}d atrás</span>`;
+  }
+
+  let badge = '';
+  if (info.enProgreso) {
+    badge = `<div class="terr-popup-badge" style="background:#2e1e00;border:0.5px solid #EF9F27;color:#FAC775;">En progreso</div>`;
+  }
+
+  const content = `
+    <div class="terr-popup">
+      <div class="terr-popup-num" style="color:${colors.fill};">${numero}</div>
+      <div class="terr-popup-group" style="color:${colors.fill};">${grupoLabel}</div>
+      <div class="terr-popup-row">
+        <span class="terr-popup-label">Último uso</span>
+        <span class="terr-popup-val">${lastDate ? formatShortFull(lastDate) : '—'}</span>
+      </div>
+      <div class="terr-popup-row">
+        <span class="terr-popup-label">Hace</span>
+        <span class="terr-popup-val">${diasHtml}</span>
+      </div>
+      <div class="terr-popup-row">
+        <span class="terr-popup-label">Conductor</span>
+        <span class="terr-popup-val">${conductor}</span>
+      </div>
+      ${badge}
+    </div>`;
+
+  const bounds = layer.getBounds ? layer.getBounds() : null;
+  const center = bounds ? bounds.getCenter() : layer.getLatLng();
+  L.popup({ maxWidth: 260 }).setLatLng(center).setContent(content).openOn(map);
+}
+
+// ─────────────────────────────────────────────────────────
+//  FILTROS
+// ─────────────────────────────────────────────────────────
+function filterGroup(group) {
+  activeFilter = group;
+
+  // Actualizar botones
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'inactive'));
+
+  if (group === 'all') {
+    document.getElementById('filter-all').classList.add('active');
+    // Mostrar todo
+    allLayers.forEach(({ polygon, label }) => {
+      if (!map.hasLayer(polygon)) polygon.addTo(map);
+      if (label && !map.hasLayer(label)) label.addTo(map);
+      polygon.setStyle && polygon.setStyle({ fillOpacity: 0.25, weight: 2 });
+    });
+  } else {
+    document.getElementById('filter-' + group)?.classList.add('active');
+    allLayers.forEach(({ polygon, label, group: g }) => {
+      if (g === group) {
+        if (!map.hasLayer(polygon)) polygon.addTo(map);
+        if (label && !map.hasLayer(label)) label.addTo(map);
+        polygon.setStyle && polygon.setStyle({ fillOpacity: 0.35, weight: 2.5 });
+      } else {
+        if (map.hasLayer(polygon)) map.removeLayer(polygon);
+        if (label && map.hasLayer(label)) map.removeLayer(label);
+      }
+    });
+    // Ajustar vista al grupo filtrado
+    const visibles = allLayers.filter(l => l.group === group && l.polygon.getBounds);
+    if (visibles.length > 0) {
+      const group_bounds = L.latLngBounds(visibles.map(v => v.polygon.getBounds()));
+      map.flyToBounds(group_bounds, { padding: [30, 30], maxZoom: 16, duration: 0.6 });
+    }
+  }
+
+  map.closePopup();
+}
+
+// ─────────────────────────────────────────────────────────
+//  UTILIDADES
+// ─────────────────────────────────────────────────────────
+function fitAllLayers() {
+  const withBounds = allLayers.filter(l => l.polygon.getBounds);
+  if (withBounds.length === 0) return;
+  const bounds = L.latLngBounds(withBounds.map(l => l.polygon.getBounds()));
+  map.flyToBounds(bounds, { padding: [20, 20], maxZoom: 15, duration: 0.8 });
+}
+
+function formatShortFull(ds) {
+  if (!ds) return '—';
+  // Acepta dd/mm/yy o yyyy-mm-dd
+  let d;
+  if (ds.includes('-') && ds.length >= 8) {
+    d = new Date(ds + 'T00:00:00');
+  } else if (ds.includes('/')) {
+    const p = ds.split('/');
+    const y = p[2]?.length === 2 ? '20' + p[2] : p[2];
+    d = new Date(`${y}-${p[1]}-${p[0]}T00:00:00`);
+  } else {
+    return ds;
+  }
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+}
+
+function daysSince(ds) {
+  if (!ds) return null;
+  let d;
+  if (ds.includes('-')) d = new Date(ds + 'T00:00:00');
+  else if (ds.includes('/')) {
+    const p = ds.split('/');
+    const y = p[2]?.length === 2 ? '20' + p[2] : p[2];
+    d = new Date(`${y}-${p[1]}-${p[0]}T00:00:00`);
+  }
+  if (!d || isNaN(d)) return null;
+  return Math.floor((new Date() - d) / 86400000);
+}
+
+function showError(msg) {
+  const el = document.getElementById('map-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ─────────────────────────────────────────────────────────
+//  FALLBACK: territorios de ejemplo (si el KML no carga)
+//  Coordenadas aproximadas de Santa Rosa, La Pampa
+// ─────────────────────────────────────────────────────────
+function loadEjemplo() {
+  const ejemplos = [
+    { numero: '11', grupo: '1', coords: [[-36.610,-64.302],[-36.610,-64.290],[-36.618,-64.290],[-36.618,-64.302]] },
+    { numero: '12', grupo: '1', coords: [[-36.618,-64.302],[-36.618,-64.290],[-36.626,-64.290],[-36.626,-64.302]] },
+    { numero: '21', grupo: '2', coords: [[-36.610,-64.290],[-36.610,-64.278],[-36.618,-64.278],[-36.618,-64.290]] },
+    { numero: '22', grupo: '2', coords: [[-36.618,-64.290],[-36.618,-64.278],[-36.626,-64.278],[-36.626,-64.290]] },
+    { numero: '31', grupo: '3', coords: [[-36.626,-64.302],[-36.626,-64.290],[-36.634,-64.290],[-36.634,-64.302]] },
+    { numero: '32', grupo: '3', coords: [[-36.626,-64.290],[-36.626,-64.278],[-36.634,-64.278],[-36.634,-64.290]] },
+    { numero: '41', grupo: '4', coords: [[-36.610,-64.314],[-36.610,-64.302],[-36.618,-64.302],[-36.618,-64.314]] },
+    { numero: '51', grupo: 'C', coords: [[-36.618,-64.314],[-36.618,-64.302],[-36.626,-64.302],[-36.626,-64.314]] },
+  ];
+  ejemplos.forEach(({ numero, grupo, coords }) => {
+    const colors = GRUPO_COLORS[grupo];
+    const polygon = L.polygon(coords, {
+      color: colors.border, fillColor: colors.fill, fillOpacity: 0.25, weight: 2,
+    });
+    const center = polygon.getBounds().getCenter();
+    const label = L.divIcon({
+      className: '',
+      html: `<div style="background:rgba(30,30,30,0.85);border:1.5px solid ${colors.fill};color:${colors.fill};border-radius:8px;padding:2px 6px;font-size:12px;font-weight:600;font-family:system-ui,sans-serif;">${numero}</div>`,
+      iconAnchor: [0, 0],
+    });
+    const labelMarker = L.marker(center, { icon: label, interactive: false });
+    polygon.on('click', () => openTerrPopup(polygon, numero, grupo, numero));
+    polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.45 }));
+    polygon.on('mouseout', () => polygon.setStyle({ fillOpacity: 0.25 }));
+    allLayers.push({ polygon, label: labelMarker, group: grupo, numero });
+    polygon.addTo(map);
+    labelMarker.addTo(map);
+  });
+  fitAllLayers();
+}
+
+// ─── Arrancar ───
+initMap();
+</script>
+</body>
+</html>

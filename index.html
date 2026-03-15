@@ -3,1598 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planificador de Salidas</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; padding: 1rem; background: #1e1e1e; color: #eee; min-height: 100vh; }
-
-.step-bar { display: flex; gap: 6px; margin-bottom: 20px; }
-.step { flex: 1; height: 3px; border-radius: 2px; background: #444; }
-.step.active { background: #185FA5; }
-.step.done { background: #1D9E75; }
-
-.section-title { font-size: 22px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
-.section-sub { font-size: 14px; color: #888; margin-bottom: 16px; text-align: center; }
-
-.terr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 18px; }
-.terr-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 14px 8px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
-.terr-btn:hover { border-color: #666; }
-.terr-btn.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
-.terr-btn.en-progreso { border: 1.5px solid #EF9F27; background: #2e1e00; }
-.terr-btn.en-progreso.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
-.terr-num { font-size: 26px; font-weight: 500; color: #eee; }
-.terr-btn.selected .terr-num { color: #85B7EB; }
-.terr-date { font-size: 11px; color: #888; margin-top: 5px; }
-.terr-days { font-size: 14px; font-weight: 600; margin-top: 5px; }
-.days-old { color: #F09595; }
-.days-mid { color: #FAC775; }
-.days-new { color: #C0DD97; }
-.badge-progreso { font-size: 10px; font-weight: 500; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; margin-top: 4px; display: inline-block; }
-
-.step1-footer { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
-.step1-footer span { font-size: 13px; color: #888; }
-
-.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 14px; }
-.spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #1D9E75; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-txt { font-size: 14px; color: #888; }
-.error-wrap { background: #2e1a1a; border: 0.5px solid #A32D2D; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 16px; font-size: 13px; color: #F09595; }
-
-.salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
-.salida-card.card-mar { border-left: 3px solid #378ADD; }
-.salida-card.card-thu { border-left: 3px solid #EF9F27; }
-.salida-card.card-fri { border-left: 3px solid #639922; }
-.salida-card.tel-card { border-left: 3px solid #1D9E75; background: #0d2420; }
-.salida-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.salida-label { font-size: 16px; font-weight: 500; color: #eee; }
-.phone-badge { font-size: 13px; background: #0a2e24; color: #5DCAA5; padding: 3px 10px; border-radius: 20px; border: 0.5px solid #1D9E75; }
-.dia-label { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
-.dia-martes { color: #85B7EB; }
-.dia-jueves { color: #FAC775; }
-.dia-viernes { color: #C0DD97; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-select, input[type=text], input[type=date], input[type=time] { width: 100%; font-size: 13px; padding: 6px 8px; border: 0.5px solid #555; border-radius: 8px; background: #1e1e1e; color: #eee; }
-select option { background: #2a2a2a; color: #eee; }
-label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
-
-.btn-primary { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; }
-.btn-primary:hover { background: #0C447C; }
-.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-.btn-secondary { padding: 10px 16px; font-size: 14px; border: 0.5px solid #555; border-radius: 8px; background: #2a2a2a; color: #ccc; cursor: pointer; }
-.btn-secondary:hover { background: #333; }
-.btn-autofill { font-size: 14px; padding: 8px 16px; background: #1a2e0a; color: #97C459; border: 0.5px solid #3B6D11; border-radius: 8px; cursor: pointer; }
-.btn-clear { font-size: 14px; padding: 8px 16px; background: #2e1a1a; color: #F09595; border: 0.5px solid #A32D2D; border-radius: 8px; cursor: pointer; }
-.btn-save { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer; }
-.btn-save:hover { background: #0F6E56; }
-
-/* ── Modo selector ── */
-.modo-wrap { min-height: calc(100vh - 4rem); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 2rem 1rem; }
-.modo-titulo { font-size: 48px; font-weight: 500; color: #ccc; margin-bottom: 20px; text-align: center; }
-.grupo-color-1 { color: #378ADD; }
-.grupo-color-2 { color: #EF9F27; }
-.grupo-color-3 { color: #97C459; }
-.grupo-color-4 { color: #D85A30; }
-.grupo-color-C { color: #7F77DD; }
-.modo-card { width: 100%; max-width: 320px; background: #2a2a2a; border: 1.5px solid #444; border-radius: 14px; padding: 1.25rem 1.5rem; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
-.modo-card:hover { transform: scale(1.02); }
-.modo-card:active { transform: scale(0.98); }
-.modo-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.modo-icon-plan { background: rgba(55,138,221,0.15); }
-.modo-icon-reg { background: rgba(29,158,117,0.15); }
-.modo-card-title { font-size: 16px; font-weight: 500; color: #eee; margin-bottom: 3px; }
-.modo-card-sub { font-size: 13px; color: #888; }
-
-/* ── Registro de territorios ── */
-.reg-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
-.reg-card.completado { border-left: 3px solid #1D9E75; opacity: 0.6; }
-.reg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.reg-terr { font-size: 18px; font-weight: 500; color: #eee; }
-.reg-ini { font-size: 12px; color: #888; }
-.toggle-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
-.toggle-btn { flex: 1; padding: 7px; font-size: 13px; border-radius: 8px; border: 0.5px solid #555; background: #1e1e1e; color: #aaa; cursor: pointer; }
-.toggle-btn.active-comp { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
-.toggle-btn.active-prog { background: #2e1e00; border-color: #EF9F27; color: #FAC775; }
-.reg-empty { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
-.btn-guardar { width: 100%; padding: 12px; font-size: 15px; font-weight: 500; background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 8px; }
-.btn-guardar:hover { background: #0F6E56; }
-.btn-guardar:disabled { opacity: 0.35; cursor: not-allowed; }
-.save-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 20px; }
-/* ── Animaciones de transición ── */
-.view { animation: fadeIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.btn-registrar-prog { width: 100%; padding: 11px; font-size: 14px; font-weight: 500; background: #2e1e00; color: #FAC775; border: 1.5px solid #EF9F27; border-radius: 8px; cursor: pointer; margin-top: 8px; }
-.btn-registrar-prog:hover { background: #3a2500; }
-.btn-registrar-prog:disabled { opacity: 0.4; cursor: not-allowed; }
-.reg-prog-status { text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; }
-/* ── Historial de salidas ── */
-.hist-registro-group { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
-.hist-registro-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.hist-registro-fecha { font-size: 13px; font-weight: 500; color: #97C459; }
-.hist-registro-del { font-size: 11px; padding: 3px 8px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
-.hist-registro-del:hover { background: #3a2020; }
-.hist-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid #333; }
-.hist-row:last-child { border-bottom: none; }
-.hist-row-terr { font-size: 14px; font-weight: 500; color: #eee; min-width: 60px; }
-.hist-row-dia { font-size: 12px; color: #FAC775; min-width: 70px; }
-.hist-row-cond { font-size: 12px; color: #888; flex: 1; }
-.hist-row-hora { font-size: 12px; color: #aaa; min-width: 40px; text-align: right; }
-.hist-row-tel { color: #5DCAA5; }
-
-
-/* ── Planificador flexible ── */
-.plan-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.plan-titulo { font-size: 20px; font-weight: 500; color: #eee; }
-.plan-btns { display: flex; gap: 8px; }
-.btn-add-salida { font-size: 13px; padding: 7px 12px; background: #1a2e0a; color: #97C459; border: 0.5px solid #3B6D11; border-radius: 8px; cursor: pointer; }
-.btn-add-tel { font-size: 13px; padding: 7px 12px; background: #0a2e24; color: #5DCAA5; border: 0.5px solid #1D9E75; border-radius: 8px; cursor: pointer; }
-.salida-card-new { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; position: relative; }
-.salida-card-new.tipo-campo { border-left: 3px solid #378ADD; }
-.salida-card-new.tipo-tel { border-left: 3px solid #1D9E75; background: #0d2420; }
-.salida-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.salida-card-label { font-size: 15px; font-weight: 500; color: #eee; }
-.salida-remove-btn { font-size: 13px; padding: 3px 10px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
-.salida-remove-btn:hover { background: #3a2020; }
-.plan-footer { display: flex; gap: 8px; margin-top: 8px; }
-.salida-count { font-size: 12px; color: #888; text-align: center; margin-bottom: 10px; }
-
-
-.cover { min-height: calc(100vh - 2rem); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; text-align: center; }
-.cover-icon { width: 80px; height: 80px; background: rgba(59,109,17,0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
-.cover-title { font-size: 62px; font-weight: 500; color: #97C459; line-height: 1.1; margin-bottom: 10px; }
-.cover-subtitle { font-size: 22px; color: #639922; letter-spacing: 0.04em; margin-bottom: 52px; }
-.grupo-label { font-size: 20px; font-weight: 500; color: #ccc; margin-bottom: 16px; }
-.grupo-grid { display: flex; gap: 12px; margin-bottom: 36px; }
-.grupo-btn { width: 72px; height: 72px; border-radius: 14px; border: 1.5px solid #444; background: #2a2a2a; font-size: 26px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s; }
-.grupo-btn:hover { transform: scale(1.08); }
-.grupo-btn:active { transform: scale(0.96); }
-.grupo-btn.selected { border-width: 2px; }
-.btn-start { padding: 14px 48px; font-size: 16px; font-weight: 500; background: #3B6D11; color: #fff; border: none; border-radius: 12px; cursor: pointer; opacity: 0.3; pointer-events: none; letter-spacing: 0.02em; }
-.btn-start.enabled { opacity: 1; pointer-events: auto; }
-.btn-start.enabled:hover { background: #27500A; }
-/* ── Panel de info del grupo ── */
-.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-bottom: 16px; }
-.info-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; }
-.info-btn:hover { border-color: #666; }
-.info-btn.estado-normal { border-color: #444; }
-.info-btn.estado-peligroso { border: 1.5px solid #EF9F27; background: #2e1e00; }
-.info-btn.estado-no_predica { border: 1.5px solid #A32D2D; background: #2e1a1a; }
-.info-btn-num { font-size: 20px; font-weight: 500; color: #eee; }
-.info-btn-date { font-size: 10px; color: #888; margin-top: 3px; }
-.info-btn-estado { font-size: 10px; font-weight: 500; margin-top: 3px; }
-.info-btn.estado-peligroso .info-btn-estado { color: #FAC775; }
-.info-btn.estado-no_predica .info-btn-estado { color: #F09595; }
-.info-btn.estado-normal .info-btn-estado { color: #888; }
-.info-legend { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-.estado-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; box-sizing: border-box; }
-.estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
-.estado-modal-title { font-size: 26px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
-.estado-modal-sub { font-size: 13px; color: #888; margin-bottom: 16px; text-align: center; }
-.estado-opt { display: inline-flex; align-items: center; justify-content: center; width: calc(33% - 6px); padding: 9px 8px; font-size: 12px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: center; transition: transform 0.1s, opacity 0.1s; }
-.estado-opt:hover { transform: scale(1.01); opacity: 0.9; }
-.estado-opt:active { transform: scale(0.98); }
-.estado-opt.opt-normal { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
-.estado-opt.opt-normal:hover { background: #0f3d22; }
-.estado-opt.opt-peligroso { background: #2e1e00; border-color: #EF9F27; color: #FAC775; }
-.estado-opt.opt-peligroso:hover { background: #3a2500; }
-.estado-opt.opt-no_predica { background: #2e1a1a; border-color: #A32D2D; color: #F09595; }
-.estado-opt.opt-no_predica:hover { background: #3a2020; }
-.hist-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 14px; }
-.hist-table th { color: #888; font-weight: 500; padding: 8px 8px; text-align: left; border-bottom: 0.5px solid #444; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-.hist-table td { padding: 10px 8px; border-bottom: 0.5px solid #333; color: #eee; vertical-align: middle; }
-.hist-table tr:last-child td { border-bottom: none; }
-.hist-edit-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #555; border-radius: 6px; background: #1e1e1e; color: #aaa; cursor: pointer; margin-right: 4px; }
-.hist-edit-btn:hover { border-color: #888; color: #eee; }
-.hist-del-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
-.hist-del-btn:hover { background: #3a2020; }
-.btn-add-entry { width: 100%; padding: 10px; font-size: 13px; border: 1px dashed #555; border-radius: 8px; background: transparent; color: #888; cursor: pointer; margin-bottom: 14px; }
-.btn-add-entry:hover { border-color: #888; color: #eee; }
-.edit-row-form { background: #1e1e1e; border: 0.5px solid #555; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-.edit-row-title { font-size: 12px; color: #888; margin-bottom: 8px; }
-.modal-divider { border: none; border-top: 0.5px solid #444; margin: 16px 0; }
-.modal-section-title { font-size: 15px; font-weight: 500; color: #ccc; letter-spacing: 0.02em; margin-bottom: 12px; text-align: center; }
-.hist-en-prog { font-size: 10px; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; }
-
-
-
-
-.preview-header-wrap { margin-bottom: 20px; }
-.preview-tag { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
-.preview-title-line { font-size: 32px; font-weight: 500; line-height: 1.2; }
-.preview-sep { color: #555; margin: 0 8px; }
-.card-preview { background: #2a2a2a; border: 2px solid #444; border-radius: 16px; overflow: hidden; }
-.card-preview-header { padding: 14px 18px 12px; border-bottom: 0.5px solid #444; }
-.card-preview-top { font-size: 11px; font-weight: 500; color: #888; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 2px; }
-.card-preview-main { font-size: 17px; font-weight: 500; color: #eee; }
-table.preview { width: 100%; border-collapse: collapse; }
-table.preview th { background: #111; color: #fff; padding: 11px 10px; text-align: center; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; border-right: 0.5px solid rgba(255,255,255,0.08); }
-table.preview th:last-child { border-right: none; }
-table.preview td { padding: 10px 10px; text-align: center; border-bottom: 0.5px solid #3a3a3a; color: #eee; background: #2a2a2a; vertical-align: middle; }
-table.preview tr:last-child td { border-bottom: none; }
-table.preview tr:nth-child(odd) td { background: #242424; }
-table.preview tr.tel-row td { background: #0d2420; }
-table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
-.tel-terr { font-size: 14px; font-weight: 500; color: #5DCAA5; letter-spacing: 0.05em; text-transform: uppercase; }
-.dia-badge { display: inline-block; font-size: 14px; font-weight: 500; padding: 4px 12px; border-radius: 20px; margin-bottom: 3px; }
-.badge-mar { background: #0c2a45; color: #85B7EB; }
-.badge-jue { background: #2e1e00; color: #FAC775; }
-.badge-vie { background: #1a2e0a; color: #C0DD97; }
-.terr-num-big { font-size: 18px; font-weight: 500; color: #eee; }
-.fecha-num { font-size: 13px; color: #aaa; margin-top: 2px; }
-.cond-txt { font-size: 14px; font-weight: 500; color: #ddd; }
-.hora-txt { font-size: 15px; font-weight: 500; color: #eee; }
-
-/* ── PIN modal ── */
-.pin-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; box-sizing: border-box; }
-.pin-card { background: #2a2a2a; border: 2px solid #555; border-radius: 22px; padding: 2rem 1.5rem; width: 100%; max-width: 300px; text-align: center; }
-.pin-title { font-size: 24px; font-weight: 500; color: #eee; margin-bottom: 4px; }
-.pin-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
-.pin-dots { display: flex; gap: 16px; justify-content: center; margin-bottom: 28px; }
-.pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; background: transparent; transition: background 0.15s, border-color 0.15s, transform 0.1s; }
-.pin-dot.filled { transform: scale(1.1); }
-.pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-.pin-btn { padding: 18px; font-size: 24px; font-weight: 500; border-radius: 14px; border: 0.5px solid #444; background: #1e1e1e; color: #eee; cursor: pointer; transition: background 0.1s, transform 0.1s; }
-.pin-btn:hover { background: #333; }
-.pin-btn:active { transform: scale(0.92); background: #444; }
-.pin-btn.pin-del { font-size: 18px; color: #F09595; border-color: #A32D2D; background: #2e1a1a; }
-.pin-btn.pin-del:hover { background: #3a2020; }
-.pin-error { font-size: 13px; color: #F09595; min-height: 20px; margin-top: 4px; }
-.pin-cancel { font-size: 13px; color: #888; background: none; border: none; cursor: pointer; margin-top: 10px; text-decoration: underline; }
-
-/* ── Botón home ── */
-.btn-home { position: fixed; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 12px; border: 0.5px solid #555; background: #2a2a2a; color: #aaa; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: background 0.15s, color 0.15s; }
-.btn-home:hover { background: #333; color: #eee; }
-.btn-home.visible { display: flex; }
-
-/* ── Encabezado tabla final por grupo ── */
-.preview-header-wrap { margin-bottom: 16px; }
-.preview-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
-.preview-title-line { font-size: 26px; font-weight: 500; line-height: 1.2; }
-.preview-sep { color: #555; margin: 0 6px; }
-  
-</style>
+<title>Territory App</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
 <button class="btn-home" id="btn-home" onclick="goToModo()" title="Inicio">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
+
 <div class="app">
 
-<div class="step-bar" id="step-bar" style="display:none;">
-  <div class="step" id="s1"></div>
-  <div class="step" id="s2"></div>
-  <div class="step" id="s3"></div>
-</div>
-
-<!-- PASO 0: Carátula -->
-<div id="view-cover" class="view">
-  <div class="cover">
-    <div class="cover-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-        <path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6M12 9v6" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="cover-title">Territory<br>App</div>
-    <div class="cover-subtitle">Congregación Sur</div>
-    <div class="grupo-label">¿Con qué grupo trabajás?</div>
-    <div class="grupo-grid">
-      <button class="grupo-btn" data-grupo="1" onclick="selectGrupo(this,1)">1</button>
-      <button class="grupo-btn" data-grupo="2" onclick="selectGrupo(this,2)">2</button>
-      <button class="grupo-btn" data-grupo="3" onclick="selectGrupo(this,3)">3</button>
-      <button class="grupo-btn" data-grupo="4" onclick="selectGrupo(this,4)">4</button>
-      <button class="grupo-btn" data-grupo="C" onclick="selectGrupo(this,'C')" style="font-size:16px;width:88px;">Congr.</button>
-    </div>
-    <button class="btn-start" id="btn-start" onclick="openPin()">Empezar →</button>
+  <!-- Barra de pasos -->
+  <div class="step-bar" id="step-bar" style="display:none;">
+    <div class="step" id="s1"></div>
+    <div class="step" id="s2"></div>
+    <div class="step" id="s3"></div>
   </div>
-</div>
 
-
-<!-- PASO 0b: Elegir modo -->
-<div id="view-modo" class="view" style="display:none;">
-  <div class="modo-wrap">
-    <div class="modo-titulo">Grupo <span id="modo-grupo-label" style="font-size:inherit;">?</span></div>
-    <button class="modo-card modo-planificar" onclick="goToStep1()">
-      <div class="modo-icon modo-icon-plan">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <!-- ── COVER ── -->
+  <div id="view-cover" class="view">
+    <div class="cover">
+      <div class="cover-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+          <path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6M12 9v6" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
       </div>
-      <div>
-        <div class="modo-card-title">Planificar salidas</div>
-        <div class="modo-card-sub">Armar las salidas de esta semana</div>
+      <div class="cover-title">Territory<br>App</div>
+      <div class="cover-subtitle">Congregación Sur</div>
+      <div class="grupo-label">¿Con qué grupo trabajás?</div>
+      <div class="grupo-grid">
+        <button class="grupo-btn" data-grupo="1" onclick="selectGrupo(this,1)">1</button>
+        <button class="grupo-btn" data-grupo="2" onclick="selectGrupo(this,2)">2</button>
+        <button class="grupo-btn" data-grupo="3" onclick="selectGrupo(this,3)">3</button>
+        <button class="grupo-btn" data-grupo="4" onclick="selectGrupo(this,4)">4</button>
+        <button class="grupo-btn" data-grupo="C" onclick="selectGrupo(this,'C')" style="font-size:16px;width:88px;">Congr.</button>
       </div>
-    </button>
-    <button class="modo-card modo-registrar" onclick="goToRegistrar()">
-      <div class="modo-icon modo-icon-reg">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M7 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-2M9 3h6" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div>
-        <div class="modo-card-title">Registrar territorios</div>
-        <div class="modo-card-sub">Cerrar territorios de la semana</div>
-      </div>
-    </button>
-    <button class="modo-card" onclick="goToInfoGrupo()">
-      <div class="modo-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </div>
-      <div>
-        <div class="modo-card-title">Ver mi grupo</div>
-        <div class="modo-card-sub">Territorios y configuración</div>
-      </div>
-    </button>
-    <button class="modo-card" onclick="goToHistorial()" style="max-width:320px;width:100%;">
-      <div class="modo-icon" style="background:rgba(100,100,100,0.15);">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </div>
-      <div>
-        <div class="modo-card-title" style="color:#ccc;">Ver historial</div>
-        <div class="modo-card-sub">Salidas de semanas anteriores</div>
-      </div>
-    </button>
-    <button class="btn-secondary" onclick="cerrarSesion()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
-  </div>
-</div>
-
-<!-- REGISTRO: territorios en progreso -->
-<div id="view-registrar" class="view" style="display:none;">
-  <p class="section-title">Registrar territorios</p>
-  <p class="section-sub">Grupo <span id="reg-grupo-label">?</span> &mdash; marc&#225; los que se completaron</p>
-  <div id="reg-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
-  <div id="reg-error" style="display:none;"></div>
-  <div id="reg-container" style="display:none;"></div>
-  <div id="reg-footer" style="display:none;">
-    <button class="btn-guardar" id="btn-guardar" onclick="guardarRegistros()">Guardar cambios</button>
-    <div class="save-status" id="save-status"></div>
-    <div style="margin-top:10px;">
-      <button class="btn-secondary" style="width:100%;" onclick="goToModo()">&#8592; Volver</button>
+      <button class="btn-start" id="btn-start" onclick="openPin()">Empezar →</button>
     </div>
   </div>
-</div>
 
-
-<!-- INFO GRUPO -->
-<div id="view-info" class="view" style="display:none;">
-  <p class="section-title" id="info-titulo" style="font-size:36px;margin-bottom:4px;">Grupo ?</p>
-  <p class="section-sub">Tocá un territorio para ver su info o cambiar su estado</p>
-  <div id="info-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
-  <div id="info-error" style="display:none;"></div>
-  <div id="info-content" style="display:none;">
-    <div class="info-legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#444;"></div>Normal</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#EF9F27;"></div>Peligroso</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#A32D2D;"></div>No se predica</div>
+  <!-- ── ELEGIR MODO ── -->
+  <div id="view-modo" class="view" style="display:none;">
+    <div class="modo-wrap">
+      <div class="modo-titulo">Grupo <span id="modo-grupo-label">?</span></div>
+      <button class="modo-card modo-planificar" onclick="goToStep1()">
+        <div class="modo-icon modo-icon-plan">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="modo-card-title">Planificar salidas</div>
+          <div class="modo-card-sub">Armar las salidas de esta semana</div>
+        </div>
+      </button>
+      <button class="modo-card modo-registrar" onclick="goToRegistrar()">
+        <div class="modo-icon modo-icon-reg">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M7 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-2M9 3h6" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="modo-card-title">Registrar territorios</div>
+          <div class="modo-card-sub">Cerrar territorios de la semana</div>
+        </div>
+      </button>
+      <button class="modo-card" onclick="goToInfoGrupo()">
+        <div class="modo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="modo-card-title">Ver mi grupo</div>
+          <div class="modo-card-sub">Territorios y configuración</div>
+        </div>
+      </button>
+      <button class="modo-card" onclick="goToHistorial()" style="max-width:320px;width:100%;">
+        <div class="modo-icon" style="background:rgba(100,100,100,0.15);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="modo-card-title" style="color:#ccc;">Ver historial</div>
+          <div class="modo-card-sub">Salidas de semanas anteriores</div>
+        </div>
+      </button>
+      <button class="modo-card" onclick="window.location.href='mapa.html'" style="max-width:320px;width:100%;">
+        <div class="modo-icon" style="background:rgba(29,158,117,0.15);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="modo-card-title" style="color:#ccc;">Ver mapa</div>
+          <div class="modo-card-sub">Territorios en el mapa</div>
+        </div>
+      </button>
+      <button class="btn-secondary" onclick="cerrarSesion()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
     </div>
-    <div class="info-grid" id="info-grid"></div>
   </div>
-  <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">&#8592; Volver</button>
-</div>
 
-<!-- MODAL TERRITORIO -->
-<div id="estado-modal" class="estado-modal" style="display:none;" onclick="handleModalBg(event)">
-  <div class="estado-modal-card">
-    <div class="estado-modal-title" id="modal-terr-title">Territorio ?</div>
+  <!-- ── REGISTRAR TERRITORIOS ── -->
+  <div id="view-registrar" class="view" style="display:none;">
+    <p class="section-title">Registrar territorios</p>
+    <p class="section-sub">Grupo <span id="reg-grupo-label">?</span> &mdash; marcá los que se completaron</p>
+    <div id="reg-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+    <div id="reg-error" style="display:none;"></div>
+    <div id="reg-container" style="display:none;"></div>
+    <div id="reg-footer" style="display:none;">
+      <button class="btn-guardar" id="btn-guardar" onclick="guardarRegistros()">Guardar cambios</button>
+      <div class="save-status" id="save-status"></div>
+      <div style="margin-top:10px;">
+        <button class="btn-secondary" style="width:100%;" onclick="goToModo()">← Volver</button>
+      </div>
+    </div>
+  </div>
 
-    <!-- Historial -->
-    <div class="modal-section-title" style="margin-top:10px;text-align:center;">Historial</div>
-    <div id="modal-hist-loading" style="font-size:13px;color:#888;margin-bottom:10px;">Cargando...</div>
-    <div id="modal-hist-content" style="display:none;">
-      <table class="hist-table">
-        <thead><tr><th>Conductor</th><th>Inicio</th><th>Fin</th><th style="text-align:right;"></th></tr></thead>
-        <tbody id="modal-hist-body"></tbody>
+  <!-- ── INFO GRUPO ── -->
+  <div id="view-info" class="view" style="display:none;">
+    <p class="section-title" id="info-titulo" style="font-size:36px;margin-bottom:4px;">Grupo ?</p>
+    <p class="section-sub">Tocá un territorio para ver su info o cambiar su estado</p>
+    <div id="info-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+    <div id="info-error" style="display:none;"></div>
+    <div id="info-content" style="display:none;">
+      <div class="info-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#444;"></div>Normal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#EF9F27;"></div>Peligroso</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#A32D2D;"></div>No se predica</div>
+      </div>
+      <div class="info-grid" id="info-grid"></div>
+    </div>
+    <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">← Volver</button>
+  </div>
+
+  <!-- ── MODAL TERRITORIO ── -->
+  <div id="estado-modal" class="estado-modal" style="display:none;" onclick="handleModalBg(event)">
+    <div class="estado-modal-card">
+      <div class="estado-modal-title" id="modal-terr-title">Territorio ?</div>
+      <div class="modal-section-title" style="margin-top:10px;">Historial</div>
+      <div id="modal-hist-loading" style="font-size:13px;color:#888;margin-bottom:10px;">Cargando...</div>
+      <div id="modal-hist-content" style="display:none;">
+        <table class="hist-table">
+          <thead><tr><th>Conductor</th><th>Inicio</th><th>Fin</th><th style="text-align:right;"></th></tr></thead>
+          <tbody id="modal-hist-body"></tbody>
+        </table>
+      </div>
+      <div id="modal-edit-form" style="display:none;">
+        <div class="edit-row-form">
+          <div class="edit-row-title">Editando fila</div>
+          <div class="form-row">
+            <div><label>Conductor</label><input type="text" id="edit-cond" list="conductores-list" placeholder="Elegir o escribir..."><datalist id="conductores-list"></datalist></div>
+            <div><label>Inicio</label><input type="date" id="edit-ini"></div>
+          </div>
+          <div><label>Fin</label><input type="date" id="edit-fin" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-secondary" style="flex:1;font-size:13px;padding:7px;" onclick="cancelEdit()">Cancelar</button>
+            <button class="btn-primary"   style="flex:1;font-size:13px;padding:7px;" onclick="saveEdit()">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <hr class="modal-divider">
+      <div class="modal-section-title">Estado del territorio</div>
+      <div style="display:flex;gap:6px;">
+        <button class="estado-opt opt-normal"     onclick="setTerritoryEstado('normal')">Normal</button>
+        <button class="estado-opt opt-peligroso"  onclick="setTerritoryEstado('peligroso')">Peligroso</button>
+        <button class="estado-opt opt-no_predica" onclick="setTerritoryEstado('no_predica')">No se predica</button>
+      </div>
+      <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ── HISTORIAL ── -->
+  <div id="view-historial" class="view" style="display:none;">
+    <p class="section-title" id="hist-titulo" style="font-size:32px;margin-bottom:4px;">Historial</p>
+    <p class="section-sub" style="margin-bottom:14px;">Salidas registradas</p>
+    <div id="hist-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+    <div id="hist-error" style="display:none;"></div>
+    <div id="hist-content" style="display:none;"></div>
+    <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">← Volver</button>
+  </div>
+
+  <!-- ── PLANIFICADOR ── -->
+  <div id="view-config" class="view" style="display:none;">
+    <div class="plan-header">
+      <p class="plan-titulo">Planificar salidas</p>
+      <div class="plan-btns">
+        <button class="btn-add-tel"   onclick="addSalida('tel')">+ Telefónica</button>
+        <button class="btn-add-salida" onclick="addSalida('campo')">+ Salida</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;">
+      <button id="btn-semana-prev" onclick="cambiarSemana(-1)" style="font-size:18px;padding:2px 10px;border:0.5px solid #555;border-radius:8px;background:#2a2a2a;color:#aaa;cursor:pointer;">←</button>
+      <span id="week-info" style="font-size:14px;color:#888;"></span>
+      <button onclick="cambiarSemana(1)" style="font-size:18px;padding:2px 10px;border:0.5px solid #555;border-radius:8px;background:#2a2a2a;color:#aaa;cursor:pointer;">→</button>
+    </div>
+    <div id="terr-loading" class="loading-wrap" style="display:none;">
+      <div class="spinner"></div>
+      <div class="loading-txt">Cargando territorios...</div>
+    </div>
+    <div id="terr-error" style="display:none;"></div>
+    <div id="salidas-container"></div>
+    <div class="plan-footer">
+      <button class="btn-secondary" onclick="goToModo()" style="flex:1;">← Volver</button>
+      <button class="btn-primary"   onclick="generatePreview()" style="flex:2;font-size:12px;padding:7px 12px;">Generar tabla →</button>
+    </div>
+  </div>
+
+  <!-- ── VISTA PREVIA ── -->
+  <div id="view-preview" class="view" style="display:none;">
+    <div class="preview-header-wrap">
+      <div class="preview-tag" id="preview-tag-label">Tabla de Salidas</div>
+      <div class="preview-title-line">
+        <span id="preview-grupo-color"></span>
+        <span class="preview-sep">·</span>
+        <span id="preview-congre-color"></span>
+      </div>
+    </div>
+    <div class="card-preview">
+      <div class="card-preview-header">
+        <div class="card-preview-top">Congregación Sur</div>
+        <div class="card-preview-main" id="preview-grupo-title">Grupo — Salidas de la semana</div>
+      </div>
+      <table class="preview">
+        <thead><tr><th>ENCUENTRO</th><th>Nº TERRITORIO</th><th>FECHA</th><th>CONDUCTOR</th><th>HORA</th></tr></thead>
+        <tbody id="preview-body"></tbody>
       </table>
     </div>
-    <div id="modal-edit-form" style="display:none;">
-      <div class="edit-row-form">
-        <div class="edit-row-title">Editando fila</div>
-        <div class="form-row">
-          <div><label>Conductor</label><input type="text" id="edit-cond" list="conductores-list" placeholder="Elegir o escribir..."><datalist id="conductores-list"></datalist></div>
-          <div><label>Inicio</label><input type="date" id="edit-ini"></div>
-        </div>
-        <div><label>Fin</label><input type="date" id="edit-fin" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button class="btn-secondary" style="flex:1;font-size:13px;padding:7px;" onclick="cancelEdit()">Cancelar</button>
-          <button class="btn-primary" style="flex:1;font-size:13px;padding:7px;" onclick="saveEdit()">Guardar</button>
-        </div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn-secondary" onclick="goBackToConfig()" style="flex:1;">← Editar</button>
+      <button class="btn-save"      onclick="guardarImagen()"  style="flex:1;">Guardar imagen</button>
+    </div>
+    <button class="btn-registrar-prog" id="btn-reg-prog" onclick="registrarEnProgreso()">Registrar territorios como en progreso</button>
+    <div class="reg-prog-status" id="reg-prog-status"></div>
+  </div>
+
+  <!-- ── PIN MODAL ── -->
+  <div id="pin-modal" class="pin-modal" style="display:none;">
+    <div class="pin-card" id="pin-card">
+      <div class="pin-title" id="pin-title">Grupo ?</div>
+      <div class="pin-sub">Ingresá el PIN</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
       </div>
-    </div>
-
-    <hr class="modal-divider">
-
-    <!-- Config estado -->
-        <div class="modal-section-title">Estado del territorio</div>
-        <div style="display:flex;gap:6px;">
-          <button class="estado-opt opt-normal" onclick="setTerritoryEstado('normal')">Normal</button>
-          <button class="estado-opt opt-peligroso" onclick="setTerritoryEstado('peligroso')">Peligroso</button>
-          <button class="estado-opt opt-no_predica" onclick="setTerritoryEstado('no_predica')">No se predica</button>
-        </div>
-        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
+      <div class="pin-grid">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn" style="visibility:hidden;"></button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
       </div>
-    </div>
-
-
-<!-- HISTORIAL DE SALIDAS -->
-<div id="view-historial" class="view" style="display:none;">
-  <p class="section-title" id="hist-titulo" style="font-size:32px;margin-bottom:4px;">Historial</p>
-  <p class="section-sub" style="margin-bottom:14px;">Salidas registradas</p>
-  <div id="hist-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
-  <div id="hist-error" style="display:none;"></div>
-  <div id="hist-content" style="display:none;"></div>
-  <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">← Volver</button>
-</div>
-
-<!-- PASO 1: Planificador flexible -->
-<div id="view-config" class="view" style="display:none;">
-  <div class="plan-header">
-    <p class="plan-titulo">Planificar salidas</p>
-    <div class="plan-btns">
-      <button class="btn-add-tel" onclick="addSalida('tel')">+ Telefónica</button>
-      <button class="btn-add-salida" onclick="addSalida('campo')">+ Salida</button>
+      <div class="pin-error" id="pin-error"></div>
+      <button class="pin-cancel" onclick="pinCancel()">Cancelar</button>
     </div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;">
-    <button id="btn-semana-prev" onclick="cambiarSemana(-1)" style="font-size:18px;padding:2px 10px;border:0.5px solid #555;border-radius:8px;background:#2a2a2a;color:#aaa;cursor:pointer;">←</button>
-    <span id="week-info" style="font-size:14px;color:#888;"></span>
-    <button onclick="cambiarSemana(1)" style="font-size:18px;padding:2px 10px;border:0.5px solid #555;border-radius:8px;background:#2a2a2a;color:#aaa;cursor:pointer;">→</button>
-  </div>
-  <div id="terr-loading" class="loading-wrap" style="display:none;">
-    <div class="spinner"></div>
-    <div class="loading-txt">Cargando territorios...</div>
-  </div>
-  <div id="terr-error" style="display:none;"></div>
-  <div id="salidas-container"></div>
-  <div class="plan-footer">
-    <button class="btn-secondary" onclick="goToModo()" style="flex:1;">← Volver</button>
-    <button class="btn-primary" onclick="generatePreview()" style="flex:2;font-size:12px;padding:7px 12px;">Generar tabla →</button>
-  </div>
-</div>
 
-<!-- PASO 3: Vista previa -->
-<div id="view-preview" class="view" style="display:none;">
-  <div class="preview-header-wrap">
-  <div class="preview-tag" id="preview-tag-label">Tabla de Salidas</div>
-  <div class="preview-title-line">
-    <span id="preview-grupo-color"></span>
-    <span class="preview-sep">·</span>
-    <span id="preview-congre-color"></span>
-  </div>
-</div>
-  <div class="card-preview">
-    <div class="card-preview-header">
-      <div class="card-preview-top">Congregación Sur</div>
-      <div class="card-preview-main" id="preview-grupo-title">Grupo — Salidas de la semana</div>
-    </div>
-    <table class="preview">
-      <thead><tr><th>ENCUENTRO</th><th>Nº TERRITORIO</th><th>FECHA</th><th>CONDUCTOR</th><th>HORA</th></tr></thead>
-      <tbody id="preview-body"></tbody>
-    </table>
-  </div>
-  <div style="display:flex;gap:8px;margin-top:12px;">
-    <button class="btn-secondary" onclick="goBackToConfig()" style="flex:1;">← Editar</button>
-    <button class="btn-save" onclick="guardarImagen()" style="flex:1;">Guardar imagen</button>
-  </div>
-  <button class="btn-registrar-prog" id="btn-reg-prog" onclick="registrarEnProgreso()">Registrar territorios como en progreso</button>
-  <div class="reg-prog-status" id="reg-prog-status"></div>
-</div>
-
-
-<!-- PIN Modal -->
-<div id="pin-modal" class="pin-modal" style="display:none;">
-  <div class="pin-card" id="pin-card">
-    <div class="pin-title" id="pin-title">Grupo ?</div>
-    <div class="pin-sub">Ingresá el PIN</div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="pin-grid">
-      <button class="pin-btn" onclick="pinPress('1')">1</button>
-      <button class="pin-btn" onclick="pinPress('2')">2</button>
-      <button class="pin-btn" onclick="pinPress('3')">3</button>
-      <button class="pin-btn" onclick="pinPress('4')">4</button>
-      <button class="pin-btn" onclick="pinPress('5')">5</button>
-      <button class="pin-btn" onclick="pinPress('6')">6</button>
-      <button class="pin-btn" onclick="pinPress('7')">7</button>
-      <button class="pin-btn" onclick="pinPress('8')">8</button>
-      <button class="pin-btn" onclick="pinPress('9')">9</button>
-      <button class="pin-btn" style="visibility:hidden;"></button>
-      <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
-    </div>
-    <div class="pin-error" id="pin-error"></div>
-    <button class="pin-cancel" onclick="pinCancel()">Cancelar</button>
-  </div>
-</div>
+</div><!-- /.app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqfcGLySbIx6I2902w6mdZKSLAPk1-gZirJmY7A4Ua0Vy3bbYtxrwotyLsSMiCrNy1/exec';
-
-const CONDUCTORES_BY_GROUP = {
-  1: [],
-  2: [],
-  3: ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'],
-  4: [],
-  C: []
-};
-
-const SPECIAL_TERR = { '11': true, '131': true };
-
-const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-
-let selectedGrupo = null;
-let selected = [];
-let territoriosData = {}; // datos cargados del Sheet
-
-
-let configData = {};
-let modalTerr = null;
-
-async function goToInfoGrupo() {
-  hide('view-modo');
-  show('view-info');
-  const infoTitulo = document.getElementById('info-titulo');
-  infoTitulo.textContent = selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo;
-  infoTitulo.style.color = GCOLORS[selectedGrupo] || '#97C459';
-  show('info-loading');
-  hide('info-content');
-  hide('info-error');
-
-  try {
-    // Cargar territorios y config en paralelo
-    territoriosData = {};
-      const raw = await fetchGrupo(selectedGrupo);
-      territoriosData = {};
-      Object.keys(raw).forEach(terr => {
-        const d = raw[terr];
-        territoriosData[terr] = {
-          lastFin: parseSheetDate(d.lastFin),
-          lastIni: parseSheetDate(d.lastIni),
-          enProgreso: d.enProgreso
-        };
-      });
-    const cfgUrl = SCRIPT_URL + '?action=getConfig&grupo=' + encodeURIComponent(selectedGrupo);
-    const cfgResp = await fetch(cfgUrl);
-    const cfgText = await cfgResp.text();
-    configData = JSON.parse(cfgText);
-
-    hide('info-loading');
-    show('info-content');
-    renderInfoGrid();
-  } catch(err) {
-    hide('info-loading');
-    const errEl = document.getElementById('info-error');
-    errEl.innerHTML = `<div class="error-wrap">Error: ${err.message}.</div>`;
-    show('info-error');
-  }
-}
-
-function renderInfoGrid() {
-  const g = document.getElementById('info-grid');
-  g.innerHTML = '';
-  const lista = Object.keys(territoriosData).sort((a,b) => parseInt(a) - parseInt(b));
-  lista.forEach(n => {
-    const t = territoriosData[n];
-    const estado = configData[n] || 'normal';
-    const lastDate = t.lastFin || t.lastIni;
-    const btn = document.createElement('button');
-    btn.className = `info-btn estado-${estado}`;
-    const estadoLabel = estado === 'normal' ? '' : estado === 'peligroso' ? '⚠ peligroso' : '✕ no predica';
-    btn.innerHTML = `<div class="info-btn-num">${n}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-estado">${estadoLabel}</div>`;
-    btn.onclick = () => openModal(n);
-    g.appendChild(btn);
-  });
-}
-
-let editingRow = null;
-
-function handleModalBg(e) {
-  if (e.target.id === 'estado-modal') closeModal();
-}
-
-async function openModal(n) {
-  modalTerr = n;
-  document.getElementById('modal-terr-title').textContent = 'Territorio ' + n;
-  document.getElementById('modal-hist-loading').style.display = '';
-  document.getElementById('modal-hist-content').style.display = 'none';
-  document.getElementById('modal-edit-form').style.display = 'none';
-  document.getElementById('estado-modal').style.display = 'flex';
-  editingRow = null;
-
-  try {
-    const url = SCRIPT_URL + '?action=getHistory&grupo=' + encodeURIComponent(selectedGrupo) + '&territorio=' + encodeURIComponent(n);
-    const resp = await fetch(url);
-    const text = await resp.text();
-    const data = JSON.parse(text);
-    document.getElementById('modal-hist-loading').style.display = 'none';
-    if (data.rows) {
-      renderHistorial(data.rows);
-      document.getElementById('modal-hist-content').style.display = '';
-    }
-  } catch(err) {
-    document.getElementById('modal-hist-loading').textContent = 'Error al cargar historial';
-  }
-}
-
-let historialRows = [];
-
-function renderHistorial(rows) {
-  historialRows = rows;
-  const tbody = document.getElementById('modal-hist-body');
-  if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="color:#888;text-align:center;">Sin registros</td></tr>';
-  } else {
-    tbody.innerHTML = rows.map((r, i) => `
-      <tr>
-        <td>${r.conductor}</td>
-        <td>${r.ini || '—'}</td>
-        <td>${r.fin ? r.fin : '<span class="hist-en-prog">en prog.</span>'}</td>
-        <td style="white-space:nowrap;text-align:right;">
-          <button class="hist-edit-btn" onclick="startEdit(${i}, '${r.rowIndex}', '${r.conductor}', '${r.ini||''}', '${r.fin||''}')">Editar</button>
-          <button class="hist-del-btn" onclick="deleteEntry('${r.rowIndex}')">✕</button>
-        </td>
-      </tr>`).join('');
-  }
-  // Botón agregar entrada
-  const histContent = document.getElementById('modal-hist-content');
-  let addBtn = document.getElementById('btn-add-entry');
-  if (!addBtn) {
-    addBtn = document.createElement('button');
-    addBtn.id = 'btn-add-entry';
-    addBtn.className = 'btn-add-entry';
-    addBtn.textContent = '+ Agregar entrada';
-    addBtn.onclick = startAddEntry;
-    histContent.appendChild(addBtn);
-  }
-}
-
-async function deleteEntry(rowIndex) {
-  if (!confirm('¿Eliminar esta entrada?')) return;
-  const url = SCRIPT_URL + '?action=deleteRecord' +
-    '&grupo=' + encodeURIComponent(selectedGrupo) +
-    '&territorio=' + encodeURIComponent(modalTerr) +
-    '&rowIndex=' + encodeURIComponent(rowIndex);
-  await fetch(url);
-  await openModal(modalTerr);
-}
-
-function startAddEntry() {
-  editingRow = null;
-  document.getElementById('modal-edit-form').style.display = '';
-  const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
-  const input = document.getElementById('edit-cond');
-  const dl = document.getElementById('conductores-list');
-  dl.innerHTML = conductores.map(c => `<option value="${c}">`).join('');
-  input.value = '';
-  document.getElementById('edit-ini').value = '';
-  document.getElementById('edit-fin').value = '';
-}
-
-function startEdit(idx, rowIndex, conductor, ini, fin) {
-  editingRow = rowIndex;
-  document.getElementById('modal-edit-form').style.display = '';
-
-  // Poblar select de conductor
-  const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
-  const sel = document.getElementById('edit-cond');
-  sel.innerHTML = '<option value="">— Elegir —</option>' + conductores.map(c => `<option value="${c}" ${c===conductor?'selected':''}>${c}</option>`).join('');
-  // Si el conductor no está en la lista (ej: CONGREGACION) agregarlo
-  if (conductor && !conductores.includes(conductor)) {
-    sel.innerHTML += `<option value="${conductor}" selected>${conductor}</option>`;
-  }
-
-  // Convertir fecha dd/mm/yy a yyyy-mm-dd para el input
-  function toInputDate(ds) {
-    if (!ds) return '';
-    const m = ds.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
-    if (m) {
-      const y = m[3].length === 2 ? '20' + m[3] : m[3];
-      return `${y}-${m[2]}-${m[1]}`;
-    }
-    return '';
-  }
-  document.getElementById('edit-ini').value = toInputDate(ini);
-  document.getElementById('edit-fin').value = toInputDate(fin);
-}
-
-function cancelEdit() {
-  editingRow = null;
-  document.getElementById('modal-edit-form').style.display = 'none';
-}
-
-async function saveEdit() {
-  const conductor = document.getElementById('edit-cond').value.trim();
-  const ini = document.getElementById('edit-ini').value;
-  const fin = document.getElementById('edit-fin').value;
-  if (!conductor) { alert('Elegí un conductor'); return; }
-
-  if (editingRow) {
-    // Editar fila existente
-    const url = SCRIPT_URL + '?action=updateRecord' +
-      '&grupo=' + encodeURIComponent(selectedGrupo) +
-      '&territorio=' + encodeURIComponent(modalTerr) +
-      '&rowIndex=' + encodeURIComponent(editingRow) +
-      '&conductor=' + encodeURIComponent(conductor) +
-      '&fechaInicio=' + encodeURIComponent(ini) +
-      '&fechaFin=' + encodeURIComponent(fin);
-    await fetch(url);
-  } else {
-    // Nueva entrada
-    const url = SCRIPT_URL + '?action=saveRecord' +
-      '&grupo=' + encodeURIComponent(selectedGrupo) +
-      '&territorio=' + encodeURIComponent(modalTerr) +
-      '&conductor=' + encodeURIComponent(conductor) +
-      '&fechaInicio=' + encodeURIComponent(ini) +
-      '&fechaFin=' + encodeURIComponent(fin);
-    await fetch(url);
-  }
-
-  cancelEdit();
-  await openModal(modalTerr);
-}
-
-function closeModal() {
-  document.getElementById('estado-modal').style.display = 'none';
-  modalTerr = null;
-  editingRow = null;
-}
-
-async function setTerritoryEstado(estado) {
-  if (!modalTerr) return;
-  closeModal();
-  const n = modalTerr;
-
-  // Actualizar local
-  if (estado === 'normal') {
-    delete configData[n];
-  } else {
-    configData[n] = estado;
-  }
-  renderInfoGrid();
-
-  // Guardar en Sheet
-  const url = SCRIPT_URL + '?action=setConfig' +
-    '&grupo=' + encodeURIComponent(selectedGrupo) +
-    '&territorio=' + encodeURIComponent(n) +
-    '&estado=' + encodeURIComponent(estado);
-  await fetch(url);
-}
-
-async function fetchGrupo(grupo) {
-  const url = SCRIPT_URL + '?action=getLastDates&grupo=' + encodeURIComponent(grupo);
-  const response = await fetch(url);
-  const text = await response.text();
-  const data = JSON.parse(text);
-  if (data.error) throw new Error(data.error);
-  return data;
-}
-
-function parseSheetDate(ds) {
-  if (!ds) return null;
-  // Formato dd/mm/yy
-  const m = ds.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-  if (m) {
-    const y = m[3].length === 2 ? '20' + m[3] : m[3];
-    return `${y}-${m[2]}-${m[1]}`;
-  }
-  return ds;
-}
-
-function getWeekDates(offset = 0) {
-  const now = new Date(); const day = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate()-(day===0?6:day-1) + offset*7);
-  function d(o){
-    const x=new Date(monday);
-    x.setDate(monday.getDate()+o);
-    const yyyy=x.getFullYear();
-    const mm=String(x.getMonth()+1).padStart(2,'0');
-    const dd=String(x.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  return {mon:d(0),tue:d(1),wed:d(2),thu:d(3),fri:d(4),sat:d(5),sun:d(6)};
-}
-
-function formatShort(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;}
-function formatShortFull(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;}
-function daysSince(ds){if(!ds)return 9999;return Math.floor((new Date()-new Date(ds+'T00:00:00'))/86400000);}
-function dayClass(d){return d>90?'days-old':d>45?'days-mid':'days-new';}
-
-const WEEK = getWeekDates();
-
-const GCOLORS = { 1:'#378ADD', 2:'#EF9F27', 3:'#97C459', 4:'#D85A30', C:'#7F77DD' };
-const GBGS   = { 1:'rgba(55,138,221,0.18)', 2:'rgba(239,159,39,0.18)', 3:'rgba(151,196,89,0.18)', 4:'rgba(216,90,48,0.18)', C:'rgba(127,119,221,0.18)' };
-
-
-async function goToHistorial() {
-  hide('view-modo');
-  show('view-historial');
-  const titulo = document.getElementById('hist-titulo');
-  titulo.textContent = (selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo) + ' — Historial';
-  titulo.style.color = GCOLORS[selectedGrupo] || '#97C459';
-  show('hist-loading');
-  hide('hist-content');
-  hide('hist-error');
-
-  try {
-    const url = SCRIPT_URL + '?action=getHistorial&grupo=' + encodeURIComponent(selectedGrupo);
-    const resp = await fetch(url);
-    const data = JSON.parse(await resp.text());
-    hide('hist-loading');
-    renderHistorialSalidas(data.rows || []);
-    show('hist-content');
-  } catch(err) {
-    hide('hist-loading');
-    document.getElementById('hist-error').innerHTML = `<div class="error-wrap">Error: ${err.message}</div>`;
-    show('hist-error');
-  }
-}
-
-function fmtHistDate(val) {
-  if (!val) return '—';
-  if (typeof val === 'string' && val.includes('T')) {
-    // ISO date from sheets
-    const d = new Date(val);
-    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
-  }
-  return String(val);
-}
-
-function getDiaFromFecha(fecha) {
-  if (!fecha) return '';
-  // puede ser dd/mm/yy
-  const m = fecha.toString().match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
-  if (m) {
-    const y = m[3].length === 2 ? '20' + m[3] : m[3];
-    const d = new Date(`${y}-${m[2]}-${m[1]}T00:00:00`);
-    return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];
-  }
-  return '';
-}
-
-function renderHistorialSalidas(rows) {
-  const c = document.getElementById('hist-content');
-  c.innerHTML = '';
-  if (rows.length === 0) {
-    c.innerHTML = '<div style="text-align:center;color:#888;padding:2rem;font-size:14px;">No hay salidas registradas todavía.</div>';
-    return;
-  }
-  // Agrupar por fecha de registro
-  const grupos = {};
-  const orden = [];
-  rows.forEach(r => {
-    const key = fmtHistDate(r.fechaReg);
-    if (!grupos[key]) { grupos[key] = { rows: [], minRowIndex: r.rowIndex }; orden.push(key); }
-    grupos[key].rows.push(r);
-    if (r.rowIndex < grupos[key].minRowIndex) grupos[key].minRowIndex = r.rowIndex;
-  });
-  orden.forEach(fecha => {
-    const g = grupos[fecha];
-    const group = document.createElement('div');
-    group.className = 'hist-registro-group';
-    group.innerHTML = `
-      <div class="hist-registro-header">
-        <span class="hist-registro-fecha">Semana del ${fecha}</span>
-        <button class="hist-registro-del" onclick="deleteHistorialGrupo(${g.minRowIndex}, ${g.rows.length}, this)">Eliminar semana</button>
-      </div>`;
-    g.rows.forEach(r => {
-      const esTel = String(r.terr).toUpperCase().includes('TEL');
-      const dia = getDiaFromFecha(fmtHistDate(r.fecha));
-      const row = document.createElement('div');
-      row.className = 'hist-row';
-      row.innerHTML = `
-        <span class="hist-row-terr ${esTel ? 'hist-row-tel' : ''}">${esTel ? 'Tel.' : 'T.' + r.terr}</span>
-        <span class="hist-row-dia">${dia} ${fmtHistDate(r.fecha)}</span>
-        <span class="hist-row-cond">${r.cond}</span>
-        <span class="hist-row-hora">${r.hora}</span>`;
-      group.appendChild(row);
-    });
-    c.appendChild(group);
-  });
-}
-
-async function deleteHistorialGrupo(startRowIndex, count, btn) {
-  if (!confirm('¿Eliminar todas las salidas de esta semana?')) return;
-  btn.disabled = true;
-  // Eliminar de atrás para adelante para no desplazar índices
-  for (let i = count - 1; i >= 0; i--) {
-    const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + (startRowIndex + i);
-    await fetch(url);
-  }
-  await goToHistorial();
-}
-
-async function deleteHistorialSalida(rowIndex, btn) {
-  if (!confirm('¿Eliminar esta entrada del historial?')) return;
-  btn.disabled = true;
-  const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + rowIndex;
-  await fetch(url);
-  await goToHistorial();
-}
-
-async function deleteHistorialSalida(rowIndex, btn) {
-  if (!confirm('¿Eliminar esta entrada del historial?')) return;
-  btn.disabled = true;
-  const url = SCRIPT_URL + '?action=deleteHistorialRow&grupo=' + encodeURIComponent(selectedGrupo) + '&rowIndex=' + rowIndex;
-  await fetch(url);
-  await goToHistorial();
-}
-
-
-const PINS = { 1:'1111', 2:'2222', 3:'3333', 4:'4444', C:'5555' };
-let pinBuffer = '';
-let pinGrupo = null;
-
-function openPin() {
-  pinGrupo = selectedGrupo;
-  pinBuffer = '';
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-  const label = pinGrupo === 'C' ? 'Congregación' : 'Grupo ' + pinGrupo;
-  document.getElementById('pin-title').textContent = label;
-  const color = GCOLORS[pinGrupo] || '#97C459';
-  document.getElementById('pin-title').style.color = color;
-  document.getElementById('pin-card').style.borderColor = color;
-  document.getElementById('pin-modal').style.display = 'flex';
-}
-
-function pinPress(digit) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += digit;
-  updatePinDots();
-  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
-}
-
-function pinDelete() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-}
-
-function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('pd' + i);
-    dot.classList.toggle('filled', i < pinBuffer.length);
-    const color = GCOLORS[pinGrupo] || '#97C459';
-    dot.style.borderColor = i < pinBuffer.length ? color : '#555';
-    dot.style.background = i < pinBuffer.length ? color : 'transparent';
-  }
-}
-
-function checkPin() {
-  const correct = PINS[pinGrupo];
-  if (pinBuffer === correct) {
-    document.getElementById('pin-modal').style.display = 'none';
-    pinBuffer = '';
-    goToModo();
-  } else {
-    document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
-    pinBuffer = '';
-    updatePinDots();
-  }
-}
-
-function pinCancel() {
-  document.getElementById('pin-modal').style.display = 'none';
-  pinBuffer = '';
-}
-
-function applyGrupoColors() {
-  document.querySelectorAll('.grupo-btn').forEach(btn => {
-    const g = btn.dataset.grupo;
-    const c = GCOLORS[g] || '#888';
-    const bg = GBGS[g] || 'rgba(100,100,100,0.18)';
-    btn.style.borderColor = c;
-    btn.style.color = c;
-    btn.onmouseenter = () => { if (!btn.classList.contains('selected')) btn.style.background = bg; };
-    btn.onmouseleave = () => { if (!btn.classList.contains('selected')) btn.style.background = '#2a2a2a'; };
-  });
-}
-applyGrupoColors();
-
-function selectGrupo(el, n) {
-  document.querySelectorAll('.grupo-btn').forEach(b => {
-    b.classList.remove('selected');
-    b.style.background = '#2a2a2a';
-  });
-  const color = GCOLORS[n] || '#888';
-  const bg = GBGS[n] || 'rgba(100,100,100,0.18)';
-  el.classList.add('selected');
-  el.style.background = bg;
-  selectedGrupo = n;
-  document.getElementById('btn-start').classList.add('enabled');
-}
-
-function show(id){
-  document.getElementById(id).style.display='';
-  const homeBtn = document.getElementById('btn-home');
-  if (homeBtn) {
-    const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
-    if (showHome) homeBtn.classList.add('visible');
-  }
-}
-function hide(id){document.getElementById(id).style.display='none';}
-function setStep(n){
-  document.getElementById('step-bar').style.display='flex';
-  for(let i=1;i<=3;i++) document.getElementById('s'+i).className='step'+(i<n?' done':i===n?' active':'');
-}
-
-function goToCover(){
-  selected=[];
-  hide('view-config');hide('view-preview');
-  hide('view-modo');hide('view-registrar');hide('view-info');
-  show('view-cover');
-  document.getElementById('step-bar').style.display='none';
-}
-
-const GROUP_COLORS = { 1:'#378ADD', 2:'#EF9F27', 3:'#97C459', 4:'#D85A30', 'C':'#7F77DD' };
-const GROUP_BG = { 1:'rgba(55,138,221,0.15)', 2:'rgba(239,159,39,0.15)', 3:'rgba(151,196,89,0.15)', 4:'rgba(216,90,48,0.15)', C:'rgba(127,119,221,0.15)' };
-
-function goToModo(){
-  selected=[];
-  document.getElementById('btn-home').classList.remove('visible');
-  hide('view-cover');hide('view-config');hide('view-preview');hide('view-registrar');hide('view-info');hide('view-historial');
-  const label = document.getElementById('modo-grupo-label');
-  label.textContent = selectedGrupo === 'C' ? 'Congregación' : selectedGrupo;
-  const color = GROUP_COLORS[selectedGrupo] || '#97C459';
-  const bg = GROUP_BG[selectedGrupo] || 'rgba(151,196,89,0.15)';
-  label.style.color = color;
-
-  // Colores fijos para planificar y registrar, color del grupo para ver mi grupo
-  const cardColors = [
-    { border: '#378ADD', bg: 'rgba(55,138,221,0.15)' },
-    { border: '#1D9E75', bg: 'rgba(29,158,117,0.15)' },
-    { border: '#7F77DD', bg: 'rgba(127,119,221,0.15)' }
-  ];
-  document.querySelectorAll('.modo-card').forEach((card, i) => {
-    const cc = cardColors[i] || cardColors[2];
-    card.style.borderColor = cc.border;
-    card.onmouseenter = function(){ this.style.background = cc.bg; this.style.transform = 'scale(1.02)'; };
-    card.onmouseleave = function(){ this.style.background = '#2a2a2a'; this.style.transform = ''; };
-  });
-  document.querySelectorAll('.modo-icon').forEach((icon, i) => {
-    const cc = cardColors[i] || cardColors[2];
-    icon.style.background = cc.bg;
-  });
-
-  show('view-modo');
-  document.getElementById('step-bar').style.display='none';
-}
-
-
-async function goToStep1(){
-  hide('view-cover');hide('view-preview');
-  hide('view-modo');hide('view-registrar');hide('view-info');
-  show('view-config'); setStep(1);
-  semanaOffset = 0;
-  updateWeekInfo();
-
-  show('terr-loading');
-  hide('terr-error');
-
-  try {
-    territoriosData = {};
-    const raw = await fetchGrupo(selectedGrupo);
-    Object.keys(raw).forEach(terr => {
-      const d = raw[terr];
-      territoriosData[terr] = {
-        lastFin: parseSheetDate(d.lastFin),
-        lastIni: parseSheetDate(d.lastIni),
-        enProgreso: d.enProgreso
-      };
-    });
-    const cfgUrl = SCRIPT_URL + '?action=getConfig&grupo=' + encodeURIComponent(selectedGrupo);
-    const cfgResp = await fetch(cfgUrl);
-    configData = JSON.parse(await cfgResp.text());
-    hide('terr-loading');
-    renderSalidas();
-  } catch(err) {
-    hide('terr-loading');
-    const errEl = document.getElementById('terr-error');
-    errEl.innerHTML = `<div class="error-wrap">Error al cargar: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToStep1()">Reintentar</button></div>`;
-    show('terr-error');
-  }
-}
-
-async function goToRegistrar(){
-  hide('view-modo');
-  show('view-registrar');
-  document.getElementById('reg-grupo-label').textContent = selectedGrupo;
-  show('reg-loading');
-  hide('reg-container');
-  hide('reg-error');
-  hide('reg-footer');
-
-  try {
-    territoriosData = {};
-      const raw = await fetchGrupo(selectedGrupo);
-      territoriosData = {};
-      Object.keys(raw).forEach(terr => {
-        const d = raw[terr];
-        territoriosData[terr] = {
-          lastFin: parseSheetDate(d.lastFin),
-          lastIni: parseSheetDate(d.lastIni),
-          enProgreso: d.enProgreso
-        };
-      });
-    hide('reg-loading');
-    renderRegistrar();
-  } catch(err) {
-    hide('reg-loading');
-    const errEl = document.getElementById('reg-error');
-    errEl.innerHTML = `<div class="error-wrap">Error: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToRegistrar()">Reintentar</button></div>`;
-    show('reg-error');
-  }
-}
-
-function renderRegistrar(){
-  const enProgreso = Object.keys(territoriosData).filter(n => territoriosData[n].enProgreso);
-  const c = document.getElementById('reg-container');
-  c.innerHTML = '';
-
-  if (enProgreso.length === 0) {
-    c.innerHTML = '<div class="reg-empty">No hay territorios en progreso para este grupo.</div>';
-    show('reg-container');
-    show('reg-footer');
-    return;
-  }
-
-  enProgreso.forEach(n => {
-    const t = territoriosData[n];
-    const ini = t.lastIni || '';
-    const div = document.createElement('div');
-    div.className = 'reg-card';
-    div.id = 'reg-card-' + n;
-    div.dataset.estado = 'completado';
-    div.dataset.terr = n;
-    div.innerHTML = `
-      <div class="reg-header">
-        <span class="reg-terr">Territorio ${n}</span>
-        <span class="reg-ini">Inicio: ${ini ? formatShortFull(ini) : '—'}</span>
-      </div>
-      <div class="toggle-wrap">
-        <button class="toggle-btn active-comp" id="tog-comp-${n}" onclick="setEstado('${n}','completado')">Completado</button>
-        <button class="toggle-btn" id="tog-prog-${n}" onclick="setEstado('${n}','progreso')">Sigue en progreso</button>
-      </div>
-      <div id="reg-fields-${n}">
-        <div class="form-row">
-          <div><label>Conductor</label>${condSelect('reg-cond-'+n, selectedGrupo)}</div>
-          <div><label>Fecha inicio</label><input type="date" id="reg-ini-${n}" value="${ini}"></div>
-        </div>
-        <div><label>Fecha fin</label><input type="date" id="reg-fin-${n}" value="${ini}" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
-      </div>`;
-    c.appendChild(div);
-  });
-
-  show('reg-container');
-  show('reg-footer');
-}
-
-function setEstado(n, estado) {
-  const card = document.getElementById('reg-card-' + n);
-  const fields = document.getElementById('reg-fields-' + n);
-  const btnComp = document.getElementById('tog-comp-' + n);
-  const btnProg = document.getElementById('tog-prog-' + n);
-  card.dataset.estado = estado;
-
-  if (estado === 'completado') {
-    btnComp.className = 'toggle-btn active-comp';
-    btnProg.className = 'toggle-btn';
-    card.classList.remove('completado');
-    fields.style.display = '';
-  } else {
-    btnComp.className = 'toggle-btn';
-    btnProg.className = 'toggle-btn active-prog';
-    card.classList.add('completado');
-    fields.style.display = 'none';
-  }
-}
-
-
-  function fmtDate(ds) {
-  if (!ds) return '';
-  const m = ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (m) return `${m[3]}/${m[2]}/${m[1].slice(-2)}`;
-  return ds;
-}
-
-  
-async function guardarRegistros(){
-  const btn = document.getElementById('btn-guardar');
-  const status = document.getElementById('save-status');
-  btn.disabled = true;
-  status.style.color = '#888';
-  status.textContent = 'Guardando...';
-
-  const cards = document.querySelectorAll('[id^="reg-card-"]');
-  const saves = [];
-
-  cards.forEach(card => {
-    const n = card.dataset.terr;
-    const estado = card.dataset.estado;
-    const conductor = document.getElementById('reg-cond-' + n)?.value || '';
-    const ini = fmtDate(document.getElementById('reg-ini-' + n)?.value || '');
-    const fin = estado === 'completado' ? fmtDate(document.getElementById('reg-fin-' + n)?.value || '') : '';
-    saves.push({ territorio: n, conductor, fechaInicio: ini, fechaFin: fin, estado });
-  });
-
-  const sinConductor = saves.some(s => s.estado === 'completado' && !s.conductor);
-  if (sinConductor) {
-    status.style.color = '#F09595';
-    status.textContent = 'Elegí el conductor de cada territorio antes de guardar.';
-    btn.disabled = false;
-    return;
-  }
-
-  try {
-    for (const s of saves) {
-      const url = SCRIPT_URL + '?action=saveRecord' +
-        '&grupo=' + encodeURIComponent(selectedGrupo) +
-        '&territorio=' + encodeURIComponent(s.territorio) +
-        '&conductor=' + encodeURIComponent(s.conductor) +
-        '&fechaInicio=' + encodeURIComponent(s.fechaInicio) +
-        '&fechaFin=' + encodeURIComponent(s.fechaFin);
-      await fetch(url);
-    }
-    territoriosData = {};
-    status.style.color = '#5DCAA5';
-    status.textContent = 'Guardado correctamente';
-    btn.disabled = false;
-  } catch(err) {
-    status.style.color = '#F09595';
-    status.textContent = 'Error al guardar: ' + err.message;
-    btn.disabled = false;
-  }
-}
-
-
-// Plantillas por defecto según grupo
-function getPlantilla(grupo) {
-  const week = getWeekDates(semanaOffset);
-  if (grupo === 'C') {
-    return [
-      { tipo:'campo', fecha: week.mon, hora:'18:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.tue, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.wed, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.thu, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.fri, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.sat, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-      { tipo:'campo', fecha: week.sun, hora:'09:30', conductor:'', encuentro:'', territorio:'' },
-    ];
-  }
-  return [
-    { tipo:'tel',   fecha: week.tue, hora:'17:30', conductor:'', encuentro:'', territorio:'' },
-    { tipo:'campo', fecha: week.tue, hora:'18:30', conductor:'', encuentro:'', territorio:'' },
-    { tipo:'campo', fecha: week.thu, hora:'18:30', conductor:'', encuentro:'', territorio:'' },
-    { tipo:'campo', fecha: week.fri, hora:'18:30', conductor:'', encuentro:'', territorio:'' },
-  ];
-}
-
-let salidas = [];
-let salidaCounter = 0;
-let semanaOffset = 0;
-
-function addSalida(tipo, data = {}) {
-  if (salidas.length >= 20) return;
-  const id = ++salidaCounter;
-  const week = getWeekDates(semanaOffset);
-  const s = {
-    id,
-    tipo,
-    fecha: data.fecha || week.tue,
-    hora: data.hora || (tipo === 'tel' ? '17:30' : '18:30'),
-    conductor: data.conductor || '',
-    encuentro: data.encuentro || '',
-    territorio: data.territorio || ''
-  };
-  salidas.push(s);
-  renderSalidaCard(s);
-}
-
-function removeSalida(id) {
-  salidas = salidas.filter(s => s.id !== id);
-  const el = document.getElementById('salida-card-' + id);
-  if (el) el.remove();
-}
-
-function getTerritoryOptions() {
-  if (!territoriosData || Object.keys(territoriosData).length === 0) return '<option value="">— Sin datos —</option>';
-  const lista = Object.keys(territoriosData)
-    .filter(n => (configData[n] || 'normal') !== 'no_predica')
-    .map(n => {
-      const d = territoriosData[n];
-      const lastDate = d.lastFin || d.lastIni;
-      const days = daysSince(lastDate);
-      return { n, days };
-    })
-    .sort((a,b) => b.days - a.days);
-  return '<option value="">— Elegir territorio —</option>' + lista.map(t => `<option value="${t.n}">Terr. ${t.n} (${t.days}d)</option>`).join('');
-}
-
-function getConductorOptions(grupo, selected = '') {
-  const conductores = CONDUCTORES_BY_GROUP[grupo] || [];
-  return '<option value="">— Elegir conductor —</option>' + conductores.map(c => `<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
-}
-
-const DIA_COLORS = {
-  'Lunes':    '#85B7EB',
-  'Martes':   '#85B7EB',
-  'Miércoles':'#C0DD97',
-  'Jueves':   '#FAC775',
-  'Viernes':  '#C0DD97',
-  'Sábado':   '#CDB4FF',
-  'Domingo':  '#F09595',
-};
-const DIAS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-
-function getNombreDia(fecha) {
-  if (!fecha) return '—';
-  const d = new Date(fecha + 'T00:00:00');
-  return DIAS_ES[d.getDay()];
-}
-
-function updateDiaLabel(id) {
-  const fecha = document.getElementById('sal-fecha-' + id)?.value;
-  const label = document.getElementById('sal-dia-label-' + id);
-  if (!label) return;
-  const nombre = getNombreDia(fecha);
-  label.textContent = nombre;
-  label.style.color = DIA_COLORS[nombre] || '#eee';
-}
-
-function renderSalidaCard(s) {
-  const c = document.getElementById('salidas-container');
-  const esTel = s.tipo === 'tel';
-  const div = document.createElement('div');
-  div.className = 'salida-card-new ' + (esTel ? 'tipo-tel' : 'tipo-campo');
-  div.id = 'salida-card-' + s.id;
-  const nombreDia = getNombreDia(s.fecha);
-  const diaColor = DIA_COLORS[nombreDia] || '#eee';
-  div.innerHTML = `
-    <div class="salida-card-top">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="sal-dia-label-${s.id}" style="font-size:22px;font-weight:500;color:${diaColor};">${nombreDia}</span>
-        <span class="salida-card-label" style="font-size:13px;color:#888;">${esTel ? 'Telefónica' : 'Campo'}</span>
-      </div>
-      <button class="salida-remove-btn" onclick="removeSalida(${s.id})">✕</button>
-    </div>
-    <div class="form-row">
-      <div>
-        <label>Día</label>
-        <input type="date" id="sal-fecha-${s.id}" value="${s.fecha}" onchange="updateDiaLabel(${s.id})">
-      </div>
-      <div>
-        <label>Hora</label>
-        <input type="time" id="sal-hora-${s.id}" value="${s.hora}">
-      </div>
-    </div>
-    <div class="form-row">
-      <div>
-        <label>Conductor</label>
-        <select id="sal-cond-${s.id}">${getConductorOptions(selectedGrupo, s.conductor)}</select>
-      </div>
-      ${esTel ? '' : `<div><label>Territorio</label><select id="sal-terr-${s.id}">${getTerritoryOptions()}</select></div>`}
-    </div>
-    <div>
-      <label>Encuentro / Familia</label>
-      <input type="text" id="sal-enc-${s.id}" value="${s.encuentro}" placeholder="Ej: Flia. García / esq. X y Y">
-    </div>`;
-  c.appendChild(div);
-}
-
-
-function updateWeekInfo() {
-  const w = getWeekDates(semanaOffset);
-  document.getElementById('week-info').textContent = `Semana del ${formatShort(w.mon)} al ${formatShort(w.sun)}`;
-  // Deshabilitar flecha izquierda si es semana actual
-  const prevBtn = document.getElementById('btn-semana-prev');
-  if (prevBtn) prevBtn.style.opacity = semanaOffset <= 0 ? '0.3' : '1';
-  if (prevBtn) prevBtn.style.pointerEvents = semanaOffset <= 0 ? 'none' : 'auto';
-}
-
-function cambiarSemana(dir) {
-  if (dir < 0 && semanaOffset <= 0) return;
-  semanaOffset += dir;
-  updateWeekInfo();
-  renderSalidas();
-}
-
-function renderSalidas() {
-  const c = document.getElementById('salidas-container');
-  c.innerHTML = '';
-  salidas = [];
-  salidaCounter = 0;
-
-  // Bloque fijo de telefónicas para congregación
-  if (selectedGrupo === 'C') {
-    const telBlock = document.createElement('div');
-    telBlock.className = 'salida-card-new tipo-tel';
-    telBlock.style.marginBottom = '14px';
-    telBlock.innerHTML = `
-      <div class="salida-card-top" style="margin-bottom:8px;">
-        <span style="font-size:16px;font-weight:500;color:#5DCAA5;">Telefónica fija — Lunes a Sábado</span>
-      </div>
-      <div style="font-size:13px;color:#888;margin-bottom:10px;">
-        ID: 844 0225 6636 &nbsp;·&nbsp; Contraseña: 479104
-      </div>
-      <div class="form-row">
-        <div><label>Hora mañana</label><input type="time" id="tel-fija-manana" value="10:00"></div>
-        <div><label>Hora tarde</label><input type="time" id="tel-fija-tarde" value="17:00"></div>
-      </div>`;
-    c.appendChild(telBlock);
-  }
-
-  const plantilla = getPlantilla(selectedGrupo);
-  plantilla.forEach(p => addSalida(p.tipo, p));
-}
-
-function condSelect(id, grupo) {
-  const conductores = CONDUCTORES_BY_GROUP[grupo] || [];
-  const opts = `<option value="">— Elegir conductor —</option>` + conductores.map(c => `<option value="${c}">${c}</option>`).join('');
-  return `<select id="${id}">${opts}</select>`;
-}
-
-
-
-async function registrarEnProgreso() {
-  const btn = document.getElementById('btn-reg-prog');
-  const status = document.getElementById('reg-prog-status');
-  
-  // Recopilar territorios de campo con conductor
-  const territoriosARegistrar = [];
-  salidas.forEach(s => {
-    if (s.tipo !== 'campo') return;
-    const terr = document.getElementById('sal-terr-' + s.id)?.value;
-    const cond = document.getElementById('sal-cond-' + s.id)?.value;
-    const fecha = document.getElementById('sal-fecha-' + s.id)?.value;
-    if (terr && terr !== '—') {
-      territoriosARegistrar.push({ terr, cond: cond || '—', fecha });
-    }
-  });
-
-  if (territoriosARegistrar.length === 0) {
-    status.style.color = '#F09595';
-    status.textContent = 'No hay territorios de campo asignados.';
-    return;
-  }
-
-  btn.disabled = true;
-  status.style.color = '#888';
-  status.textContent = `Registrando ${territoriosARegistrar.length} territorio(s)...`;
-
-  try {
-    for (const t of territoriosARegistrar) {
-      const url = SCRIPT_URL + '?action=saveRecord' +
-        '&grupo=' + encodeURIComponent(selectedGrupo) +
-        '&territorio=' + encodeURIComponent(t.terr) +
-        '&conductor=' + encodeURIComponent(t.cond) +
-        '&fechaInicio=' + encodeURIComponent(t.fecha) +
-        '&fechaFin=';
-      await fetch(url);
-    }
-    territoriosData = {};
-    // Guardar en historial
-    const salidasParaHistorial = salidas.map(s => ({
-      enc: document.getElementById('sal-enc-' + s.id)?.value || '—',
-      terr: s.tipo === 'tel' ? 'TELEFÓNICA' : (document.getElementById('sal-terr-' + s.id)?.value || '—'),
-      fecha: document.getElementById('sal-fecha-' + s.id)?.value || '',
-      cond: document.getElementById('sal-cond-' + s.id)?.value || '—',
-      hora: (document.getElementById('sal-hora-' + s.id)?.value || '').replace(':','.')
-    }));
-    const histUrl = SCRIPT_URL + '?action=saveHistorial&grupo=' + encodeURIComponent(selectedGrupo) + '&salidas=' + encodeURIComponent(JSON.stringify(salidasParaHistorial));
-    await fetch(histUrl);
-    status.style.color = '#5DCAA5';
-    status.textContent = `✓ ${territoriosARegistrar.length} territorio(s) registrado(s) como en progreso`;
-    btn.disabled = true;
-    btn.textContent = 'Ya registrado ✓';
-  } catch(err) {
-    status.style.color = '#F09595';
-    status.textContent = 'Error: ' + err.message;
-    btn.disabled = false;
-  }
-}
-
-function goBackToConfig(){
-  hide('view-preview');show('view-config');setStep(1);
-  // Resetear estado del botón de registro
-  const btn = document.getElementById('btn-reg-prog');
-  const status = document.getElementById('reg-prog-status');
-  if (btn) { btn.disabled = false; btn.textContent = 'Registrar territorios como en progreso'; }
-  if (status) status.textContent = '';
-}
-
-
-
-function getDiaBadge(fecha) {
-  if (!fecha) return '';
-  const d = new Date(fecha + 'T00:00:00');
-  const nombre = DIAS_SEMANA[d.getDay()];
-  const colores = {
-    'Lunes':    'background:#1a1a2e;color:#85B7EB;',
-    'Martes':   'background:#0c2a45;color:#85B7EB;',
-    'Miércoles':'background:#1a2000;color:#C0DD97;',
-    'Jueves':   'background:#2e1e00;color:#FAC775;',
-    'Viernes':  'background:#1a2e0a;color:#C0DD97;',
-    'Sábado':   'background:#2e1a2e;color:#CDB4FF;',
-    'Domingo':  'background:#2e1a1a;color:#F09595;',
-  };
-  const style = colores[nombre] || '';
-  return `<div class="dia-badge" style="${style}">${nombre}</div>`;
-}
-
-function generatePreview(){
-  const grupoLabel = selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo;
-  const colores = { '1':'#378ADD', '2':'#EF9F27', '3':'#97C459', '4':'#D85A30', 'C':'#7F77DD' };
-  const color = colores[selectedGrupo] || '#eee';
-  document.getElementById('preview-grupo-title').textContent = `${grupoLabel} — Salidas de la semana`;
-  document.getElementById('preview-grupo-color').innerHTML = `<span style="color:${color}">${grupoLabel}</span>`;
-  document.getElementById('preview-congre-color').innerHTML = `<span style="color:#7F77DD">Congregación Sur</span>`;
-  document.querySelector('.card-preview').style.borderColor = color;
-  document.querySelector('.card-preview-header').style.borderBottomColor = color;
-  const colorOscuro = { '1':'#0c2a45', '2':'#2e1e00', '3':'#1a2e0a', '4':'#2e1000', 'C':'#1e1a3a' };
-  document.querySelectorAll('table.preview th').forEach(th => {
-  th.style.background = colorOscuro[selectedGrupo] || '#111';
-  th.style.color = color;
-});
-  const rows = [];
-
-  // Telefónica fija de congregación (dos filas arriba del todo)
-  if (selectedGrupo === 'C') {
-    const horaMan = document.getElementById('tel-fija-manana')?.value || '10:00';
-    const horaTar = document.getElementById('tel-fija-tarde')?.value || '17:00';
-    rows.push({ enc: 'ID: 844 0225 6636 · Clave: 479104', terr: 'TELEFÓNICA', tel: true, badge: '<div class="dia-badge" style="background:#0a2e24;color:#5DCAA5;">Lun a Sáb</div>', fecha: '', cond: '—', hora: horaMan.replace(':','.') });
-    rows.push({ enc: 'ID: 844 0225 6636 · Clave: 479104', terr: 'TELEFÓNICA', tel: true, badge: '<div class="dia-badge" style="background:#0a2e24;color:#5DCAA5;">Lun a Sáb</div>', fecha: '', cond: '—', hora: horaTar.replace(':','.') });
-  }
-
-  salidas.forEach(s => {
-    const fecha = document.getElementById('sal-fecha-' + s.id)?.value || '';
-    const hora = document.getElementById('sal-hora-' + s.id)?.value || '';
-    const cond = document.getElementById('sal-cond-' + s.id)?.value || '—';
-    const enc = document.getElementById('sal-enc-' + s.id)?.value || '—';
-    const terr = s.tipo === 'tel' ? 'TELEFÓNICA' : (document.getElementById('sal-terr-' + s.id)?.value || '—');
-    rows.push({
-      enc, terr, tel: s.tipo === 'tel',
-      badge: getDiaBadge(fecha),
-      fecha: formatShortFull(fecha).replace(/\//g,'-'),
-      cond,
-      hora: hora.replace(':','.')
-    });
-  });
-  document.getElementById('preview-body').innerHTML=rows.map(r=>`
-    <tr${r.tel?' class="tel-row"':''}>
-      <td>${r.enc}</td>
-      <td>${r.tel?'<div class="tel-terr">Telefónica</div>':`<div class="terr-num-big">${r.terr}</div>`}</td>
-      <td>${r.badge}<div class="fecha-num">${r.fecha}</div></td>
-      <td><div class="cond-txt">${r.cond}</div></td>
-      <td><div class="hora-txt">${r.hora}</div></td>
-    </tr>`).join('');
-  hide('view-config');show('view-preview');setStep(3);
-}
-
-function guardarImagen(){
-  const el = document.querySelector('.card-preview');
-  const originalWidth = el.style.width;
-  el.style.width = '900px';
-html2canvas(el, { backgroundColor: '#1e1e1e', scale: 1, width: 900 }).then(canvas => {
-    el.style.width = originalWidth;
-    const link = document.createElement('a');
-    link.download = `salidas-grupo-${selectedGrupo}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.92);
-    link.click();
-  });
-}
-
-function cerrarSesion() {
-  selectedGrupo = null;
-  document.querySelectorAll('.grupo-btn').forEach(b => {
-    b.classList.remove('selected');
-    b.style.background = '#2a2a2a';
-  });
-  document.getElementById('btn-start').classList.remove('enabled');
-  document.getElementById('btn-home').classList.remove('visible');
-  goToCover();
-}
-  
-</script>
+<script src="app.js"></script>
 </body>
-</html><!DOCTYPE html>
+</html>
