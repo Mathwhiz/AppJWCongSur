@@ -273,6 +273,1181 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 
 <!-- INFO GRUPO -->
 <div id="view-info" style="display:none;">
+  <p class="section-title" id="info-titulo" style="font-size:36px;margin-bottom:4px;">Grupo ?</p>
+  <p class="section-sub">Tocá un territorio para ver su info o cambiar su estado</p>
+  <div id="info-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+  <div id="info-error" style="display:none;"></div>
+  <div id="info-content" style="display:none;">
+    <div class="info-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#444;"></div>Normal</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#EF9F27;"></div>Peligroso</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#A32D2D;"></div>No se predica</div>
+    </div>
+    <div class="info-grid" id="info-grid"></div>
+  </div>
+  <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">&#8592; Volver</button>
+</div>
+
+<!-- MODAL TERRITORIO -->
+<div id="estado-modal" class="estado-modal" style="display:none;" onclick="handleModalBg(event)">
+  <div class="estado-modal-card">
+    <div class="estado-modal-title" id="modal-terr-title">Territorio ?</div>
+
+    <!-- Historial -->
+    <div class="modal-section-title" style="margin-top:10px;text-align:center;">Historial</div>
+    <div id="modal-hist-loading" style="font-size:13px;color:#888;margin-bottom:10px;">Cargando...</div>
+    <div id="modal-hist-content" style="display:none;">
+      <table class="hist-table">
+        <thead><tr><th>Conductor</th><th>Inicio</th><th>Fin</th><th style="text-align:right;"></th></tr></thead>
+        <tbody id="modal-hist-body"></tbody>
+      </table>
+    </div>
+    <div id="modal-edit-form" style="display:none;">
+      <div class="edit-row-form">
+        <div class="edit-row-title">Editando fila</div>
+        <div class="form-row">
+          <div><label>Conductor</label><input type="text" id="edit-cond" list="conductores-list" placeholder="Elegir o escribir..."><datalist id="conductores-list"></datalist></div>
+          <div><label>Inicio</label><input type="date" id="edit-ini"></div>
+        </div>
+        <div><label>Fin</label><input type="date" id="edit-fin" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-secondary" style="flex:1;font-size:13px;padding:7px;" onclick="cancelEdit()">Cancelar</button>
+          <button class="btn-primary" style="flex:1;font-size:13px;padding:7px;" onclick="saveEdit()">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="modal-divider">
+
+    <!-- Config estado -->
+        <div class="modal-section-title">Estado del territorio</div>
+        <div style="display:flex;gap:6px;">
+          <button class="estado-opt opt-normal" onclick="setTerritoryEstado('normal')">Normal</button>
+          <button class="estado-opt opt-peligroso" onclick="setTerritoryEstado('peligroso')">Peligroso</button>
+          <button class="estado-opt opt-no_predica" onclick="setTerritoryEstado('no_predica')">No se predica</button>
+        </div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
+
+<!-- PASO 1: Elegir territorios -->
+<div id="view-select" style="display:none;">
+  <p class="section-title">Elegí 3 territorios</p>
+  <p class="section-sub" id="week-info"></p>
+  <div id="terr-loading" class="loading-wrap">
+    <div class="spinner"></div>
+    <div class="loading-txt">Cargando territorios...</div>
+  </div>
+  <div id="terr-error" style="display:none;"></div>
+  <div class="terr-grid" id="terr-grid" style="display:none;"></div>
+  <div class="step1-footer">
+    <span id="sel-count">0 de 3 seleccionados</span>
+    <button class="btn-secondary" onclick="goToModo()">← Modo</button>
+    <button class="btn-primary" id="btn-next1" onclick="goToStep2()" disabled>Continuar →</button>
+  </div>
+</div>
+
+<!-- PASO 2: Configurar salidas -->
+<div id="view-config" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <p class="section-title" style="margin:0;text-align:left;font-size:22px;">Configurá cada salida</p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-clear" onclick="clearAll()">Limpiar</button>
+      <button class="btn-autofill" onclick="autoFillAll()">Autocompletar</button>
+    </div>
+  </div>
+  <div id="salidas-container"></div>
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="btn-secondary" onclick="goToStep1()" style="flex:1;">← Volver</button>
+    <button class="btn-primary" onclick="generatePreview()" style="flex:2;font-size:12px;padding:7px 12px;">Generar tabla →</button>
+  </div>
+</div>
+
+<!-- PASO 3: Vista previa -->
+<div id="view-preview" style="display:none;">
+  <div class="preview-header-wrap">
+    <span class="preview-title">Salidas</span>
+    <span class="preview-subtitle" id="preview-grupo-label">Grupo · Congregación Sur</span>
+  </div>
+  <div class="card-preview">
+    <div class="card-preview-header">
+      <div class="card-preview-top">Congregación Sur</div>
+      <div class="card-preview-main" id="preview-grupo-title">Grupo — Salidas de la semana</div>
+    </div>
+    <table class="preview">
+      <thead><tr><th>ENCUENTRO</th><th>Nº TERRITORIO</th><th>FECHA</th><th>CONDUCTOR</th><th>HORA</th></tr></thead>
+      <tbody id="preview-body"></tbody>
+    </table>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px;">
+    <button class="btn-secondary" onclick="goBackToConfig()" style="flex:1;">← Editar</button>
+    <button class="btn-save" onclick="guardarImagen()" style="flex:1;">Guardar imagen</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqfcGLySbIx6I2902w6mdZKSLAPk1-gZirJmY7A4Ua0Vy3bbYtxrwotyLsSMiCrNy1/exec';
+
+const CONDUCTORES_BY_GROUP = {
+  1: [],
+  2: [],
+  3: ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'],
+  4: [],
+  C: []
+};
+
+const SPECIAL_TERR = { '11': true, '131': true };
+
+const DIA_CONFIG = [
+  { key:'tue', label:'Martes', cls:'dia-martes', cardCls:'card-mar' },
+  { key:'thu', label:'Jueves', cls:'dia-jueves', cardCls:'card-thu' },
+  { key:'fri', label:'Viernes', cls:'dia-viernes', cardCls:'card-fri' }
+];
+const DIA_ORDER = { tue:0, thu:1, fri:2 };
+const DIA_DEFAULT_HORA = { tue:'17:30', thu:'18:30', fri:'18:30' };
+
+let selectedGrupo = null;
+let selected = [];
+let territoriosData = {}; // datos cargados del Sheet
+
+
+let configData = {};
+let modalTerr = null;
+
+async function goToInfoGrupo() {
+  hide('view-modo');
+  show('view-info');
+  const infoTitulo = document.getElementById('info-titulo');
+  infoTitulo.textContent = selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo;
+  infoTitulo.style.color = GCOLORS[selectedGrupo] || '#97C459';
+  show('info-loading');
+  hide('info-content');
+  hide('info-error');
+
+  try {
+    // Cargar territorios y config en paralelo
+    if (!territoriosData || Object.keys(territoriosData).length === 0) {
+      const raw = await fetchGrupo(selectedGrupo);
+      territoriosData = {};
+      Object.keys(raw).forEach(terr => {
+        const d = raw[terr];
+        territoriosData[terr] = {
+          lastFin: parseSheetDate(d.lastFin),
+          lastIni: parseSheetDate(d.lastIni),
+          enProgreso: d.enProgreso
+        };
+      });
+    }
+    const cfgUrl = SCRIPT_URL + '?action=getConfig&grupo=' + encodeURIComponent(selectedGrupo);
+    const cfgResp = await fetch(cfgUrl);
+    const cfgText = await cfgResp.text();
+    configData = JSON.parse(cfgText);
+
+    hide('info-loading');
+    show('info-content');
+    renderInfoGrid();
+  } catch(err) {
+    hide('info-loading');
+    const errEl = document.getElementById('info-error');
+    errEl.innerHTML = `<div class="error-wrap">Error: ${err.message}.</div>`;
+    show('info-error');
+  }
+}
+
+function renderInfoGrid() {
+  const g = document.getElementById('info-grid');
+  g.innerHTML = '';
+  const lista = Object.keys(territoriosData).sort((a,b) => parseInt(a) - parseInt(b));
+  lista.forEach(n => {
+    const t = territoriosData[n];
+    const estado = configData[n] || 'normal';
+    const lastDate = t.lastFin || t.lastIni;
+    const btn = document.createElement('button');
+    btn.className = `info-btn estado-${estado}`;
+    const estadoLabel = estado === 'normal' ? '' : estado === 'peligroso' ? '⚠ peligroso' : '✕ no predica';
+    btn.innerHTML = `<div class="info-btn-num">${n}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-estado">${estadoLabel}</div>`;
+    btn.onclick = () => openModal(n);
+    g.appendChild(btn);
+  });
+}
+
+let editingRow = null;
+
+function handleModalBg(e) {
+  if (e.target.id === 'estado-modal') closeModal();
+}
+
+async function openModal(n) {
+  modalTerr = n;
+  document.getElementById('modal-terr-title').textContent = 'Territorio ' + n;
+  document.getElementById('modal-hist-loading').style.display = '';
+  document.getElementById('modal-hist-content').style.display = 'none';
+  document.getElementById('modal-edit-form').style.display = 'none';
+  document.getElementById('estado-modal').style.display = 'flex';
+  editingRow = null;
+
+  try {
+    const url = SCRIPT_URL + '?action=getHistory&grupo=' + encodeURIComponent(selectedGrupo) + '&territorio=' + encodeURIComponent(n);
+    const resp = await fetch(url);
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    document.getElementById('modal-hist-loading').style.display = 'none';
+    if (data.rows) {
+      renderHistorial(data.rows);
+      document.getElementById('modal-hist-content').style.display = '';
+    }
+  } catch(err) {
+    document.getElementById('modal-hist-loading').textContent = 'Error al cargar historial';
+  }
+}
+
+let historialRows = [];
+
+function renderHistorial(rows) {
+  historialRows = rows;
+  const tbody = document.getElementById('modal-hist-body');
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#888;text-align:center;">Sin registros</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td>${r.conductor}</td>
+        <td>${r.ini || '—'}</td>
+        <td>${r.fin ? r.fin : '<span class="hist-en-prog">en prog.</span>'}</td>
+        <td style="white-space:nowrap;text-align:right;">
+          <button class="hist-edit-btn" onclick="startEdit(${i}, '${r.rowIndex}', '${r.conductor}', '${r.ini||''}', '${r.fin||''}')">Editar</button>
+          <button class="hist-del-btn" onclick="deleteEntry('${r.rowIndex}')">✕</button>
+        </td>
+      </tr>`).join('');
+  }
+  // Botón agregar entrada
+  const histContent = document.getElementById('modal-hist-content');
+  let addBtn = document.getElementById('btn-add-entry');
+  if (!addBtn) {
+    addBtn = document.createElement('button');
+    addBtn.id = 'btn-add-entry';
+    addBtn.className = 'btn-add-entry';
+    addBtn.textContent = '+ Agregar entrada';
+    addBtn.onclick = startAddEntry;
+    histContent.appendChild(addBtn);
+  }
+}
+
+async function deleteEntry(rowIndex) {
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  const url = SCRIPT_URL + '?action=deleteRecord' +
+    '&grupo=' + encodeURIComponent(selectedGrupo) +
+    '&territorio=' + encodeURIComponent(modalTerr) +
+    '&rowIndex=' + encodeURIComponent(rowIndex);
+  await fetch(url);
+  await openModal(modalTerr);
+}
+
+function startAddEntry() {
+  editingRow = null;
+  document.getElementById('modal-edit-form').style.display = '';
+  const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
+  const input = document.getElementById('edit-cond');
+  const dl = document.getElementById('conductores-list');
+  dl.innerHTML = conductores.map(c => `<option value="${c}">`).join('');
+  input.value = '';
+  document.getElementById('edit-ini').value = '';
+  document.getElementById('edit-fin').value = '';
+}
+
+function startEdit(idx, rowIndex, conductor, ini, fin) {
+  editingRow = rowIndex;
+  document.getElementById('modal-edit-form').style.display = '';
+
+  // Poblar select de conductor
+  const conductores = CONDUCTORES_BY_GROUP[selectedGrupo] || [];
+  const sel = document.getElementById('edit-cond');
+  sel.innerHTML = '<option value="">— Elegir —</option>' + conductores.map(c => `<option value="${c}" ${c===conductor?'selected':''}>${c}</option>`).join('');
+  // Si el conductor no está en la lista (ej: CONGREGACION) agregarlo
+  if (conductor && !conductores.includes(conductor)) {
+    sel.innerHTML += `<option value="${conductor}" selected>${conductor}</option>`;
+  }
+
+  // Convertir fecha dd/mm/yy a yyyy-mm-dd para el input
+  function toInputDate(ds) {
+    if (!ds) return '';
+    const m = ds.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (m) {
+      const y = m[3].length === 2 ? '20' + m[3] : m[3];
+      return `${y}-${m[2]}-${m[1]}`;
+    }
+    return '';
+  }
+  document.getElementById('edit-ini').value = toInputDate(ini);
+  document.getElementById('edit-fin').value = toInputDate(fin);
+}
+
+function cancelEdit() {
+  editingRow = null;
+  document.getElementById('modal-edit-form').style.display = 'none';
+}
+
+async function saveEdit() {
+  const conductor = document.getElementById('edit-cond').value.trim();
+  const ini = document.getElementById('edit-ini').value;
+  const fin = document.getElementById('edit-fin').value;
+  if (!conductor) { alert('Elegí un conductor'); return; }
+
+  if (editingRow) {
+    // Editar fila existente
+    const url = SCRIPT_URL + '?action=updateRecord' +
+      '&grupo=' + encodeURIComponent(selectedGrupo) +
+      '&territorio=' + encodeURIComponent(modalTerr) +
+      '&rowIndex=' + encodeURIComponent(editingRow) +
+      '&conductor=' + encodeURIComponent(conductor) +
+      '&fechaInicio=' + encodeURIComponent(ini) +
+      '&fechaFin=' + encodeURIComponent(fin);
+    await fetch(url);
+  } else {
+    // Nueva entrada
+    const url = SCRIPT_URL + '?action=saveRecord' +
+      '&grupo=' + encodeURIComponent(selectedGrupo) +
+      '&territorio=' + encodeURIComponent(modalTerr) +
+      '&conductor=' + encodeURIComponent(conductor) +
+      '&fechaInicio=' + encodeURIComponent(ini) +
+      '&fechaFin=' + encodeURIComponent(fin);
+    await fetch(url);
+  }
+
+  cancelEdit();
+  await openModal(modalTerr);
+}
+
+function closeModal() {
+  document.getElementById('estado-modal').style.display = 'none';
+  modalTerr = null;
+  editingRow = null;
+}
+
+async function setTerritoryEstado(estado) {
+  if (!modalTerr) return;
+  closeModal();
+  const n = modalTerr;
+
+  // Actualizar local
+  if (estado === 'normal') {
+    delete configData[n];
+  } else {
+    configData[n] = estado;
+  }
+  renderInfoGrid();
+
+  // Guardar en Sheet
+  const url = SCRIPT_URL + '?action=setConfig' +
+    '&grupo=' + encodeURIComponent(selectedGrupo) +
+    '&territorio=' + encodeURIComponent(n) +
+    '&estado=' + encodeURIComponent(estado);
+  await fetch(url);
+}
+
+async function fetchGrupo(grupo) {
+  const url = SCRIPT_URL + '?action=getLastDates&grupo=' + encodeURIComponent(grupo);
+  const response = await fetch(url);
+  const text = await response.text();
+  const data = JSON.parse(text);
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+function parseSheetDate(ds) {
+  if (!ds) return null;
+  // Formato dd/mm/yy
+  const m = ds.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+  if (m) {
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${m[2]}-${m[1]}`;
+  }
+  return ds;
+}
+
+function getWeekDates() {
+  const now = new Date(); const day = now.getDay();
+  const monday = new Date(now); monday.setDate(now.getDate()-(day===0?6:day-1));
+  function d(o){const x=new Date(monday);x.setDate(monday.getDate()+o);return x.toISOString().slice(0,10);}
+  return {mon:d(0),tue:d(1),thu:d(3),fri:d(4),sun:d(6)};
+}
+
+function formatShort(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;}
+function formatShortFull(ds){if(!ds)return'—';const d=new Date(ds+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;}
+function daysSince(ds){if(!ds)return 9999;return Math.floor((new Date()-new Date(ds+'T00:00:00'))/86400000);}
+function dayClass(d){return d>90?'days-old':d>45?'days-mid':'days-new';}
+
+const WEEK = getWeekDates();
+
+const GCOLORS = { 1:'#378ADD', 2:'#EF9F27', 3:'#97C459', 4:'#D85A30', C:'#7F77DD' };
+const GBGS   = { 1:'rgba(55,138,221,0.18)', 2:'rgba(239,159,39,0.18)', 3:'rgba(151,196,89,0.18)', 4:'rgba(216,90,48,0.18)', C:'rgba(127,119,221,0.18)' };
+
+function applyGrupoColors() {
+  document.querySelectorAll('.grupo-btn').forEach(btn => {
+    const g = btn.dataset.grupo;
+    const c = GCOLORS[g] || '#888';
+    const bg = GBGS[g] || 'rgba(100,100,100,0.18)';
+    btn.style.borderColor = c;
+    btn.style.color = c;
+    btn.onmouseenter = () => { if (!btn.classList.contains('selected')) btn.style.background = bg; };
+    btn.onmouseleave = () => { if (!btn.classList.contains('selected')) btn.style.background = '#2a2a2a'; };
+  });
+}
+applyGrupoColors();
+
+function selectGrupo(el, n) {
+  document.querySelectorAll('.grupo-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.background = '#2a2a2a';
+  });
+  const color = GCOLORS[n] || '#888';
+  const bg = GBGS[n] || 'rgba(100,100,100,0.18)';
+  el.classList.add('selected');
+  el.style.background = bg;
+  selectedGrupo = n;
+  document.getElementById('btn-start').classList.add('enabled');
+}
+
+function show(id){document.getElementById(id).style.display='';}
+function hide(id){document.getElementById(id).style.display='none';}
+function setStep(n){
+  document.getElementById('step-bar').style.display='flex';
+  for(let i=1;i<=3;i++) document.getElementById('s'+i).className='step'+(i<n?' done':i===n?' active':'');
+}
+
+function goToCover(){
+  selected=[];
+  hide('view-select');hide('view-config');hide('view-preview');
+  hide('view-modo');hide('view-registrar');hide('view-info');
+  show('view-cover');
+  document.getElementById('step-bar').style.display='none';
+}
+
+const GROUP_COLORS = { 1:'#378ADD', 2:'#EF9F27', 3:'#97C459', 4:'#D85A30', 'C':'#7F77DD' };
+const GROUP_BG = { 1:'rgba(55,138,221,0.15)', 2:'rgba(239,159,39,0.15)', 3:'rgba(151,196,89,0.15)', 4:'rgba(216,90,48,0.15)', C:'rgba(127,119,221,0.15)' };
+
+function goToModo(){
+  selected=[];
+  hide('view-cover');hide('view-select');hide('view-config');hide('view-preview');hide('view-registrar');hide('view-info');
+  const label = document.getElementById('modo-grupo-label');
+  label.textContent = selectedGrupo === 'C' ? 'Congregación' : selectedGrupo;
+  const color = GROUP_COLORS[selectedGrupo] || '#97C459';
+  const bg = GROUP_BG[selectedGrupo] || 'rgba(151,196,89,0.15)';
+  label.style.color = color;
+
+  // Colores fijos para planificar y registrar, color del grupo para ver mi grupo
+  const cardColors = [
+    { border: '#378ADD', bg: 'rgba(55,138,221,0.15)' },
+    { border: '#1D9E75', bg: 'rgba(29,158,117,0.15)' },
+    { border: color,     bg: bg }
+  ];
+  document.querySelectorAll('.modo-card').forEach((card, i) => {
+    const cc = cardColors[i] || cardColors[2];
+    card.style.borderColor = cc.border;
+    card.onmouseenter = function(){ this.style.background = cc.bg; this.style.transform = 'scale(1.02)'; };
+    card.onmouseleave = function(){ this.style.background = '#2a2a2a'; this.style.transform = ''; };
+  });
+  document.querySelectorAll('.modo-icon').forEach((icon, i) => {
+    const cc = cardColors[i] || cardColors[2];
+    icon.style.background = cc.bg;
+  });
+
+  show('view-modo');
+  document.getElementById('step-bar').style.display='none';
+}
+
+async function goToRegistrar(){
+  hide('view-modo');
+  show('view-registrar');
+  document.getElementById('reg-grupo-label').textContent = selectedGrupo;
+  show('reg-loading');
+  hide('reg-container');
+  hide('reg-error');
+  hide('reg-footer');
+
+  try {
+    if (!territoriosData || Object.keys(territoriosData).length === 0) {
+      const raw = await fetchGrupo(selectedGrupo);
+      territoriosData = {};
+      Object.keys(raw).forEach(terr => {
+        const d = raw[terr];
+        territoriosData[terr] = {
+          lastFin: parseSheetDate(d.lastFin),
+          lastIni: parseSheetDate(d.lastIni),
+          enProgreso: d.enProgreso
+        };
+      });
+    }
+    hide('reg-loading');
+    renderRegistrar();
+  } catch(err) {
+    hide('reg-loading');
+    const errEl = document.getElementById('reg-error');
+    errEl.innerHTML = `<div class="error-wrap">Error: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToRegistrar()">Reintentar</button></div>`;
+    show('reg-error');
+  }
+}
+
+function renderRegistrar(){
+  const enProgreso = Object.keys(territoriosData).filter(n => territoriosData[n].enProgreso);
+  const c = document.getElementById('reg-container');
+  c.innerHTML = '';
+
+  if (enProgreso.length === 0) {
+    c.innerHTML = '<div class="reg-empty">No hay territorios en progreso para este grupo.</div>';
+    show('reg-container');
+    show('reg-footer');
+    return;
+  }
+
+  enProgreso.forEach(n => {
+    const t = territoriosData[n];
+    const ini = t.lastIni || '';
+    const div = document.createElement('div');
+    div.className = 'reg-card';
+    div.id = 'reg-card-' + n;
+    div.dataset.estado = 'completado';
+    div.dataset.terr = n;
+    div.innerHTML = `
+      <div class="reg-header">
+        <span class="reg-terr">Territorio ${n}</span>
+        <span class="reg-ini">Inicio: ${ini ? formatShortFull(ini) : '—'}</span>
+      </div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn active-comp" id="tog-comp-${n}" onclick="setEstado('${n}','completado')">Completado</button>
+        <button class="toggle-btn" id="tog-prog-${n}" onclick="setEstado('${n}','progreso')">Sigue en progreso</button>
+      </div>
+      <div id="reg-fields-${n}">
+        <div class="form-row">
+          <div><label>Conductor</label>${condSelect('reg-cond-'+n, selectedGrupo)}</div>
+          <div><label>Fecha inicio</label><input type="date" id="reg-ini-${n}" value="${ini}"></div>
+        </div>
+        <div><label>Fecha fin</label><input type="date" id="reg-fin-${n}" value="${ini}" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#eee;margin-top:3px;"></div>
+      </div>`;
+    c.appendChild(div);
+  });
+
+  show('reg-container');
+  show('reg-footer');
+}
+
+function setEstado(n, estado) {
+  const card = document.getElementById('reg-card-' + n);
+  const fields = document.getElementById('reg-fields-' + n);
+  const btnComp = document.getElementById('tog-comp-' + n);
+  const btnProg = document.getElementById('tog-prog-' + n);
+  card.dataset.estado = estado;
+
+  if (estado === 'completado') {
+    btnComp.className = 'toggle-btn active-comp';
+    btnProg.className = 'toggle-btn';
+    card.classList.remove('completado');
+    fields.style.display = '';
+  } else {
+    btnComp.className = 'toggle-btn';
+    btnProg.className = 'toggle-btn active-prog';
+    card.classList.add('completado');
+    fields.style.display = 'none';
+  }
+}
+
+
+  function fmtDate(ds) {
+  if (!ds) return '';
+  const m = ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return `${m[3]}/${m[2]}/${m[1].slice(-2)}`;
+  return ds;
+}
+
+  
+async function guardarRegistros(){
+  const btn = document.getElementById('btn-guardar');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  status.style.color = '#888';
+  status.textContent = 'Guardando...';
+
+  const cards = document.querySelectorAll('[id^="reg-card-"]');
+  const saves = [];
+
+  cards.forEach(card => {
+    const n = card.dataset.terr;
+    const estado = card.dataset.estado;
+    const conductor = document.getElementById('reg-cond-' + n)?.value || '';
+    const ini = fmtDate(document.getElementById('reg-ini-' + n)?.value || '');
+    const fin = estado === 'completado' ? fmtDate(document.getElementById('reg-fin-' + n)?.value || '') : '';
+    saves.push({ territorio: n, conductor, fechaInicio: ini, fechaFin: fin, estado });
+  });
+
+  const sinConductor = saves.some(s => s.estado === 'completado' && !s.conductor);
+  if (sinConductor) {
+    status.style.color = '#F09595';
+    status.textContent = 'Elegí el conductor de cada territorio antes de guardar.';
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    for (const s of saves) {
+      const url = SCRIPT_URL + '?action=saveRecord' +
+        '&grupo=' + encodeURIComponent(selectedGrupo) +
+        '&territorio=' + encodeURIComponent(s.territorio) +
+        '&conductor=' + encodeURIComponent(s.conductor) +
+        '&fechaInicio=' + encodeURIComponent(s.fechaInicio) +
+        '&fechaFin=' + encodeURIComponent(s.fechaFin);
+      await fetch(url);
+    }
+    territoriosData = {};
+    status.style.color = '#5DCAA5';
+    status.textContent = 'Guardado correctamente';
+    btn.disabled = false;
+  } catch(err) {
+    status.style.color = '#F09595';
+    status.textContent = 'Error al guardar: ' + err.message;
+    btn.disabled = false;
+  }
+}
+
+async function goToStep1(){
+  hide('view-cover');hide('view-config');hide('view-preview');
+  hide('view-modo');hide('view-registrar');
+  show('view-select'); setStep(1);
+  document.getElementById('week-info').textContent=`Semana del ${formatShort(WEEK.mon)} al ${formatShort(WEEK.sun)}`;
+
+  // Mostrar spinner, ocultar grid
+  show('terr-loading');
+  hide('terr-grid');
+  hide('terr-error');
+  selected = [];
+
+  try {
+    const raw = await fetchGrupo(selectedGrupo);
+    // Convertir fechas del Sheet al formato yyyy-mm-dd
+    territoriosData = {};
+    Object.keys(raw).forEach(terr => {
+      const d = raw[terr];
+      territoriosData[terr] = {
+        lastFin: parseSheetDate(d.lastFin),
+        lastIni: parseSheetDate(d.lastIni),
+        enProgreso: d.enProgreso
+      };
+    });
+    hide('terr-loading');
+    show('terr-grid');
+    renderGrid();
+  } catch(err) {
+    hide('terr-loading');
+    const errEl = document.getElementById('terr-error');
+    errEl.innerHTML = `<div class="error-wrap">Error al cargar territorios: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToStep1()">Reintentar</button></div>`;
+    show('terr-error');
+  }
+}
+
+function renderGrid() {
+  const g = document.getElementById('terr-grid'); g.innerHTML='';
+  if(!territoriosData || Object.keys(territoriosData).length === 0){
+    g.innerHTML='<p style="color:#888;font-size:13px;grid-column:1/-1;text-align:center;">No hay territorios cargados para este grupo.</p>';
+    document.getElementById('sel-count').textContent='0 de 3 seleccionados';
+    document.getElementById('btn-next1').disabled=true;
+    return;
+  }
+
+  // Ordenar: en progreso primero, luego por días sin trabajar desc
+  const lista = Object.keys(territoriosData)
+  .filter(n => (configData[n] || 'normal') !== 'no_predica')
+  .map(n => {
+    const d = territoriosData[n];
+    const lastDate = d.lastFin || d.lastIni;
+    const estadoConfig = configData[n] || 'normal';
+    return { n, ...d, days: daysSince(lastDate), lastDate, estadoConfig };
+  }).sort((a,b) => {
+    if (a.enProgreso && !b.enProgreso) return -1;
+    if (!a.enProgreso && b.enProgreso) return 1;
+    return b.days - a.days;
+  });
+
+  lista.forEach(t => {
+    const isSelected = selected.includes(t.n);
+    const isSpecial = SPECIAL_TERR[t.n];
+    const btn = document.createElement('button');
+    let cls = 'terr-btn';
+    if (isSelected) cls += ' selected';
+    else if (t.enProgreso) cls += ' en-progreso';
+    btn.className = cls;
+
+    const dateLabel = t.lastDate ? `Últ: ${formatShortFull(t.lastDate)}` : 'Sin registro';
+    const daysLabel = t.enProgreso
+      ? '<div class="badge-progreso">en progreso</div>'
+      : `<div class="terr-days ${dayClass(t.days)}">${t.days}d</div>`;
+    const peligroLabel = t.estadoConfig === 'peligroso' ? '<div class="badge-progreso" style="border-color:#EF9F27;color:#FAC775;">⚠ peligroso</div>' : '';
+
+    btn.innerHTML = `<div class="terr-num">${t.n}</div><div class="terr-date">${dateLabel}</div>${daysLabel}${peligroLabel}`;
+    btn.onclick = () => {
+      if(selected.includes(t.n)) selected=selected.filter(x=>x!==t.n);
+      else if(selected.length<3) selected.push(t.n);
+      renderGrid();
+    };
+    g.appendChild(btn);
+  });
+
+  document.getElementById('sel-count').textContent=`${selected.length} de 3 seleccionados`;
+  document.getElementById('btn-next1').disabled=selected.length!==3;
+}
+
+function condSelect(id, grupo) {
+  const conductores = CONDUCTORES_BY_GROUP[grupo] || [];
+  const opts = `<option value="">— Elegir conductor —</option>` + conductores.map(c => `<option value="${c}">${c}</option>`).join('');
+  return `<select id="${id}">${opts}</select>`;
+}
+
+function reorderPhone(){
+  const diaKey = document.getElementById('dia-phone')?.value || 'tue';
+  const c = document.getElementById('salidas-container');
+  const phoneCard = document.getElementById('card-phone');
+  if(!phoneCard) return;
+  phoneCard.dataset.diaKey = diaKey;
+  phoneCard.dataset.fecha = WEEK[diaKey];
+  const horaInput = document.getElementById('hora-phone');
+  if(horaInput && !horaInput.dataset.edited) horaInput.value = DIA_DEFAULT_HORA[diaKey];
+  const phoneOrder = DIA_ORDER[diaKey] ?? 0;
+  const terrCards = selected.map((n,i)=>document.getElementById('card-terr-'+i)).filter(Boolean);
+  let inserted = false;
+  for(let i=0;i<terrCards.length;i++){
+    if(phoneOrder <= i && !inserted){
+      c.insertBefore(phoneCard, terrCards[i]);
+      inserted = true; break;
+    }
+  }
+  if(!inserted) c.appendChild(phoneCard);
+}
+
+function renderSalidas(){
+  const c=document.getElementById('salidas-container');c.innerHTML='';
+  selected.forEach((n,i)=>{
+    const cfg=DIA_CONFIG[i]; const fechaVal=WEEK[cfg.key];
+    const div=document.createElement('div');
+    div.className=`salida-card ${cfg.cardCls}`;
+    div.id='card-terr-'+i;
+    div.dataset.idx=i;
+    div.innerHTML=`
+      <div class="salida-header">
+        <span class="salida-label">Territorio ${n}</span>
+        <span class="dia-label ${cfg.cls}">${cfg.label}</span>
+      </div>
+      <div class="form-row">
+        <div><label>Conductor</label>${condSelect('cond-'+n, selectedGrupo)}</div>
+        <div><label>Día</label><input type="date" id="fecha-${n}" value="${fechaVal}"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Hora</label><input type="time" id="hora-${n}" value="18:30"></div>
+        <div><label>Encuentro / Familia</label><input type="text" id="enc-${n}" placeholder="Ej: Flia. García"></div>
+      </div>`;
+    c.appendChild(div);
+  });
+
+  const phoneDiv=document.createElement('div');
+  phoneDiv.className='salida-card tel-card';
+  phoneDiv.id='card-phone';
+  phoneDiv.dataset.diaKey='tue';
+  phoneDiv.dataset.fecha=WEEK.tue;
+  phoneDiv.innerHTML=`
+    <div class="salida-header">
+      <span class="salida-label">Salida telefónica</span>
+      <span class="phone-badge">Telefónica</span>
+    </div>
+    <div class="form-row">
+      <div><label>Conductor</label>${condSelect('cond-phone', selectedGrupo)}</div>
+      <div><label>Día</label>
+        <select id="dia-phone" onchange="reorderPhone()">
+          <option value="tue">Martes</option>
+          <option value="thu">Jueves</option>
+          <option value="fri">Viernes</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Hora</label><input type="time" id="hora-phone" value="17:30" oninput="this.dataset.edited='1'"></div>
+      <div><label>Encuentro / Familia</label><input type="text" id="enc-phone" placeholder="Ej: Flia. López"></div>
+    </div>`;
+  c.appendChild(phoneDiv);
+  reorderPhone();
+}
+
+function goToStep2(){
+  if(selected.length!==3)return;
+  hide('view-select');show('view-config');hide('view-preview');setStep(2);renderSalidas();
+}
+
+function goBackToConfig(){
+  hide('view-preview');show('view-config');setStep(2);
+  // No llama a renderSalidas() para preservar los datos ingresados
+}
+
+function autoFillAll(){
+  selected.forEach((n,i)=>{
+    const fd=document.getElementById('fecha-'+n);
+    const fh=document.getElementById('hora-'+n);
+    if(fd)fd.value=WEEK[DIA_CONFIG[i].key];
+    if(fh)fh.value='18:30';
+  });
+  const hp=document.getElementById('hora-phone');
+  const dp=document.getElementById('dia-phone');
+  if(hp){ delete hp.dataset.edited; hp.value=DIA_DEFAULT_HORA[dp?.value||'tue']; }
+}
+
+function clearAll(){
+  selected.forEach(n=>{
+    const fc=document.getElementById('cond-'+n);
+    const fh=document.getElementById('hora-'+n);
+    const fe=document.getElementById('enc-'+n);
+    if(fc)fc.value='';if(fh)fh.value='';if(fe)fe.value='';
+  });
+  const cp=document.getElementById('cond-phone');
+  const hp=document.getElementById('hora-phone');
+  const ep=document.getElementById('enc-phone');
+  const dp=document.getElementById('dia-phone');
+  if(cp)cp.value='';
+  if(hp){delete hp.dataset.edited; hp.value='';}
+  if(ep)ep.value='';
+  if(dp){dp.value='tue'; reorderPhone();}
+}
+
+function generatePreview(){
+  document.getElementById('preview-grupo-title').textContent=`Grupo ${selectedGrupo} — Salidas de la semana`;
+  document.getElementById('preview-grupo-label').textContent=`Grupo ${selectedGrupo} · Congregación Sur`;
+  const DIA_BADGE={
+    tue:'<div class="dia-badge badge-mar">Martes</div>',
+    thu:'<div class="dia-badge badge-jue">Jueves</div>',
+    fri:'<div class="dia-badge badge-vie">Viernes</div>'
+  };
+  const c = document.getElementById('salidas-container');
+  const rows = [];
+  Array.from(c.children).forEach(card => {
+    if(card.id === 'card-phone'){
+      const diaKey = card.dataset.diaKey || 'tue';
+      rows.push({
+        enc: document.getElementById('enc-phone').value||'—',
+        terr:'TELEFÓNICA', tel:true,
+        badge: DIA_BADGE[diaKey],
+        fecha: formatShortFull(card.dataset.fecha||WEEK.tue).replace(/\//g,'-'),
+        cond: document.getElementById('cond-phone').value||'—',
+        hora: (document.getElementById('hora-phone').value||'17:30').replace(':','.')
+      });
+    } else {
+      const i = parseInt(card.dataset.idx);
+      const n = selected[i];
+      rows.push({
+        enc: document.getElementById('enc-'+n).value||'—',
+        terr: n, tel:false,
+        badge: DIA_BADGE[DIA_CONFIG[i].key],
+        fecha: formatShortFull(document.getElementById('fecha-'+n).value).replace(/\//g,'-'),
+        cond: document.getElementById('cond-'+n).value||'—',
+        hora: (document.getElementById('hora-'+n).value||'18:30').replace(':','.')
+      });
+    }
+  });
+  document.getElementById('preview-body').innerHTML=rows.map(r=>`
+    <tr${r.tel?' class="tel-row"':''}>
+      <td>${r.enc}</td>
+      <td>${r.tel?'<div class="tel-terr">Telefónica</div>':`<div class="terr-num-big">${r.terr}</div>`}</td>
+      <td>${r.badge}<div class="fecha-num">${r.fecha}</div></td>
+      <td><div class="cond-txt">${r.cond}</div></td>
+      <td><div class="hora-txt">${r.hora}</div></td>
+    </tr>`).join('');
+  hide('view-config');show('view-preview');setStep(3);
+}
+
+function guardarImagen(){
+  const el = document.querySelector('.card-preview');
+  const originalWidth = el.style.width;
+  el.style.width = '900px';
+html2canvas(el, { backgroundColor: '#1e1e1e', scale: 1, width: 900 }).then(canvas => {
+    el.style.width = originalWidth;
+    const link = document.createElement('a');
+    link.download = `salidas-grupo-${selectedGrupo}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.92);
+    link.click();
+  });
+}
+  
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificador de Salidas</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; padding: 1rem; background: #1e1e1e; color: #eee; min-height: 100vh; }
+
+.step-bar { display: flex; gap: 6px; margin-bottom: 20px; }
+.step { flex: 1; height: 3px; border-radius: 2px; background: #444; }
+.step.active { background: #185FA5; }
+.step.done { background: #1D9E75; }
+
+.section-title { font-size: 22px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
+.section-sub { font-size: 14px; color: #888; margin-bottom: 16px; text-align: center; }
+
+.terr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 18px; }
+.terr-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 14px 8px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
+.terr-btn:hover { border-color: #666; }
+.terr-btn.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
+.terr-btn.en-progreso { border: 1.5px solid #EF9F27; background: #2e1e00; }
+.terr-btn.en-progreso.selected { border: 1.5px solid #378ADD; background: #0c2a45; }
+.terr-num { font-size: 26px; font-weight: 500; color: #eee; }
+.terr-btn.selected .terr-num { color: #85B7EB; }
+.terr-date { font-size: 11px; color: #888; margin-top: 5px; }
+.terr-days { font-size: 14px; font-weight: 600; margin-top: 5px; }
+.days-old { color: #F09595; }
+.days-mid { color: #FAC775; }
+.days-new { color: #C0DD97; }
+.badge-progreso { font-size: 10px; font-weight: 500; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; margin-top: 4px; display: inline-block; }
+
+.step1-footer { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.step1-footer span { font-size: 13px; color: #888; }
+
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 14px; }
+.spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #1D9E75; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt { font-size: 14px; color: #888; }
+.error-wrap { background: #2e1a1a; border: 0.5px solid #A32D2D; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 16px; font-size: 13px; color: #F09595; }
+
+.salida-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+.salida-card.card-mar { border-left: 3px solid #378ADD; }
+.salida-card.card-thu { border-left: 3px solid #EF9F27; }
+.salida-card.card-fri { border-left: 3px solid #639922; }
+.salida-card.tel-card { border-left: 3px solid #1D9E75; background: #0d2420; }
+.salida-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.salida-label { font-size: 16px; font-weight: 500; color: #eee; }
+.phone-badge { font-size: 13px; background: #0a2e24; color: #5DCAA5; padding: 3px 10px; border-radius: 20px; border: 0.5px solid #1D9E75; }
+.dia-label { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
+.dia-martes { color: #85B7EB; }
+.dia-jueves { color: #FAC775; }
+.dia-viernes { color: #C0DD97; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+select, input[type=text], input[type=date], input[type=time] { width: 100%; font-size: 13px; padding: 6px 8px; border: 0.5px solid #555; border-radius: 8px; background: #1e1e1e; color: #eee; }
+select option { background: #2a2a2a; color: #eee; }
+label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
+
+.btn-primary { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; }
+.btn-primary:hover { background: #0C447C; }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-secondary { padding: 10px 16px; font-size: 14px; border: 0.5px solid #555; border-radius: 8px; background: #2a2a2a; color: #ccc; cursor: pointer; }
+.btn-secondary:hover { background: #333; }
+.btn-autofill { font-size: 14px; padding: 8px 16px; background: #1a2e0a; color: #97C459; border: 0.5px solid #3B6D11; border-radius: 8px; cursor: pointer; }
+.btn-clear { font-size: 14px; padding: 8px 16px; background: #2e1a1a; color: #F09595; border: 0.5px solid #A32D2D; border-radius: 8px; cursor: pointer; }
+.btn-save { padding: 10px 16px; font-size: 14px; font-weight: 500; background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer; }
+.btn-save:hover { background: #0F6E56; }
+
+/* ── Modo selector ── */
+.modo-wrap { min-height: calc(100vh - 4rem); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 2rem 1rem; }
+.modo-titulo { font-size: 48px; font-weight: 500; color: #ccc; margin-bottom: 20px; text-align: center; }
+.grupo-color-1 { color: #378ADD; }
+.grupo-color-2 { color: #EF9F27; }
+.grupo-color-3 { color: #97C459; }
+.grupo-color-4 { color: #D85A30; }
+.grupo-color-C { color: #7F77DD; }
+.modo-card { width: 100%; max-width: 320px; background: #2a2a2a; border: 1.5px solid #444; border-radius: 14px; padding: 1.25rem 1.5rem; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+.modo-card:hover { transform: scale(1.02); }
+.modo-card:active { transform: scale(0.98); }
+.modo-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modo-icon-plan { background: rgba(55,138,221,0.15); }
+.modo-icon-reg { background: rgba(29,158,117,0.15); }
+.modo-card-title { font-size: 16px; font-weight: 500; color: #eee; margin-bottom: 3px; }
+.modo-card-sub { font-size: 13px; color: #888; }
+
+/* ── Registro de territorios ── */
+.reg-card { background: #2a2a2a; border: 0.5px solid #444; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+.reg-card.completado { border-left: 3px solid #1D9E75; opacity: 0.6; }
+.reg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.reg-terr { font-size: 18px; font-weight: 500; color: #eee; }
+.reg-ini { font-size: 12px; color: #888; }
+.toggle-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
+.toggle-btn { flex: 1; padding: 7px; font-size: 13px; border-radius: 8px; border: 0.5px solid #555; background: #1e1e1e; color: #aaa; cursor: pointer; }
+.toggle-btn.active-comp { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
+.toggle-btn.active-prog { background: #2e1e00; border-color: #EF9F27; color: #FAC775; }
+.reg-empty { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
+.btn-guardar { width: 100%; padding: 12px; font-size: 15px; font-weight: 500; background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 8px; }
+.btn-guardar:hover { background: #0F6E56; }
+.btn-guardar:disabled { opacity: 0.35; cursor: not-allowed; }
+.save-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 20px; }
+
+.cover { min-height: calc(100vh - 2rem); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; text-align: center; }
+.cover-icon { width: 80px; height: 80px; background: rgba(59,109,17,0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+.cover-title { font-size: 62px; font-weight: 500; color: #97C459; line-height: 1.1; margin-bottom: 10px; }
+.cover-subtitle { font-size: 22px; color: #639922; letter-spacing: 0.04em; margin-bottom: 52px; }
+.grupo-label { font-size: 20px; font-weight: 500; color: #ccc; margin-bottom: 16px; }
+.grupo-grid { display: flex; gap: 12px; margin-bottom: 36px; }
+.grupo-btn { width: 72px; height: 72px; border-radius: 14px; border: 1.5px solid #444; background: #2a2a2a; font-size: 26px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s; }
+.grupo-btn:hover { transform: scale(1.08); }
+.grupo-btn:active { transform: scale(0.96); }
+.grupo-btn.selected { border-width: 2px; }
+.btn-start { padding: 14px 48px; font-size: 16px; font-weight: 500; background: #3B6D11; color: #fff; border: none; border-radius: 12px; cursor: pointer; opacity: 0.3; pointer-events: none; letter-spacing: 0.02em; }
+.btn-start.enabled { opacity: 1; pointer-events: auto; }
+.btn-start.enabled:hover { background: #27500A; }
+/* ── Panel de info del grupo ── */
+.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.info-btn { background: #2a2a2a; border: 0.5px solid #444; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; }
+.info-btn:hover { border-color: #666; }
+.info-btn.estado-normal { border-color: #444; }
+.info-btn.estado-peligroso { border: 1.5px solid #EF9F27; background: #2e1e00; }
+.info-btn.estado-no_predica { border: 1.5px solid #A32D2D; background: #2e1a1a; }
+.info-btn-num { font-size: 20px; font-weight: 500; color: #eee; }
+.info-btn-date { font-size: 10px; color: #888; margin-top: 3px; }
+.info-btn-estado { font-size: 10px; font-weight: 500; margin-top: 3px; }
+.info-btn.estado-peligroso .info-btn-estado { color: #FAC775; }
+.info-btn.estado-no_predica .info-btn-estado { color: #F09595; }
+.info-btn.estado-normal .info-btn-estado { color: #888; }
+.info-legend { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.estado-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; box-sizing: border-box; }
+.estado-modal-card { background: #2a2a2a; border: 0.5px solid #555; border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+.estado-modal-title { font-size: 26px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
+.estado-modal-sub { font-size: 13px; color: #888; margin-bottom: 16px; text-align: center; }
+.estado-opt { display: inline-flex; align-items: center; justify-content: center; width: calc(33% - 6px); padding: 9px 8px; font-size: 12px; font-weight: 500; border-radius: 10px; border: 1.5px solid; cursor: pointer; margin-bottom: 8px; text-align: center; transition: transform 0.1s, opacity 0.1s; }
+.estado-opt:hover { transform: scale(1.01); opacity: 0.9; }
+.estado-opt:active { transform: scale(0.98); }
+.estado-opt.opt-normal { background: #0d2e1a; border-color: #1D9E75; color: #5DCAA5; }
+.estado-opt.opt-normal:hover { background: #0f3d22; }
+.estado-opt.opt-peligroso { background: #2e1e00; border-color: #EF9F27; color: #FAC775; }
+.estado-opt.opt-peligroso:hover { background: #3a2500; }
+.estado-opt.opt-no_predica { background: #2e1a1a; border-color: #A32D2D; color: #F09595; }
+.estado-opt.opt-no_predica:hover { background: #3a2020; }
+.hist-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 14px; }
+.hist-table th { color: #888; font-weight: 500; padding: 8px 8px; text-align: left; border-bottom: 0.5px solid #444; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hist-table td { padding: 10px 8px; border-bottom: 0.5px solid #333; color: #eee; vertical-align: middle; }
+.hist-table tr:last-child td { border-bottom: none; }
+.hist-edit-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #555; border-radius: 6px; background: #1e1e1e; color: #aaa; cursor: pointer; margin-right: 4px; }
+.hist-edit-btn:hover { border-color: #888; color: #eee; }
+.hist-del-btn { font-size: 12px; padding: 4px 10px; border: 0.5px solid #A32D2D; border-radius: 6px; background: #2e1a1a; color: #F09595; cursor: pointer; }
+.hist-del-btn:hover { background: #3a2020; }
+.btn-add-entry { width: 100%; padding: 10px; font-size: 13px; border: 1px dashed #555; border-radius: 8px; background: transparent; color: #888; cursor: pointer; margin-bottom: 14px; }
+.btn-add-entry:hover { border-color: #888; color: #eee; }
+.edit-row-form { background: #1e1e1e; border: 0.5px solid #555; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+.edit-row-title { font-size: 12px; color: #888; margin-bottom: 8px; }
+.modal-divider { border: none; border-top: 0.5px solid #444; margin: 16px 0; }
+.modal-section-title { font-size: 15px; font-weight: 500; color: #ccc; letter-spacing: 0.02em; margin-bottom: 12px; text-align: center; }
+.hist-en-prog { font-size: 10px; color: #FAC775; background: #2e1e00; border: 0.5px solid #EF9F27; border-radius: 4px; padding: 1px 5px; }
+
+
+
+
+.preview-header-wrap { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
+.preview-title { font-size: 28px; font-weight: 500; color: #97C459; }
+.preview-subtitle { font-size: 14px; color: #639922; }
+.card-preview { background: #2a2a2a; border: 0.5px solid #444; border-radius: 16px; overflow: hidden; }
+.card-preview-header { padding: 14px 18px 12px; border-bottom: 0.5px solid #444; }
+.card-preview-top { font-size: 11px; font-weight: 500; color: #888; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 2px; }
+.card-preview-main { font-size: 17px; font-weight: 500; color: #eee; }
+table.preview { width: 100%; border-collapse: collapse; }
+table.preview th { background: #111; color: #fff; padding: 11px 10px; text-align: center; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; border-right: 0.5px solid rgba(255,255,255,0.08); }
+table.preview th:last-child { border-right: none; }
+table.preview td { padding: 10px 10px; text-align: center; border-bottom: 0.5px solid #3a3a3a; color: #eee; background: #2a2a2a; vertical-align: middle; }
+table.preview tr:last-child td { border-bottom: none; }
+table.preview tr:nth-child(odd) td { background: #242424; }
+table.preview tr.tel-row td { background: #0d2420; }
+table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
+.tel-terr { font-size: 14px; font-weight: 500; color: #5DCAA5; letter-spacing: 0.05em; text-transform: uppercase; }
+.dia-badge { display: inline-block; font-size: 14px; font-weight: 500; padding: 4px 12px; border-radius: 20px; margin-bottom: 3px; }
+.badge-mar { background: #0c2a45; color: #85B7EB; }
+.badge-jue { background: #2e1e00; color: #FAC775; }
+.badge-vie { background: #1a2e0a; color: #C0DD97; }
+.terr-num-big { font-size: 18px; font-weight: 500; color: #eee; }
+.fecha-num { font-size: 13px; color: #aaa; margin-top: 2px; }
+.cond-txt { font-size: 14px; font-weight: 500; color: #ddd; }
+.hora-txt { font-size: 15px; font-weight: 500; color: #eee; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="step-bar" id="step-bar" style="display:none;">
+  <div class="step" id="s1"></div>
+  <div class="step" id="s2"></div>
+  <div class="step" id="s3"></div>
+</div>
+
+<!-- PASO 0: Carátula -->
+<div id="view-cover">
+  <div class="cover">
+    <div class="cover-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+        <path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6M12 9v6" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="cover-title">Territory<br>App</div>
+    <div class="cover-subtitle">Congregación Sur</div>
+    <div class="grupo-label">¿Con qué grupo trabajás?</div>
+    <div class="grupo-grid">
+      <button class="grupo-btn" data-grupo="1" onclick="selectGrupo(this,1)">1</button>
+      <button class="grupo-btn" data-grupo="2" onclick="selectGrupo(this,2)">2</button>
+      <button class="grupo-btn" data-grupo="3" onclick="selectGrupo(this,3)">3</button>
+      <button class="grupo-btn" data-grupo="4" onclick="selectGrupo(this,4)">4</button>
+      <button class="grupo-btn" data-grupo="C" onclick="selectGrupo(this,'C')" style="font-size:16px;width:88px;">Congr.</button>
+    </div>
+    <button class="btn-start" id="btn-start" onclick="goToModo()">Empezar →</button>
+  </div>
+</div>
+
+
+<!-- PASO 0b: Elegir modo -->
+<div id="view-modo" style="display:none;">
+  <div class="modo-wrap">
+    <div class="modo-titulo">Grupo <span id="modo-grupo-label" style="font-size:inherit;">?</span></div>
+    <button class="modo-card modo-planificar" onclick="goToStep1()">
+      <div class="modo-icon modo-icon-plan">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div class="modo-card-title">Planificar salidas</div>
+        <div class="modo-card-sub">Armar las salidas de esta semana</div>
+      </div>
+    </button>
+    <button class="modo-card modo-registrar" onclick="goToRegistrar()">
+      <div class="modo-icon modo-icon-reg">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M7 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-2M9 3h6" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="modo-card-title">Registrar territorios</div>
+        <div class="modo-card-sub">Cerrar territorios de la semana</div>
+      </div>
+    </button>
+    <button class="modo-card" onclick="goToInfoGrupo()">
+      <div class="modo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div class="modo-card-title">Ver mi grupo</div>
+        <div class="modo-card-sub">Territorios y configuración</div>
+      </div>
+    </button>
+    <button class="btn-secondary" onclick="goToCover()" style="width:100%;max-width:320px;">&#8592; Volver</button>
+  </div>
+</div>
+
+<!-- REGISTRO: territorios en progreso -->
+<div id="view-registrar" style="display:none;">
+  <p class="section-title">Registrar territorios</p>
+  <p class="section-sub">Grupo <span id="reg-grupo-label">?</span> &mdash; marc&#225; los que se completaron</p>
+  <div id="reg-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+  <div id="reg-error" style="display:none;"></div>
+  <div id="reg-container" style="display:none;"></div>
+  <div id="reg-footer" style="display:none;">
+    <button class="btn-guardar" id="btn-guardar" onclick="guardarRegistros()">Guardar cambios</button>
+    <div class="save-status" id="save-status"></div>
+    <div style="margin-top:10px;">
+      <button class="btn-secondary" style="width:100%;" onclick="goToModo()">&#8592; Volver</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- INFO GRUPO -->
+<div id="view-info" style="display:none;">
   <p class="section-title">Mi grupo</p>
   <p class="section-sub">Grupo <span id="info-grupo-label">?</span> — tocá un territorio para cambiar su estado</p>
   <div id="info-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
