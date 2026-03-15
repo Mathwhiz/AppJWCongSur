@@ -438,7 +438,6 @@ async function goToInfoGrupo() {
           enProgreso: d.enProgreso
         };
       });
-    }
     const cfgUrl = SCRIPT_URL + '?action=getConfig&grupo=' + encodeURIComponent(selectedGrupo);
     const cfgResp = await fetch(cfgUrl);
     const cfgText = await cfgResp.text();
