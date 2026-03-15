@@ -132,6 +132,22 @@ function initMap() {
   });
 }
 
+// ── Parsear fecha del Sheet "dd/mm/yy" → "yyyy-mm-dd" ──
+function parseSheetDate(ds) {
+  if (!ds) return null;
+  const m = ds.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+  if (m) {
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${m[2]}-${m[1]}`;
+  }
+  return ds;
+}
+
+// ── Normalizar clave: "59A" → "59", "104B" → "104", "92C" → "92"
+function baseNum(num) {
+  return String(num).replace(/[A-C]$/i, '');
+}
+
 // ── Cargar info del Sheet ──
 async function loadTerritoriosInfo() {
   try {
@@ -144,8 +160,14 @@ async function loadTerritoriosInfo() {
     results.forEach(data => {
       Object.keys(data).forEach(terr => {
         const d = data[terr];
+        // Usar lastFin si ya existe, para no pisar con dato peor
         if (!territoriosInfo[terr] || d.lastFin) {
-          territoriosInfo[terr] = { lastFin: d.lastFin, lastIni: d.lastIni, enProgreso: d.enProgreso, conductor: d.conductor };
+          territoriosInfo[terr] = {
+            lastFin:    parseSheetDate(d.lastFin),
+            lastIni:    parseSheetDate(d.lastIni),
+            enProgreso: d.enProgreso,
+            conductor:  d.conductor
+          };
         }
       });
     });
