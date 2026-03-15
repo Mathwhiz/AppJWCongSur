@@ -427,7 +427,7 @@ async function goToInfoGrupo() {
 
   try {
     // Cargar territorios y config en paralelo
-    if (!territoriosData || Object.keys(territoriosData).length === 0) {
+    territoriosData = {};
       const raw = await fetchGrupo(selectedGrupo);
       territoriosData = {};
       Object.keys(raw).forEach(terr => {
@@ -767,7 +767,7 @@ async function goToRegistrar(){
   hide('reg-footer');
 
   try {
-    if (!territoriosData || Object.keys(territoriosData).length === 0) {
+    territoriosData = {};
       const raw = await fetchGrupo(selectedGrupo);
       territoriosData = {};
       Object.keys(raw).forEach(terr => {
