@@ -141,6 +141,25 @@ async function fetchGrupo(grupo) {
 /* ─────────────────────────────────────────
    COVER / NAVEGACIÓN
 ───────────────────────────────────────── */
+// ─── Recuperar sesión si venimos del mapa ───
+(function() {
+  const grupoGuardado = sessionStorage.getItem('selectedGrupo');
+  if (grupoGuardado) {
+    sessionStorage.removeItem('selectedGrupo');
+    // Esperar a que el DOM esté listo
+    window.addEventListener('DOMContentLoaded', () => {
+      selectedGrupo = isNaN(grupoGuardado) ? grupoGuardado : parseInt(grupoGuardado);
+      // Simular selección visual del botón
+      document.querySelectorAll('.grupo-btn').forEach(btn => {
+        if (String(btn.dataset.grupo) === String(grupoGuardado)) {
+          selectGrupo(btn, isNaN(grupoGuardado) ? grupoGuardado : parseInt(grupoGuardado));
+        }
+      });
+      goToModo();
+    });
+  }
+})();
+
 const WEEK = getWeekDates();
 
 function applyGrupoColors() {
@@ -205,6 +224,11 @@ function goToModo() {
 
   show('view-modo');
   document.getElementById('step-bar').style.display = 'none';
+}
+
+function goToMapa() {
+  sessionStorage.setItem('selectedGrupo', selectedGrupo);
+  window.location.href = 'mapa.html';
 }
 
 function cerrarSesion() {

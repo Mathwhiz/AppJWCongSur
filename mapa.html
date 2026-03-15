@@ -200,7 +200,7 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; hei
 
 <!-- Header -->
 <div class="map-header">
-  <button class="map-back-btn" onclick="window.location.href='index.html'">
+  <button class="map-back-btn" onclick="history.back()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <div>
@@ -378,148 +378,198 @@ async function loadKML() {
 
 // ─────────────────────────────────────────────────────────
 //  PARSEAR KML
+//  Estructura real del mapa:
+//  - "Puntos importantes" / "Puntos Santa Rosa" → marcadores con número de territorio
+//  - "Territorios Santa Rosa"   → polígonos grupo 1-4
+//  - "Territorios Congregación" → polígonos congregación
+//  - El resto (plazas, manzanas) → ignorar
 // ─────────────────────────────────────────────────────────
+
+// Capas que contienen territorios reales — todo lo demás se ignora
+const CAPAS_TERRITORIOS = [
+  'territorios santa rosa',
+  'territorios congregacion',
+  'territorios congregación',
+  'puntos importantes',
+  'puntos santa rosa',
+];
+
+// Qué grupo asignar según el nombre de la capa
+function grupoDeFolder(nombre) {
+  if (!nombre) return null;
+  const n = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if (n.includes('congregac')) return 'C';
+  if (n.includes('santa rosa') || n.includes('territorios')) return null; // grupos 1-4, se detectan por número
+  if (n.includes('puntos')) return null; // ídem
+  return null;
+}
+
+// Las capas de "Territorios Santa Rosa" y "Puntos" mezclan grupos 1-4.
+// El grupo se detecta por el color del estilo en el KML (Google My Maps colorea por grupo).
+// Mapeamos los colores KML (formato AABBGGRR) a grupos.
+// Si no hay color definido, usamos el número como fallback.
+const COLOR_A_GRUPO = {
+  // Azul  → Grupo 1
+  'ff0000ff': '1', 'ff4169e1': '1', 'ff0000cd': '1', 'ff1e90ff': '1',
+  'ff4285f4': '1', 'ff5b9bd5': '1',
+  // Naranja/Amarillo → Grupo 2
+  'ff00a5ff': '2', 'ff00b4ff': '2', 'ff0099ff': '2', 'ffffb300': '2',
+  'ffff8c00': '2', 'ffe6811f': '2', 'ffef9f27': '2',
+  // Verde → Grupo 3
+  'ff00ff00': '3', 'ff008000': '3', 'ff228b22': '3', 'ff32cd32': '3',
+  'ff57bb8a': '3', 'ff97c459': '3', 'ff3b6d11': '3',
+  // Rojo/Coral → Grupo 4
+  'ffff0000': '4', 'ffdc143c': '4', 'ffff4500': '4', 'ffff6347': '4',
+  'ffd85a30': '4', 'ffe84c3e': '4',
+  // Violeta → Congregación
+  'ff800080': 'C', 'ff9400d3': 'C', 'ff8a2be2': 'C', 'ff7f77dd': 'C',
+  'ff673ab7': 'C', 'ff9c27b0': 'C',
+};
+
+function grupoDeColor(kmlColor) {
+  if (!kmlColor) return null;
+  const c = kmlColor.toLowerCase().trim();
+  // Buscar match exacto
+  if (COLOR_A_GRUPO[c]) return COLOR_A_GRUPO[c];
+  // Buscar match parcial (últimos 6 chars = BBGGRR)
+  const bgr = c.slice(-6);
+  for (const [key, val] of Object.entries(COLOR_A_GRUPO)) {
+    if (key.slice(-6) === bgr) return val;
+  }
+  return null;
+}
+
 function parseAndRenderKML(kmlText) {
   const parser = new DOMParser();
   const kml = parser.parseFromString(kmlText, 'text/xml');
 
-  // Manejar NetworkLink (como el tuyo que apunta a otro KML)
-  const networkLinks = kml.querySelectorAll('NetworkLink');
-  if (networkLinks.length > 0) {
-    // El KML que exportaste es un NetworkLink — ya lo estamos resolviendo
-    // con la URL directa en KML_URL, así que si llegamos acá es el contenido real
-  }
+  // Leer StyleMap y Style globales para resolver colores por styleUrl
+  const estilos = {};
+  kml.querySelectorAll('Style').forEach(s => {
+    const id = s.getAttribute('id');
+    if (!id) return;
+    const fillColor = s.querySelector('PolyStyle > color, IconStyle > color, LineStyle > color')?.textContent;
+    if (fillColor) estilos['#' + id] = fillColor;
+  });
+  kml.querySelectorAll('StyleMap').forEach(sm => {
+    const id = sm.getAttribute('id');
+    // Tomar el primer Pair "normal"
+    sm.querySelectorAll('Pair').forEach(pair => {
+      const key = pair.querySelector('key')?.textContent;
+      const url = pair.querySelector('styleUrl')?.textContent;
+      if (key === 'normal' && url && estilos[url]) {
+        estilos['#' + id] = estilos[url];
+      }
+    });
+  });
 
-  // Buscar Folders/capas → cada Folder es un grupo
-  const folders = kml.querySelectorAll('Folder, Document');
   let processedSomething = false;
 
-  folders.forEach(folder => {
+  // Iterar folders
+  kml.querySelectorAll('Folder').forEach(folder => {
     const folderName = folder.querySelector(':scope > name')?.textContent?.trim() || '';
-    const grupo = detectarGrupo(folderName);
+    const fn = folderName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-    // Placemarks dentro de este folder
-    folder.querySelectorAll(':scope > Placemark').forEach(pm => {
-      procesarPlacemark(pm, grupo);
+    // Ignorar capas que no son territorios
+    const esCapa = CAPAS_TERRITORIOS.some(c => fn.includes(c.normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+    if (!esCapa) return;
+
+    const grupoCapa = grupoDeFolder(folderName); // 'C' si es congregación, null si es mixto
+
+    folder.querySelectorAll('Placemark').forEach(pm => {
+      const nombre = pm.querySelector('name')?.textContent?.trim() || '';
+      const numero = nombre.replace(/\D/g, '') || nombre;
+      if (!numero) return; // sin número = no es territorio
+
+      // Determinar grupo: capa fija > color del estilo > fallback gris
+      let grupo = grupoCapa;
+      if (!grupo) {
+        const styleUrl = pm.querySelector('styleUrl')?.textContent || '';
+        const colorRaw = estilos[styleUrl]
+          || pm.querySelector('PolyStyle > color, IconStyle > color')?.textContent;
+        grupo = grupoDeColor(colorRaw);
+      }
+
+      procesarPlacemark(pm, numero, nombre, grupo, estilos);
       processedSomething = true;
     });
   });
 
-  // También procesar Placemarks raíz
-  kml.querySelectorAll('Document > Placemark').forEach(pm => {
-    const grupo = detectarGrupoDeStyle(pm);
-    procesarPlacemark(pm, grupo);
-    processedSomething = true;
-  });
-
   if (!processedSomething) {
-    showError('No se encontraron territorios en el mapa.');
+    showError('No se encontraron territorios. Revisá los nombres de las capas.');
     loadEjemplo();
   } else {
     fitAllLayers();
   }
 }
 
-function detectarGrupo(nombre) {
-  if (!nombre) return null;
-  const n = nombre.toLowerCase();
-  if (n.includes('grupo 1') || n.includes('group 1') || n === '1') return '1';
-  if (n.includes('grupo 2') || n.includes('group 2') || n === '2') return '2';
-  if (n.includes('grupo 3') || n.includes('group 3') || n === '3') return '3';
-  if (n.includes('grupo 4') || n.includes('group 4') || n === '4') return '4';
-  if (n.includes('congreg') || n === 'c') return 'C';
-  return null;
-}
+function procesarPlacemark(pm, numero, nombre, grupo, estilos) {
+  const colors = GRUPO_COLORS[grupo] || { fill: '#888888', border: '#555555', bg: 'rgba(136,136,136,0.2)' };
 
-function detectarGrupoDeStyle(pm) {
-  // Intentar detectar grupo por color del estilo
-  const styleUrl = pm.querySelector('styleUrl')?.textContent || '';
-  const fillColor = pm.querySelector('PolyStyle color')?.textContent || '';
-  // Fallback: sin grupo conocido
-  return null;
-}
+  function makeLabel(center) {
+    return L.marker(center, {
+      interactive: false,
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="
+          background:rgba(20,20,20,0.88);
+          border:1.5px solid ${colors.fill};
+          color:${colors.fill};
+          border-radius:7px;
+          padding:1px 6px;
+          font-size:11px;
+          font-weight:700;
+          font-family:system-ui,sans-serif;
+          white-space:nowrap;
+          pointer-events:none;
+        ">${numero}</div>`,
+        iconAnchor: [0, 0],
+      })
+    });
+  }
 
-function procesarPlacemark(pm, grupo) {
-  const nombre = pm.querySelector('name')?.textContent?.trim() || '';
-  // El número de territorio es el nombre (o parte de él)
-  const numero = nombre.replace(/[^0-9]/g, '') || nombre;
-
-  // Detectar grupo del nombre si no viene del folder
-  const grupoFinal = grupo || detectarGrupo(nombre) || detectarGrupoPorNumero(numero);
-  const colors = GRUPO_COLORS[grupoFinal] || { fill: '#888', border: '#555', bg: 'rgba(136,136,136,0.2)' };
-
-  // Polígono
-  const coordsEl = pm.querySelector('Polygon coordinates, LinearRing coordinates, coordinates');
-  if (coordsEl) {
+  // ── Polígono ──
+  const coordsEl = pm.querySelector('coordinates');
+  if (coordsEl && pm.querySelector('Polygon, LinearRing')) {
     const latlngs = parseCoordsKML(coordsEl.textContent);
     if (latlngs.length > 2) {
       const polygon = L.polygon(latlngs, {
-        color:       colors.border,
-        fillColor:   colors.fill,
-        fillOpacity: 0.25,
-        weight:      2,
-        opacity:     0.9,
+        color: colors.border, fillColor: colors.fill,
+        fillOpacity: 0.22, weight: 2, opacity: 0.85,
       });
-
-      // Label en el centro
       const center = polygon.getBounds().getCenter();
-      const label = L.divIcon({
-        className: '',
-        html: `<div style="
-          background:rgba(30,30,30,0.85);
-          border:1.5px solid ${colors.fill};
-          color:${colors.fill};
-          border-radius:8px;
-          padding:2px 6px;
-          font-size:12px;
-          font-weight:600;
-          font-family:system-ui,sans-serif;
-          white-space:nowrap;
-          backdrop-filter:blur(4px);
-        ">${numero}</div>`,
-        iconAnchor: [0, 0],
-      });
-      const labelMarker = L.marker(center, { icon: label, interactive: false });
+      const labelMarker = makeLabel(center);
 
-      // Popup al tocar
-      polygon.on('click', () => openTerrPopup(polygon, numero, grupoFinal, nombre));
-      polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.45, weight: 2.5 }));
-      polygon.on('mouseout',  () => {
-        if (activeFilter === 'all' || activeFilter === grupoFinal)
-          polygon.setStyle({ fillOpacity: 0.25, weight: 2 });
-      });
+      polygon.on('click', () => openTerrPopup(polygon, numero, grupo, nombre));
+      polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.42, weight: 2.5 }));
+      polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity: 0.22, weight: 2 }));
 
-      allLayers.push({ polygon, label: labelMarker, group: grupoFinal, numero });
+      allLayers.push({ polygon, label: labelMarker, group: grupo, numero });
       polygon.addTo(map);
       labelMarker.addTo(map);
+      return;
     }
   }
 
-  // Punto (si es un marcador solo)
+  // ── Punto ──
   const pointEl = pm.querySelector('Point coordinates');
-  if (pointEl && !coordsEl) {
+  if (pointEl) {
     const parts = pointEl.textContent.trim().split(',');
     if (parts.length >= 2) {
       const lat = parseFloat(parts[1]);
       const lng = parseFloat(parts[0]);
+      if (isNaN(lat) || isNaN(lng)) return;
       const marker = L.circleMarker([lat, lng], {
-        radius: 10,
-        color: colors.border,
-        fillColor: colors.fill,
-        fillOpacity: 0.8,
-        weight: 2,
+        radius: 9, color: colors.border, fillColor: colors.fill,
+        fillOpacity: 0.85, weight: 2,
       });
-      marker.on('click', () => openTerrPopup(marker, numero, grupoFinal, nombre));
-      allLayers.push({ polygon: marker, label: null, group: grupoFinal, numero });
+      const labelMarker = makeLabel([lat + 0.0002, lng]);
+      marker.on('click', () => openTerrPopup(marker, numero, grupo, nombre));
+      allLayers.push({ polygon: marker, label: labelMarker, group: grupo, numero });
       marker.addTo(map);
+      labelMarker.addTo(map);
     }
   }
-}
-
-function detectarGrupoPorNumero(num) {
-  // Si conocés qué números pertenecen a cada grupo, podés hardcodearlos acá
-  // Por ahora devuelve null (sin grupo conocido)
-  return null;
 }
 
 function parseCoordsKML(text) {
@@ -704,6 +754,7 @@ function loadEjemplo() {
 
 // ─── Arrancar ───
 initMap();
+
 </script>
 </body>
 </html>
