@@ -13,61 +13,35 @@ const ROLES_LABELS = {
   REVISTAS:             'Revistas',
   PUBLICACIONES:        'Publicaciones',
 };
-
 const ROLES = Object.keys(ROLES_LABELS);
 
 const DIA_COLORS = {
-  'Lunes':     '#85B7EB',
-  'Martes':    '#85B7EB',
-  'Miércoles': '#C0DD97',
-  'Jueves':    '#FAC775',
-  'Viernes':   '#C0DD97',
-  'Sábado':    '#CDB4FF',
-  'Domingo':   '#F09595',
+  'Lunes':'#85B7EB','Martes':'#85B7EB','Miércoles':'#C0DD97',
+  'Jueves':'#FAC775','Viernes':'#C0DD97','Sábado':'#CDB4FF','Domingo':'#F09595',
 };
-
 const DIA_BG = {
-  'Lunes':     '#0c1e33',
-  'Martes':    '#0c1e33',
-  'Miércoles': '#1a2e0a',
-  'Jueves':    '#2e1e00',
-  'Viernes':   '#1a2e0a',
-  'Sábado':    '#1e1a2e',
-  'Domingo':   '#2e1a1a',
+  'Lunes':'#0c1e33','Martes':'#0c1e33','Miércoles':'#1a2e0a',
+  'Jueves':'#2e1e00','Viernes':'#1a2e0a','Sábado':'#1e1a2e','Domingo':'#2e1a1a',
 };
 
 /* ─── Estado global ─── */
-let hermanos        = {};
-let semanaActual    = null;
-let programacion    = [];
+let hermanos         = {};
+let todasLasFilas    = [];   // todas las filas del sheet
+let autoResult       = [];
+let esEncargado      = false;
+let pinBuffer        = '';
 let semanaOffsetEdit = 0;
-let semanaOffsetAuto = 0;
-let autoResult      = [];
-let esEncargado     = false;
-let pinBuffer       = '';
 
 /* ─── Utilidades ─── */
-function show(id) { document.getElementById(id).style.display = ''; }
-function hide(id) { document.getElementById(id).style.display = 'none'; }
+function show(id) { const el = document.getElementById(id); if(el) el.style.display = ''; }
+function hide(id) { const el = document.getElementById(id); if(el) el.style.display = 'none'; }
+function setText(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
 
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
   show(id);
   const homeBtn = document.getElementById('btn-home');
-  if (homeBtn) {
-    const showHome = id !== 'view-cover';
-    homeBtn.classList.toggle('visible', showHome);
-  }
-}
-
-function getWeekDates(offset = 0) {
-  const now = new Date();
-  const day = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
-  const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
-  const sun = new Date(monday); sun.setDate(monday.getDate() + 6);
-  return { monday, sunday: sun, label: `${fmt(monday)} al ${fmt(sun)}`, lunes: fmt(monday) };
+  if (homeBtn) homeBtn.classList.toggle('visible', id !== 'view-cover');
 }
 
 function parseFecha(str) {
@@ -84,24 +58,76 @@ function getNombreDia(fechaStr) {
   return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d.getDay()];
 }
 
-function semanaKeyDeFecha(fechaStr) {
-  const d = parseFecha(fechaStr);
-  if (!d) return null;
-  const day = d.getDay();
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-  return `${String(monday.getDate()).padStart(2,'0')}/${String(monday.getMonth()+1).padStart(2,'0')}/${String(monday.getFullYear()).slice(-2)}`;
+function getLunesDeHoy() {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  return monday;
 }
 
+function getLunesDeOffset(offset) {
+  const monday = getLunesDeHoy();
+  monday.setDate(monday.getDate() + offset * 7);
+  return monday;
+}
+
+function fmtFecha(d) {
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+}
+
+// Devuelve las filas de la semana que contiene "hoy"
+// Si no hay, busca la semana más cercana hacia adelante con datos
+function getFilasSemanaActual(rows) {
+  const hoy = new Date();
+  // Filtramos filas cuya fecha sea >= lunes de esta semana y <= domingo
+  const lunes = getLunesDeHoy();
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+
+  let filasActual = rows.filter(r => {
+    const d = parseFecha(r.fecha);
+    return d && d >= lunes && d <= domingo;
+  });
+
+  // Si no hay datos esta semana, tomamos la semana con la fecha más próxima >= hoy
+  if (filasActual.length === 0) {
+    const futuras = rows
+      .filter(r => { const d = parseFecha(r.fecha); return d && d >= lunes; })
+      .sort((a,b) => parseFecha(a.fecha) - parseFecha(b.fecha));
+    if (futuras.length > 0) {
+      // Agarramos la semana de la primera fila futura
+      const primeraFecha = parseFecha(futuras[0].fecha);
+      const lunesFutura = new Date(primeraFecha);
+      const dayF = lunesFutura.getDay();
+      lunesFutura.setDate(lunesFutura.getDate() - (dayF === 0 ? 6 : dayF - 1));
+      const domingoFutura = new Date(lunesFutura); domingoFutura.setDate(lunesFutura.getDate() + 6);
+      filasActual = rows.filter(r => {
+        const d = parseFecha(r.fecha);
+        return d && d >= lunesFutura && d <= domingoFutura;
+      });
+    }
+  }
+  return filasActual;
+}
+
+function getLabelSemana(rows) {
+  if (!rows || rows.length === 0) return '—';
+  const fechas = rows.map(r => parseFecha(r.fecha)).filter(Boolean).sort((a,b) => a-b);
+  if (!fechas.length) return '—';
+  const lunes = new Date(fechas[0]);
+  const dayL = lunes.getDay();
+  lunes.setDate(lunes.getDate() - (dayL === 0 ? 6 : dayL - 1));
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+  return `${fmtFecha(lunes)} al ${fmtFecha(domingo)}`;
+}
+
+/* ─── JSONP fetch ─── */
 function apiFetch(params) {
   return new Promise((resolve, reject) => {
     const cbName = '_cb_' + Math.random().toString(36).slice(2);
     const qs = Object.entries(params).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
     const script = document.createElement('script');
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error('Timeout al conectar con el servidor'));
-    }, 15000);
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 15000);
     function cleanup() {
       clearTimeout(timeout);
       delete window[cbName];
@@ -109,118 +135,28 @@ function apiFetch(params) {
     }
     window[cbName] = (data) => { cleanup(); resolve(data); };
     script.src = `${SCRIPT_URL}?${qs}&callback=${cbName}`;
-    script.onerror = () => { cleanup(); reject(new Error('Error de red al contactar el servidor')); };
+    script.onerror = () => { cleanup(); reject(new Error('Error de red')); };
     document.head.appendChild(script);
   });
 }
 
-/* ─── Navegación ─── */
-function goToCover()          { showView('view-cover'); }
-function goToPin()            { openPin(); }
-function cerrarSesionEncargado() { esEncargado = false; goToCover(); }
-
-async function goToVerSemana() {
-  showView('view-semana');
-  show('semana-loading'); hide('semana-content'); hide('semana-error');
-  try {
-    const data = await apiFetch({ action: 'getSemanaActual' });
-    semanaActual = data.semanaActual;
-    programacion = data.rows || [];
-    document.getElementById('semana-label').textContent = `Semana del ${semanaActual || '—'}`;
-    hide('semana-loading');
-    renderSemana(programacion, 'semana-reuniones');
-    show('semana-content');
-  } catch(err) {
-    hide('semana-loading');
-    document.getElementById('semana-error').innerHTML = `<div class="error-wrap">Error al cargar: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToVerSemana()">Reintentar</button></div>`;
-    show('semana-error');
-  }
-}
-
-async function goToBuscarHermano() {
-  showView('view-buscar');
-  document.getElementById('search-input').value = '';
-  hide('search-suggestions');
-  hide('buscar-result');
-  hide('buscar-empty');
-  if (Object.keys(hermanos).length === 0) {
-    try {
-      hermanos = await apiFetch({ action: 'getHermanos' });
-    } catch(e) {}
-  }
-}
-
-function goToEncargado() { showView('view-encargado'); }
-
-async function goToEditar() {
-  showView('view-editar');
-  semanaOffsetEdit = 0;
-  await cargarEditar();
-}
-
-async function goToAutomatico() {
-  showView('view-automatico');
-  semanaOffsetAuto = 0;
-  hide('auto-loading'); hide('auto-preview'); hide('auto-guardar-wrap');
-  document.getElementById('auto-status').textContent = '';
-  autoResult = [];
-  updateSemanaAutoInfo();
-  if (Object.keys(hermanos).length === 0) {
-    try { hermanos = await apiFetch({ action: 'getHermanos' }); } catch(e) {}
-  }
-}
-
-async function goToGenerarImagen() {
-  showView('view-imagen');
-  show('imagen-loading'); hide('imagen-content');
-  try {
-    const data = await apiFetch({ action: 'getSemanaActual' });
-    const rows = data.rows || [];
-    document.getElementById('imagen-semana-label').textContent = `Semana del ${data.semanaActual || '—'}`;
-    document.getElementById('imagen-titulo').textContent = `Asignaciones — Semana del ${data.semanaActual || ''}`;
-    hide('imagen-loading');
-    renderTablaImagen(rows);
-    show('imagen-content');
-  } catch(err) {
-    hide('imagen-loading');
-  }
-}
-
-/* ─── PIN ─── */
-function openPin() {
-  pinBuffer = '';
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-  show('pin-modal');
-}
-
-function pinPress(d) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  updatePinDots();
-  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
-}
-
-function pinDelete() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-}
-
-function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('pd' + i);
-    const filled = i < pinBuffer.length;
-    dot.classList.toggle('filled', filled);
-    dot.style.borderColor = filled ? '#7F77DD' : '#555';
-    dot.style.background  = filled ? '#7F77DD' : 'transparent';
-  }
-}
+/* ─── PIN — verificación LOCAL (igual que territorios, sin roundtrip) ─── */
+// El PIN se guarda en la hoja Config del Sheet, pero para no tardar
+// lo cacheamos en memoria la primera vez que se verifica exitosamente.
+// Si querés cambiarlo basta con cambiar la hoja Config.
+let pinCorrecto = null;
 
 async function checkPin() {
   try {
+    // Si ya lo tenemos cacheado, comparamos directo
+    if (pinCorrecto !== null) {
+      validarPin(pinCorrecto);
+      return;
+    }
+    // Primera vez: fetch al servidor
     const data = await apiFetch({ action: 'checkPin', pin: pinBuffer });
     if (data.ok) {
+      pinCorrecto = pinBuffer; // cachear para la próxima
       hide('pin-modal');
       esEncargado = true;
       pinBuffer = '';
@@ -237,41 +173,155 @@ async function checkPin() {
   }
 }
 
+function validarPin(correcto) {
+  if (pinBuffer === correcto) {
+    hide('pin-modal');
+    esEncargado = true;
+    pinBuffer = '';
+    goToEncargado();
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
+    pinBuffer = '';
+    updatePinDots();
+  }
+}
+
+/* ─── Navegación ─── */
+function goToCover() { showView('view-cover'); }
+function goToPin()   { openPin(); }
+function cerrarSesionEncargado() { esEncargado = false; goToCover(); }
+
+async function goToVerSemana() {
+  showView('view-semana');
+  show('semana-loading'); hide('semana-content'); hide('semana-error');
+  try {
+    if (todasLasFilas.length === 0) {
+      const data = await apiFetch({ action: 'getProgramacion' });
+      todasLasFilas = data.rows || [];
+    }
+    const filas = getFilasSemanaActual(todasLasFilas);
+    setText('semana-label', `Semana del ${getLabelSemana(filas)}`);
+    hide('semana-loading');
+    renderSemana(filas, 'semana-reuniones');
+    show('semana-content');
+  } catch(err) {
+    hide('semana-loading');
+    const errEl = document.getElementById('semana-error');
+    if (errEl) errEl.innerHTML = `<div class="error-wrap">Error al cargar: ${err.message}. <button class="btn-secondary" style="font-size:12px;padding:4px 10px;margin-left:8px;" onclick="goToVerSemana()">Reintentar</button></div>`;
+    show('semana-error');
+  }
+}
+
+async function goToBuscarHermano() {
+  showView('view-buscar');
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  hide('search-suggestions'); hide('buscar-result'); hide('buscar-empty'); hide('buscar-loading');
+  // Cargar hermanos y todas las filas en paralelo si no las tenemos
+  const promises = [];
+  if (Object.keys(hermanos).length === 0)
+    promises.push(apiFetch({ action: 'getHermanos' }).then(d => { hermanos = d; }).catch(()=>{}));
+  if (todasLasFilas.length === 0)
+    promises.push(apiFetch({ action: 'getProgramacion' }).then(d => { todasLasFilas = d.rows || []; }).catch(()=>{}));
+  await Promise.all(promises);
+}
+
+function goToEncargado() { showView('view-encargado'); }
+
+async function goToEditar() {
+  showView('view-editar');
+  semanaOffsetEdit = 0;
+  await cargarEditar();
+}
+
+async function goToAutomatico() {
+  showView('view-automatico');
+  hide('auto-loading'); hide('auto-preview'); hide('auto-guardar-wrap');
+  setText('auto-status', '');
+  autoResult = [];
+  if (Object.keys(hermanos).length === 0) {
+    try { hermanos = await apiFetch({ action: 'getHermanos' }); } catch(e) {}
+  }
+  if (todasLasFilas.length === 0) {
+    try { const d = await apiFetch({ action: 'getProgramacion' }); todasLasFilas = d.rows || []; } catch(e) {}
+  }
+  renderAutoInfo();
+}
+
+async function goToGenerarImagen() {
+  showView('view-imagen');
+  show('imagen-loading'); hide('imagen-content');
+  try {
+    if (todasLasFilas.length === 0) {
+      const data = await apiFetch({ action: 'getProgramacion' });
+      todasLasFilas = data.rows || [];
+    }
+    const filas = getFilasSemanaActual(todasLasFilas);
+    setText('imagen-semana-label', `Semana del ${getLabelSemana(filas)}`);
+    setText('imagen-titulo', `Asignaciones — Semana del ${getLabelSemana(filas)}`);
+    hide('imagen-loading');
+    renderTablaImagen(filas);
+    show('imagen-content');
+  } catch(err) {
+    hide('imagen-loading');
+  }
+}
+
+/* ─── PIN modal ─── */
+function openPin() {
+  pinBuffer = '';
+  updatePinDots();
+  setText('pin-error', '');
+  show('pin-modal');
+}
+function pinPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
+}
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+  setText('pin-error', '');
+}
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.style.borderColor = i < pinBuffer.length ? '#7F77DD' : '#555';
+    dot.style.background  = i < pinBuffer.length ? '#7F77DD' : 'transparent';
+  }
+}
 function pinCancel() { hide('pin-modal'); pinBuffer = ''; }
 
 /* ─── Render semana ─── */
 function renderSemana(rows, containerId) {
   const c = document.getElementById(containerId);
+  if (!c) return;
   c.innerHTML = '';
-
   if (!rows || rows.length === 0) {
     c.innerHTML = '<div class="empty-state"><p>No hay programación cargada para esta semana.</p></div>';
     return;
   }
-
   rows.forEach(row => {
     const dia = row.dia || getNombreDia(row.fecha);
     const diaColor = DIA_COLORS[dia] || '#eee';
     const diaBg    = DIA_BG[dia] || '#1e1e1e';
-
-    const card = document.createElement('div');
-    card.className = 'reunion-card';
-
     const rolesHTML = ROLES.map(r => {
       const val = row[r] || '';
       if (!val) return '';
-      return `<div class="rol-row">
-        <span class="rol-label">${ROLES_LABELS[r]}</span>
-        <span class="rol-valor">${val}</span>
-      </div>`;
+      return `<div class="rol-row"><span class="rol-label">${ROLES_LABELS[r]}</span><span class="rol-valor">${val}</span></div>`;
     }).filter(Boolean).join('');
-
+    const card = document.createElement('div');
+    card.className = 'reunion-card';
     card.innerHTML = `
       <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};">
         <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
         <span class="reunion-fecha">${row.fecha || ''}</span>
       </div>
-      <div class="roles-list">${rolesHTML || '<div style="color:#666;font-size:13px;padding:8px 0;">Sin datos cargados</div>'}</div>`;
+      <div class="roles-list">${rolesHTML || '<div style="color:#666;font-size:13px;padding:8px 0;">Sin datos</div>'}</div>`;
     c.appendChild(card);
   });
 }
@@ -286,57 +336,55 @@ function getAllHermanos() {
 }
 
 function filtrarHermanos() {
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
-  const sugg = document.getElementById('search-suggestions');
-  hide('buscar-result');
-  hide('buscar-empty');
-
+  const q = document.getElementById('search-input')?.value.trim().toLowerCase() || '';
+  hide('buscar-result'); hide('buscar-empty');
   if (q.length < 2) { hide('search-suggestions'); return; }
-
-  const todos = getAllHermanos();
-  const matches = todos.filter(h => h.toLowerCase().includes(q));
-
+  const matches = getAllHermanos().filter(h => h.toLowerCase().includes(q));
   if (matches.length === 0) { hide('search-suggestions'); return; }
-
-  sugg.innerHTML = matches.slice(0, 8).map(h =>
-    `<button class="sugg-item" onclick="buscarHermano('${h}')">${h}</button>`
-  ).join('');
-  show('search-suggestions');
+  const sugg = document.getElementById('search-suggestions');
+  if (sugg) {
+    sugg.innerHTML = matches.slice(0,8).map(h =>
+      `<button class="sugg-item" onclick="buscarHermano('${h.replace(/'/g,"\\'")}')">  ${h}</button>`
+    ).join('');
+    show('search-suggestions');
+  }
 }
 
 async function buscarHermano(nombre) {
   hide('search-suggestions');
-  document.getElementById('search-input').value = nombre;
-  hide('buscar-empty');
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = nombre;
+  hide('buscar-empty'); hide('buscar-result');
+  show('buscar-loading');
 
   try {
-    const data = await apiFetch({ action: 'getSemanaActual' });
-    const rows = data.rows || [];
+    if (todasLasFilas.length === 0) {
+      const data = await apiFetch({ action: 'getProgramacion' });
+      todasLasFilas = data.rows || [];
+    }
+    const filas = getFilasSemanaActual(todasLasFilas);
+    hide('buscar-loading');
 
     const asignaciones = [];
-    rows.forEach(row => {
+    filas.forEach(row => {
       const dia = row.dia || getNombreDia(row.fecha);
       ROLES.forEach(r => {
         const val = (row[r] || '').trim();
-        if (val.toLowerCase() === nombre.toLowerCase()) {
+        if (val.toLowerCase() === nombre.toLowerCase())
           asignaciones.push({ dia, fecha: row.fecha, rol: ROLES_LABELS[r] });
-        }
       });
     });
 
     const res = document.getElementById('buscar-result');
-    if (asignaciones.length === 0) {
-      show('buscar-empty');
-      return;
-    }
+    if (asignaciones.length === 0) { show('buscar-empty'); return; }
 
     res.innerHTML = `
       <div class="buscar-nombre">${nombre}</div>
-      <div class="buscar-semana">Semana del ${data.semanaActual || '—'}</div>
+      <div class="buscar-semana">Semana del ${getLabelSemana(filas)}</div>
       ${asignaciones.map(a => {
         const diaColor = DIA_COLORS[a.dia] || '#eee';
         const diaBg    = DIA_BG[a.dia] || '#1e1e1e';
-        return `<div class="asig-card" style="border-left:3px solid ${diaColor};background:${diaBg}20;">
+        return `<div class="asig-card" style="border-left:3px solid ${diaColor};background:${diaBg}33;">
           <span class="asig-dia" style="color:${diaColor};">${a.dia}</span>
           <span class="asig-fecha">${a.fecha}</span>
           <span class="asig-rol">${a.rol}</span>
@@ -344,15 +392,24 @@ async function buscarHermano(nombre) {
       }).join('')}`;
     show('buscar-result');
   } catch(e) {
+    hide('buscar-loading');
     show('buscar-empty');
   }
 }
 
 /* ─── Editar programación ─── */
 function updateSemanaEditInfo() {
-  const w = getWeekDates(semanaOffsetEdit);
-  document.getElementById('editar-semana-info').textContent = `Semana del ${w.label}`;
-  document.getElementById('editar-semana-label').textContent = `Semana del ${w.label}`;
+  const lunes = getLunesDeOffset(semanaOffsetEdit);
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+  const label = `${fmtFecha(lunes)} al ${fmtFecha(domingo)}`;
+  setText('editar-semana-info', `Semana del ${label}`);
+}
+
+function getFechaDelDia(lunesDate, diaSemana) {
+  // diaSemana: 0=Dom,1=Lun,...,3=Mié,6=Sáb
+  const d = new Date(lunesDate);
+  d.setDate(lunesDate.getDate() + diaSemana - 1);
+  return fmtFecha(d);
 }
 
 async function cambiarSemanaEdit(dir) {
@@ -363,140 +420,155 @@ async function cambiarSemanaEdit(dir) {
 async function cargarEditar() {
   updateSemanaEditInfo();
   show('editar-loading');
-  document.getElementById('editar-content').innerHTML = '';
-  document.getElementById('editar-status').textContent = '';
-
-  const w = getWeekDates(semanaOffsetEdit);
+  const cont = document.getElementById('editar-content');
+  if (cont) cont.innerHTML = '';
+  setText('editar-status', '');
 
   try {
-    if (Object.keys(hermanos).length === 0) {
+    if (Object.keys(hermanos).length === 0)
       hermanos = await apiFetch({ action: 'getHermanos' });
+    if (todasLasFilas.length === 0) {
+      const d = await apiFetch({ action: 'getProgramacion' });
+      todasLasFilas = d.rows || [];
     }
-    const data = await apiFetch({ action: 'getProgramacion', semana: w.lunes });
-    const rows = data.rows || [];
+    const lunes = getLunesDeOffset(semanaOffsetEdit);
+    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+    const rows = todasLasFilas.filter(r => {
+      const d = parseFecha(r.fecha);
+      return d && d >= lunes && d <= domingo;
+    });
     hide('editar-loading');
-    renderEditar(rows, w);
+    renderEditar(rows, lunes);
   } catch(err) {
     hide('editar-loading');
-    document.getElementById('editar-content').innerHTML = `<div class="error-wrap">Error: ${err.message}</div>`;
+    const cont = document.getElementById('editar-content');
+    if (cont) cont.innerHTML = `<div class="error-wrap">Error: ${err.message}</div>`;
   }
 }
 
-function renderEditar(rows, week) {
+function renderEditar(rows, lunesDate) {
   const c = document.getElementById('editar-content');
+  if (!c) return;
   c.innerHTML = '';
-
-  // Días de la semana (miércoles y sábado por defecto)
   const diasSemana = [
-    { dia: 'Miércoles', fecha: getFechaOfWeek(week.monday, 3) },
-    { dia: 'Sábado',    fecha: getFechaOfWeek(week.monday, 6) },
+    { dia: 'Miércoles', offset: 2 },
+    { dia: 'Sábado',    offset: 5 },
   ];
-
-  diasSemana.forEach(({ dia, fecha }) => {
+  diasSemana.forEach(({ dia, offset }) => {
+    const d = new Date(lunesDate); d.setDate(lunesDate.getDate() + offset);
+    const fecha = fmtFecha(d);
     const existing = rows.find(r => r.fecha === fecha) || {};
     const diaColor = DIA_COLORS[dia] || '#eee';
     const diaBg    = DIA_BG[dia] || '#1e1e1e';
-
     const div = document.createElement('div');
     div.className = 'edit-card';
     div.dataset.fecha = fecha;
     div.dataset.dia = dia;
-
     const rolesHTML = ROLES.map(r => {
       const lista = hermanos[r] || [];
       const valActual = existing[r] || '';
       const opts = `<option value="">— Sin asignar —</option>` +
-        lista.map(h => `<option value="${h}" ${h === valActual ? 'selected' : ''}>${h}</option>`).join('');
+        lista.map(h => `<option value="${h}" ${h===valActual?'selected':''}>${h}</option>`).join('');
       return `<div class="edit-rol-row">
         <label class="edit-rol-label">${ROLES_LABELS[r]}</label>
         <select class="edit-rol-select" data-rol="${r}">${opts}</select>
       </div>`;
     }).join('');
-
     div.innerHTML = `
       <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};margin-bottom:12px;">
         <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
         <span class="reunion-fecha">${fecha}</span>
-      </div>
-      ${rolesHTML}`;
+      </div>${rolesHTML}`;
     c.appendChild(div);
   });
 }
 
-function getFechaOfWeek(monday, dayOffset) {
-  const d = new Date(monday);
-  d.setDate(monday.getDate() + dayOffset - 1);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
-}
-
 async function guardarEdicion() {
-  const btn    = document.querySelector('.btn-guardar');
+  const btn    = document.getElementById('btn-guardar-edicion');
   const status = document.getElementById('editar-status');
-  btn.disabled = true;
-  status.style.color = '#888';
-  status.textContent = 'Guardando...';
-
+  if (btn) btn.disabled = true;
+  if (status) { status.style.color = '#888'; status.textContent = 'Guardando...'; }
   const cards = document.querySelectorAll('#editar-content .edit-card');
   const data  = [];
   cards.forEach(card => {
     const entry = { fecha: card.dataset.fecha, dia: card.dataset.dia };
-    card.querySelectorAll('select[data-rol]').forEach(sel => {
-      entry[sel.dataset.rol] = sel.value;
-    });
+    card.querySelectorAll('select[data-rol]').forEach(sel => { entry[sel.dataset.rol] = sel.value; });
     data.push(entry);
   });
-
   try {
     await apiFetch({ action: 'saveProgramacion', data: JSON.stringify(data) });
-    status.style.color = '#5DCAA5';
-    status.textContent = '✓ Guardado correctamente';
+    // Invalidar caché local
+    todasLasFilas = [];
+    if (status) { status.style.color = '#5DCAA5'; status.textContent = '✓ Guardado correctamente'; }
   } catch(err) {
-    status.style.color = '#F09595';
-    status.textContent = 'Error: ' + err.message;
+    if (status) { status.style.color = '#F09595'; status.textContent = 'Error: ' + err.message; }
   }
-  btn.disabled = false;
+  if (btn) btn.disabled = false;
 }
 
 /* ─── Generar automático ─── */
-function updateSemanaAutoInfo() {
-  const w = getWeekDates(semanaOffsetAuto);
-  document.getElementById('auto-semana-info').textContent = `Semana del ${w.label}`;
-}
-
-function cambiarSemanaAuto(dir) {
-  semanaOffsetAuto += dir;
-  updateSemanaAutoInfo();
-  hide('auto-preview');
-  hide('auto-guardar-wrap');
-  autoResult = [];
+function renderAutoInfo() {
+  const c = document.getElementById('auto-info-wrap');
+  if (!c) return;
+  // Calcular desde hoy hasta 3 meses adelante
+  const hoy = new Date();
+  const fin = new Date(hoy); fin.setMonth(fin.getMonth() + 3);
+  c.innerHTML = `Generará asignaciones desde hoy hasta el <strong>${fmtFecha(fin)}</strong> (3 meses), 
+    respetando rotación para que ningún hermano repita rol en semanas consecutivas.`;
 }
 
 function generarAutomatico() {
   if (Object.keys(hermanos).length === 0) {
-    document.getElementById('auto-status').textContent = 'Cargando hermanos...';
+    setText('auto-status', 'Cargando lista de hermanos...');
+    return;
+  }
+  show('auto-loading'); hide('auto-preview'); hide('auto-guardar-wrap');
+
+  // Rango: desde la próxima reunión sin datos hasta 3 meses
+  const hoy = new Date();
+  const finRango = new Date(hoy); finRango.setMonth(finRango.getMonth() + 3);
+
+  // Obtener fechas ya cargadas en el sheet
+  const fechasExistentes = new Set(todasLasFilas.map(r => r.fecha));
+
+  // Generar todas las fechas de miércoles y sábados en el rango
+  const fechasAGenerar = [];
+  const cursor = new Date(hoy);
+  // Ir al próximo miércoles o sábado
+  while (cursor <= finRango) {
+    const dow = cursor.getDay(); // 0=Dom,3=Mié,6=Sáb
+    if (dow === 3 || dow === 6) {
+      const f = fmtFecha(cursor);
+      if (!fechasExistentes.has(f)) {
+        fechasAGenerar.push({ fecha: f, dia: dow === 3 ? 'Miércoles' : 'Sábado' });
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  if (fechasAGenerar.length === 0) {
+    hide('auto-loading');
+    setText('auto-status', 'Ya existe programación para los próximos 3 meses.');
+    show('auto-guardar-wrap');
+    autoResult = [];
     return;
   }
 
-  show('auto-loading');
-  hide('auto-preview');
-  hide('auto-guardar-wrap');
+  // Rotación inteligente: índice por rol, avanza en la lista
+  const indices = {};
+  ROLES.forEach(r => {
+    const lista = hermanos[r] || [];
+    // Arrancar desde un índice basado en cuántas reuniones ya hay
+    indices[r] = todasLasFilas.length % Math.max(lista.length, 1);
+  });
 
-  const week = getWeekDates(semanaOffsetAuto);
-
-  const diasSemana = [
-    { dia: 'Miércoles', fecha: getFechaOfWeek(week.monday, 3) },
-    { dia: 'Sábado',    fecha: getFechaOfWeek(week.monday, 6) },
-  ];
-
-  autoResult = diasSemana.map(({ dia, fecha }) => {
+  autoResult = fechasAGenerar.map(({ fecha, dia }) => {
     const entry = { fecha, dia };
-    // Rotación simple: shuffle la lista y tomamos el primero
     ROLES.forEach(r => {
       const lista = hermanos[r] || [];
       if (lista.length === 0) { entry[r] = ''; return; }
-      // Pseudo-rotación basada en día + rol para variedad reproducible
-      const seed = (fecha.split('/')[0] * 17 + ROLES.indexOf(r) * 7) % lista.length;
-      entry[r] = lista[seed] || lista[0];
+      entry[r] = lista[indices[r] % lista.length];
+      indices[r]++;
     });
     return entry;
   });
@@ -509,20 +581,18 @@ function generarAutomatico() {
 
 function renderAutoPreview(rows) {
   const c = document.getElementById('auto-preview');
-  c.innerHTML = '<div style="font-size:12px;color:#888;margin-bottom:10px;">Vista previa — revisá antes de guardar</div>';
+  if (!c) return;
+  c.innerHTML = `<div style="font-size:12px;color:#888;margin-bottom:10px;">${rows.length} reuniones a generar — revisá antes de guardar</div>`;
   rows.forEach(row => {
-    const dia = row.dia;
-    const diaColor = DIA_COLORS[dia] || '#eee';
-    const diaBg    = DIA_BG[dia] || '#1e1e1e';
-    const rolesHTML = ROLES.map(r => row[r] ? `
-      <div class="rol-row">
-        <span class="rol-label">${ROLES_LABELS[r]}</span>
-        <span class="rol-valor">${row[r]}</span>
-      </div>` : '').join('');
+    const diaColor = DIA_COLORS[row.dia] || '#eee';
+    const diaBg    = DIA_BG[row.dia] || '#1e1e1e';
+    const rolesHTML = ROLES.map(r => row[r] ?
+      `<div class="rol-row"><span class="rol-label">${ROLES_LABELS[r]}</span><span class="rol-valor">${row[r]}</span></div>` : ''
+    ).join('');
     c.innerHTML += `
       <div class="reunion-card">
         <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};">
-          <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
+          <span class="reunion-dia" style="color:${diaColor};">${row.dia}</span>
           <span class="reunion-fecha">${row.fecha}</span>
         </div>
         <div class="roles-list">${rolesHTML}</div>
@@ -532,21 +602,21 @@ function renderAutoPreview(rows) {
 
 async function guardarAutomatico() {
   const status = document.getElementById('auto-status');
-  status.style.color = '#888';
-  status.textContent = 'Guardando...';
+  if (!autoResult.length) { if(status) { status.style.color='#888'; status.textContent='Nada que guardar.'; } return; }
+  if (status) { status.style.color='#888'; status.textContent='Guardando...'; }
   try {
     await apiFetch({ action: 'saveProgramacion', data: JSON.stringify(autoResult) });
-    status.style.color = '#5DCAA5';
-    status.textContent = '✓ Guardado en la planilla';
+    todasLasFilas = []; // invalidar caché
+    if (status) { status.style.color='#5DCAA5'; status.textContent=`✓ ${autoResult.length} reuniones guardadas`; }
   } catch(err) {
-    status.style.color = '#F09595';
-    status.textContent = 'Error: ' + err.message;
+    if (status) { status.style.color='#F09595'; status.textContent='Error: '+err.message; }
   }
 }
 
 /* ─── Tabla imagen ─── */
 function renderTablaImagen(rows) {
   const c = document.getElementById('tabla-reuniones');
+  if (!c) return;
   c.innerHTML = '';
   if (!rows || rows.length === 0) {
     c.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-size:13px;">Sin programación esta semana</div>';
@@ -560,7 +630,6 @@ function renderTablaImagen(rows) {
       if (!val) return '';
       return `<tr><td class="tabla-rol">${ROLES_LABELS[r]}</td><td class="tabla-val">${val}</td></tr>`;
     }).filter(Boolean).join('');
-
     c.innerHTML += `
       <div class="tabla-reunion-wrap">
         <div class="tabla-dia-header" style="color:${diaColor};border-bottom:1px solid ${diaColor}30;">
@@ -573,6 +642,7 @@ function renderTablaImagen(rows) {
 
 function guardarImagen() {
   const el = document.getElementById('card-tabla');
+  if (!el) return;
   const orig = el.style.width;
   el.style.width = '700px';
   html2canvas(el, { backgroundColor: '#1e1e1e', scale: 1.5, width: 700 }).then(canvas => {

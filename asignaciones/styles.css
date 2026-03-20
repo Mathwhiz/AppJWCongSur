@@ -234,3 +234,36 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 /* ── App container ── */
 .app { max-width: 480px; margin: 0 auto; }
+
+/* ── Fixes adicionales ── */
+
+/* Botón casita — oculto por defecto, visible con clase */
+.btn-home {
+  position: fixed; top: 14px; right: 14px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: #252525; border: 0.5px solid #444; color: #888;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-home.visible { display: flex; }
+.btn-home:hover { background: #333; color: #eee; }
+
+/* Bordes específicos para cards del encargado */
+.modo-editar  { border-color: #378ADD !important; }
+.modo-editar:hover { background: rgba(55,138,221,0.08) !important; }
+.modo-auto    { border-color: #1D9E75 !important; }
+.modo-auto:hover { background: rgba(29,158,117,0.08) !important; }
+.modo-imagen  { border-color: #FAC775 !important; }
+.modo-imagen:hover { background: rgba(250,199,117,0.08) !important; }
+.modo-encargado { border-color: #7F77DD !important; }
+.modo-encargado:hover { background: rgba(127,119,221,0.08) !important; border-color: #7F77DD !important; }
+
+/* Layout buscar — que no quede el botón volver pegado abajo */
+.view-buscar-layout {
+  min-height: calc(100vh - 2rem);
+  display: flex; flex-direction: column;
+}
+.view-buscar-layout .buscar-wrap { flex: 1; }
+
+/* Section title más grande */
+.section-title { font-size: 28px !important; font-weight: 500; }
