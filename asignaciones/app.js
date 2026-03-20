@@ -362,7 +362,8 @@ async function buscarHermano(nombre) {
         let encontrado = false;
         ROLES.forEach(r => {
           const val = (row[r] || '').trim();
-          if (val.toLowerCase() === nombre.toLowerCase()) {
+          const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+          if (norm(val) === norm(nombre)) {
             asignaciones.push({ dia, fecha: row.fecha, rol: ROLES_LABELS[r] });
             encontrado = true;
           }
@@ -476,8 +477,9 @@ function renderEditar(rows, lunesDate) {
     const rolesHTML = ROLES.map(r => {
       const lista = hermanos[r] || [];
       const valActual = existing[r] || '';
+      const normalizar = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       const opts = `<option value="">— Sin asignar —</option>` +
-        lista.map(h => `<option value="${h}" ${h===valActual?'selected':''}>${h}</option>`).join('');
+      lista.map(h => `<option value="${h}" ${normalizar(h)===normalizar(valActual)?'selected':''}>${h}</option>`).join('');
       return `<div class="edit-rol-row">
         <label class="edit-rol-label">${ROLES_LABELS[r]}</label>
         <select class="edit-rol-select" data-rol="${r}">${opts}</select>
