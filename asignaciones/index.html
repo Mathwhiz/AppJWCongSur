@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asignaciones — Congregación Sur</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── COVER ── -->
+  <div id="view-cover" class="view">
+    <div class="cover">
+      <div class="cover-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="9" cy="7" r="4" stroke="#7F77DD" stroke-width="1.5"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="cover-title">Asignaciones</div>
+      <div class="cover-subtitle">Congregación Sur</div>
+
+      <button class="btn-ver" onclick="goToVerSemana()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+        Ver semana actual
+      </button>
+
+      <button class="btn-buscar" onclick="goToBuscarHermano()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Buscar mi asignación
+      </button>
+
+      <div class="cover-divider"></div>
+
+      <button class="btn-encargado" onclick="goToPin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Acceso encargado
+      </button>
+
+      <a href="../index.html" class="btn-volver-home">← Inicio</a>
+    </div>
+  </div>
+
+  <!-- ── VER SEMANA ── -->
+  <div id="view-semana" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="goToCover()">←</button>
+      <div>
+        <div class="page-title">Semana actual</div>
+        <div class="page-sub" id="semana-label">Cargando...</div>
+      </div>
+    </div>
+    <div id="semana-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando programación...</div></div>
+    <div id="semana-error" style="display:none;"></div>
+    <div id="semana-content" style="display:none;">
+      <div id="semana-reuniones"></div>
+    </div>
+  </div>
+
+  <!-- ── BUSCAR HERMANO ── -->
+  <div id="view-buscar" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="goToCover()">←</button>
+      <div>
+        <div class="page-title">Mi asignación</div>
+        <div class="page-sub">Buscá tu nombre</div>
+      </div>
+    </div>
+    <div class="buscar-wrap">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#888" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="Escribí tu nombre..." oninput="filtrarHermanos()" autocomplete="off">
+      </div>
+      <div id="search-suggestions" class="search-suggestions" style="display:none;"></div>
+      <div id="buscar-result" style="display:none;"></div>
+      <div id="buscar-empty" class="buscar-empty" style="display:none;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#444" stroke-width="1.5"/><path d="m21 21-4.35-4.35" stroke="#444" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p>No encontramos ese nombre</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PIN MODAL ── -->
+  <div id="pin-modal" class="pin-modal" style="display:none;">
+    <div class="pin-card">
+      <div class="pin-title">Encargado</div>
+      <div class="pin-sub">Ingresá el PIN</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-grid">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn" style="visibility:hidden;"></button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+      <button class="pin-cancel" onclick="pinCancel()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ── MENÚ ENCARGADO ── -->
+  <div id="view-encargado" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="cerrarSesionEncargado()">←</button>
+      <div>
+        <div class="page-title">Encargado</div>
+        <div class="page-sub">Panel de gestión</div>
+      </div>
+    </div>
+    <div class="enc-menu">
+      <button class="enc-card" onclick="goToEditar()">
+        <div class="enc-icon" style="background:rgba(55,138,221,0.15);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="enc-card-title">Editar programación</div>
+          <div class="enc-card-sub">Modificar asignaciones de la semana</div>
+        </div>
+      </button>
+      <button class="enc-card" onclick="goToAutomatico()">
+        <div class="enc-icon" style="background:rgba(29,158,117,0.15);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="enc-card-title">Generar automático</div>
+          <div class="enc-card-sub">Asignar roles respetando rotación</div>
+        </div>
+      </button>
+      <button class="enc-card" onclick="goToGenerarImagen()">
+        <div class="enc-icon" style="background:rgba(250,199,117,0.15);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#FAC775" stroke-width="1.8"/><circle cx="8.5" cy="8.5" r="1.5" stroke="#FAC775" stroke-width="1.8"/><path d="M21 15l-5-5L5 21" stroke="#FAC775" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="enc-card-title">Generar imagen</div>
+          <div class="enc-card-sub">Tabla lista para compartir por WhatsApp</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── EDITAR PROGRAMACIÓN ── -->
+  <div id="view-editar" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="showView('view-encargado')">←</button>
+      <div>
+        <div class="page-title">Editar programación</div>
+        <div class="page-sub" id="editar-semana-label"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;">
+      <button onclick="cambiarSemanaEdit(-1)" class="semana-nav-btn">←</button>
+      <span id="editar-semana-info" style="font-size:13px;color:#888;"></span>
+      <button onclick="cambiarSemanaEdit(1)" class="semana-nav-btn">→</button>
+    </div>
+    <div id="editar-loading" class="loading-wrap" style="display:none;"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+    <div id="editar-content"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+      <button class="btn-guardar" onclick="guardarEdicion()" style="flex:2;">Guardar cambios</button>
+    </div>
+    <div class="save-status" id="editar-status"></div>
+  </div>
+
+  <!-- ── AUTOMÁTICO ── -->
+  <div id="view-automatico" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="showView('view-encargado')">←</button>
+      <div>
+        <div class="page-title">Generar automático</div>
+        <div class="page-sub">Asignación inteligente por rotación</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;">
+      <button onclick="cambiarSemanaAuto(-1)" class="semana-nav-btn">←</button>
+      <span id="auto-semana-info" style="font-size:13px;color:#888;"></span>
+      <button onclick="cambiarSemanaAuto(1)" class="semana-nav-btn">→</button>
+    </div>
+    <div class="auto-info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#7F77DD" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Generá la programación automáticamente. Se respeta la rotación para que ningún hermano repita rol dos reuniones seguidas.
+    </div>
+    <div id="auto-loading" class="loading-wrap" style="display:none;"><div class="spinner"></div><div class="loading-txt">Generando...</div></div>
+    <div id="auto-preview" style="display:none;"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+      <button class="btn-primary" onclick="generarAutomatico()" style="flex:2;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right:6px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Generar
+      </button>
+    </div>
+    <div id="auto-guardar-wrap" style="display:none;margin-top:8px;">
+      <button class="btn-guardar" style="width:100%;" onclick="guardarAutomatico()">Guardar en planilla</button>
+      <div class="save-status" id="auto-status"></div>
+    </div>
+  </div>
+
+  <!-- ── GENERAR IMAGEN ── -->
+  <div id="view-imagen" class="view" style="display:none;">
+    <div class="page-header">
+      <button class="back-btn" onclick="showView('view-encargado')">←</button>
+      <div>
+        <div class="page-title">Tabla para WhatsApp</div>
+        <div class="page-sub" id="imagen-semana-label"></div>
+      </div>
+    </div>
+    <div id="imagen-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
+    <div id="imagen-content" style="display:none;">
+      <div class="card-tabla" id="card-tabla">
+        <div class="card-tabla-header">
+          <div class="card-tabla-top">Congregación Sur</div>
+          <div class="card-tabla-main" id="imagen-titulo">Asignaciones de la semana</div>
+        </div>
+        <div id="tabla-reuniones"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+        <button class="btn-save" onclick="guardarImagen()" style="flex:1;">💾 Guardar imagen</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
