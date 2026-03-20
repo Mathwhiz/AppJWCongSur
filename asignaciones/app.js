@@ -357,12 +357,13 @@ async function buscarHermano(nombre) {
       const asignaciones = [];
       const sinAsignar = [];
 
+      filas.sort((a,b) => parseFecha(a.fecha) - parseFecha(b.fecha));
       filas.forEach(row => {
         const dia = row.dia || getNombreDia(row.fecha);
         let encontrado = false;
         ROLES.forEach(r => {
           const val = (row[r] || '').trim();
-          if (val.toLowerCase() === nombre.toLowerCase()) {
+          if (norm(val) === norm(nombre)) {
             asignaciones.push({ dia, fecha: row.fecha, rol: ROLES_LABELS[r] });
             encontrado = true;
           }

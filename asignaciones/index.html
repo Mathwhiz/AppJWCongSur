@@ -90,7 +90,7 @@
     <div class="buscar-wrap">
       <div class="search-box">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#888" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <input type="text" id="search-input" placeholder="Ej: Flores Daniel..." oninput="filtrarHermanos()" autocomplete="off">
+        <input type="text" id="search-input" placeholder="Ej: Flores Daniel..." oninput="filtrarHermanos()" onfocus="inputFocus()" onkeydown="inputKeydown(event)" autocomplete="off">
       </div>
       <div id="search-suggestions" class="search-suggestions" style="display:none;"></div>
       <div id="buscar-loading" class="loading-wrap" style="display:none;"><div class="spinner"></div><div class="loading-txt">Buscando...</div></div>

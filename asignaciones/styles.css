@@ -267,3 +267,26 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 /* Section title más grande */
 .section-title { font-size: 28px !important; font-weight: 500; }
+
+/* ── Buscar hermano — semanas ── */
+.semana-bloque { margin-bottom: 16px; }
+.semana-bloque-title {
+  font-size: 12px; color: #666; text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px; padding-left: 2px;
+}
+.asig-tiene { opacity: 1; }
+.asig-libre { opacity: 0.45; }
+.asig-rol-libre {
+  font-size: 12px; padding: 3px 10px; border-radius: 20px;
+  background: rgba(80,80,80,0.15); color: #555;
+  border: 0.5px solid #333;
+}
+
+/* Sugerencia activa con teclado */
+.sugg-active { background: #333 !important; color: #eee !important; }
+
+/* Semana bloque en buscar */
+.semana-bloque { margin-bottom: 16px; }
+.semana-bloque-title { font-size: 12px; color: #7F77DD; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding: 4px 0; border-bottom: 0.5px solid #2a2a2a; }
+.asig-libre { opacity: 0.45; }
+.asig-rol-libre { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: #2a2a2a; color: #555; border: 0.5px solid #333; }
