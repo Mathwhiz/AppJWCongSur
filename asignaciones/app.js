@@ -140,41 +140,11 @@ function apiFetch(params) {
   });
 }
 
-/* ─── PIN — verificación LOCAL (igual que territorios, sin roundtrip) ─── */
-// El PIN se guarda en la hoja Config del Sheet, pero para no tardar
-// lo cacheamos en memoria la primera vez que se verifica exitosamente.
-// Si querés cambiarlo basta con cambiar la hoja Config.
-let pinCorrecto = null;
+/* ─── PIN hardcodeado — instantáneo ─── */
+const PIN_ENCARGADO = '1234'; // cambiá este valor si querés otro PIN
 
-async function checkPin() {
-  try {
-    // Si ya lo tenemos cacheado, comparamos directo
-    if (pinCorrecto !== null) {
-      validarPin(pinCorrecto);
-      return;
-    }
-    // Primera vez: fetch al servidor
-    const data = await apiFetch({ action: 'checkPin', pin: pinBuffer });
-    if (data.ok) {
-      pinCorrecto = pinBuffer; // cachear para la próxima
-      hide('pin-modal');
-      esEncargado = true;
-      pinBuffer = '';
-      goToEncargado();
-    } else {
-      document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
-      pinBuffer = '';
-      updatePinDots();
-    }
-  } catch(e) {
-    document.getElementById('pin-error').textContent = 'Error al verificar PIN';
-    pinBuffer = '';
-    updatePinDots();
-  }
-}
-
-function validarPin(correcto) {
-  if (pinBuffer === correcto) {
+function checkPin() {
+  if (pinBuffer === PIN_ENCARGADO) {
     hide('pin-modal');
     esEncargado = true;
     pinBuffer = '';
@@ -362,34 +332,73 @@ async function buscarHermano(nombre) {
       const data = await apiFetch({ action: 'getProgramacion' });
       todasLasFilas = data.rows || [];
     }
-    const filas = getFilasSemanaActual(todasLasFilas);
     hide('buscar-loading');
 
-    const asignaciones = [];
-    filas.forEach(row => {
-      const dia = row.dia || getNombreDia(row.fecha);
-      ROLES.forEach(r => {
-        const val = (row[r] || '').trim();
-        if (val.toLowerCase() === nombre.toLowerCase())
-          asignaciones.push({ dia, fecha: row.fecha, rol: ROLES_LABELS[r] });
-      });
+    // Buscar en todas las semanas desde hoy en adelante (máx 8 semanas)
+    const hoy = new Date();
+    const filasProximas = todasLasFilas.filter(r => {
+      const d = parseFecha(r.fecha);
+      return d && d >= new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 7);
+    }).sort((a,b) => parseFecha(a.fecha) - parseFecha(b.fecha));
+
+    // Agrupar por semana
+    const semanas = {};
+    filasProximas.forEach(row => {
+      const key = row.semana || getLabelSemana([row]);
+      if (!semanas[key]) semanas[key] = [];
+      semanas[key].push(row);
     });
 
     const res = document.getElementById('buscar-result');
-    if (asignaciones.length === 0) { show('buscar-empty'); return; }
+    let html = `<div class="buscar-nombre">${nombre}</div>`;
+    let tieneAlgo = false;
 
-    res.innerHTML = `
-      <div class="buscar-nombre">${nombre}</div>
-      <div class="buscar-semana">Semana del ${getLabelSemana(filas)}</div>
-      ${asignaciones.map(a => {
+    Object.entries(semanas).slice(0, 8).forEach(([semKey, filas]) => {
+      const asignaciones = [];
+      const sinAsignar = [];
+
+      filas.forEach(row => {
+        const dia = row.dia || getNombreDia(row.fecha);
+        let encontrado = false;
+        ROLES.forEach(r => {
+          const val = (row[r] || '').trim();
+          if (val.toLowerCase() === nombre.toLowerCase()) {
+            asignaciones.push({ dia, fecha: row.fecha, rol: ROLES_LABELS[r] });
+            encontrado = true;
+          }
+        });
+        if (!encontrado) sinAsignar.push({ dia, fecha: row.fecha });
+      });
+
+      if (asignaciones.length > 0) tieneAlgo = true;
+
+      html += `<div class="semana-bloque">
+        <div class="semana-bloque-title">Semana del ${getLabelSemana(filas)}</div>`;
+
+      asignaciones.forEach(a => {
         const diaColor = DIA_COLORS[a.dia] || '#eee';
-        const diaBg    = DIA_BG[a.dia] || '#1e1e1e';
-        return `<div class="asig-card" style="border-left:3px solid ${diaColor};background:${diaBg}33;">
+        const diaBg = DIA_BG[a.dia] || '#1e1e1e';
+        html += `<div class="asig-card asig-tiene" style="border-left:3px solid ${diaColor};background:${diaBg}33;">
           <span class="asig-dia" style="color:${diaColor};">${a.dia}</span>
           <span class="asig-fecha">${a.fecha}</span>
           <span class="asig-rol">${a.rol}</span>
         </div>`;
-      }).join('')}`;
+      });
+
+      sinAsignar.forEach(a => {
+        const diaColor = DIA_COLORS[a.dia] || '#555';
+        html += `<div class="asig-card asig-libre" style="border-left:3px solid #333;">
+          <span class="asig-dia" style="color:#555;">${a.dia}</span>
+          <span class="asig-fecha" style="color:#555;">${a.fecha}</span>
+          <span class="asig-rol asig-rol-libre">Sin asignación</span>
+        </div>`;
+      });
+
+      html += `</div>`;
+    });
+
+    if (Object.keys(semanas).length === 0) { show('buscar-empty'); return; }
+    res.innerHTML = html;
     show('buscar-result');
   } catch(e) {
     hide('buscar-loading');
