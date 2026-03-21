@@ -18,11 +18,11 @@ const ROLES = Object.keys(ROLES_LABELS);
 
 // Mapeo: columna de programación → lista de hermanos a usar en el selector
 // SONIDO_1 y SONIDO_2 comparten la lista del rol SONIDO; igual para MICROFONISTAS
+// El script de Google devuelve las listas con claves SONIDO_1, SONIDO_2, etc.
+// SONIDO_2 comparte la misma lista que SONIDO_1; igual para MICROFONISTAS_2
 const ROL_LISTA_MAP = {
-  SONIDO_1:        'SONIDO',
-  SONIDO_2:        'SONIDO',
-  MICROFONISTAS_1: 'MICROFONISTAS',
-  MICROFONISTAS_2: 'MICROFONISTAS',
+  SONIDO_2:        'SONIDO_1',
+  MICROFONISTAS_2: 'MICROFONISTAS_1',
 };
 
 // ── Roles que SOLO existen en la lista de hermanos (no en tabla semanal) ──
