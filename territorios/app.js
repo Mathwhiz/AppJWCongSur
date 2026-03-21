@@ -1,12 +1,35 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqfcGLySbIx6I2902w6mdZKSLAPk1-gZirJmY7A4Ua0Vy3bbYtxrwotyLsSMiCrNy1/exec';
 
-const CONDUCTORES_BY_GROUP = {
-  1: [],
-  2: [],
-  3: ['Andrés Sánchez','Eduardo Scalese','Jose Luis Lasierra','Diego Reinoso','Armando Núñez'],
-  4: [],
-  C: []
-};
+const ASIGNACIONES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy3WmKkJjSsEXM8qI0lCUdQn76o2v-55zZavlx_lJ_-SVZUip4vFsl0WXAPcPgMfDE/exec';
+
+const CONDUCTORES_BY_GROUP = { 1: [], 2: [], 3: [], 4: [], C: [] };
+
+async function cargarConductores() {
+  try {
+    const url = ASIGNACIONES_SCRIPT_URL + '?action=getLista';
+    const resp = await fetch(url);
+    const data = JSON.parse(await resp.text());
+    if (!data.hermanos) return;
+    [1,2,3,4,'C'].forEach(g => { CONDUCTORES_BY_GROUP[g] = []; });
+    const MAP = {
+      'CONDUCTOR_GRUPO_1': 1,
+      'CONDUCTOR_GRUPO_2': 2,
+      'CONDUCTOR_GRUPO_3': 3,
+      'CONDUCTOR_GRUPO_4': 4,
+      'CONDUCTOR_CONGREGACION': 'C',
+    };
+    data.hermanos.forEach(h => {
+      h.roles.forEach(rol => {
+        const grupo = MAP[rol.toUpperCase()];
+        if (grupo !== undefined && !CONDUCTORES_BY_GROUP[grupo].includes(h.nombre)) {
+          CONDUCTORES_BY_GROUP[grupo].push(h.nombre);
+        }
+      });
+    });
+  } catch(e) {
+    console.warn('No se pudo cargar conductores:', e);
+  }
+}
 
 const SPECIAL_TERR = { '11': true, '131': true };
 const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -308,6 +331,7 @@ function checkPin() {
   if (pinBuffer === correct) {
     document.getElementById('pin-modal').style.display = 'none';
     pinBuffer = '';
+    cargarConductores();
     goToModo();
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
