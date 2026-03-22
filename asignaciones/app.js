@@ -697,16 +697,18 @@ function generarAutomatico() {
       contadores[nombre][rg] = (contadores[nombre][rg] || 0) + 1;
     });
   });
-
 function getCount(nombre, rolGrupo) {
     const base = contadores[nombre]?.[rolGrupo] || 0;
-    // Prioridad por exclusividad: cuantos menos roles tiene, menor puntaje base
-    // para que el algoritmo lo elija antes
+    // Mientras más roles tiene alguien, más probable que ya esté ocupado
+    // por eso no necesita bonus. El que tiene pocos roles necesita
+    // que se distribuya mejor entre ellos.
+    // La solución es normalizar: dividir el conteo por la cantidad de roles
+    // para que alguien con 1 rol "gaste" más rápido su turno
     const rolesDisponibles = Object.keys(hermanos).filter(listaKey => 
       (hermanos[listaKey] || []).includes(nombre)
     ).length;
-    const bonusExclusividad = rolesDisponibles <= 1 ? -0.5 : 0;
-    return base + bonusExclusividad;
+    const factor = Math.max(1, rolesDisponibles);
+    return base / factor;
   }
 
   function incrementar(nombre, rolGrupo) {
