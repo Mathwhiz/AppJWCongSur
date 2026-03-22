@@ -20,9 +20,13 @@ async function cargarConductores() {
     };
     data.hermanos.forEach(h => {
       h.roles.forEach(rol => {
-        const grupo = MAP[rol.toUpperCase()];
-        if (grupo !== undefined && !CONDUCTORES_BY_GROUP[grupo].includes(h.nombre)) {
-          CONDUCTORES_BY_GROUP[grupo].push(h.nombre);
+        const grupo = MAP[rol.trim().toUpperCase()];
+        if (grupo !== undefined) {
+          // Asegurar que la clave exista (int y string pueden diferir)
+          if (!CONDUCTORES_BY_GROUP[grupo]) CONDUCTORES_BY_GROUP[grupo] = [];
+          if (!CONDUCTORES_BY_GROUP[grupo].includes(h.nombre)) {
+            CONDUCTORES_BY_GROUP[grupo].push(h.nombre);
+          }
         }
       });
     });
@@ -326,12 +330,12 @@ function updatePinDots() {
   }
 }
 
-function checkPin() {
+async function checkPin() {
   const correct = PINS[pinGrupo];
   if (pinBuffer === correct) {
     document.getElementById('pin-modal').style.display = 'none';
     pinBuffer = '';
-    cargarConductores();
+    await cargarConductores();
     goToModo();
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
