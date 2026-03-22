@@ -325,6 +325,17 @@
     </div>
   </div>
 
+  <!-- ── MODAL PREVIEW AUTOMÁTICO ── -->
+  <div id="auto-preview-modal" class="preview-modal" style="display:none;" onclick="if(event.target===this)cerrarPreviewModal()">
+    <div class="preview-modal-card">
+      <div class="preview-modal-header">
+        <span class="preview-modal-title" id="auto-preview-modal-title">Preview</span>
+        <button class="preview-modal-close" onclick="cerrarPreviewModal()">✕</button>
+      </div>
+      <div class="preview-modal-body" id="auto-preview-modal-body"></div>
+    </div>
+  </div>
+  
 </div><!-- /.app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
