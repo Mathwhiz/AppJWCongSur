@@ -298,6 +298,25 @@ async function goToAutomatico() {
     try { hermanos = await apiFetch({ action: 'getHermanos' }); } catch(e) {}
   if (todasLasFilas.length === 0)
     try { const d = await apiFetch({ action: 'getProgramacion' }); todasLasFilas = d.rows || []; } catch(e) {}
+
+  // Calcular fecha desde: primer miércoles o sábado vacío
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fechasExistentes = new Set(todasLasFilas.map(r => r.fecha));
+  let desdeDate = new Date(hoy);
+  desdeDate.setDate(hoy.getDate() + 1);
+  for (let i = 0; i < 60; i++) {
+    const dow = desdeDate.getDay();
+    if ((dow === 3 || dow === 6) && !fechasExistentes.has(fmtFecha(desdeDate))) break;
+    desdeDate.setDate(desdeDate.getDate() + 1);
+  }
+
+  // Fecha hasta: 3 meses desde desde
+  const hastaDate = new Date(desdeDate);
+  hastaDate.setMonth(hastaDate.getMonth() + 3);
+
+  document.getElementById('auto-desde').value = desdeDate.toISOString().split('T')[0];
+  document.getElementById('auto-hasta').value = hastaDate.toISOString().split('T')[0];
+  document.getElementById('auto-desde').min = hoy.toISOString().split('T')[0];
 }
 
 async function goToGenerarImagen() {
@@ -602,13 +621,27 @@ function generarAutomatico() {
     setText('auto-status', 'Cargando hermanos...');
     return;
   }
+
+  const desdeVal = document.getElementById('auto-desde').value;
+  const hastaVal = document.getElementById('auto-hasta').value;
+  if (!desdeVal || !hastaVal) {
+    setText('auto-status', 'Elegí las fechas primero.');
+    return;
+  }
+
+  const desde = new Date(desdeVal + 'T00:00:00');
+  const hasta  = new Date(hastaVal + 'T00:00:00');
+  if (desde > hasta) {
+    setText('auto-status', 'La fecha desde no puede ser mayor que hasta.');
+    return;
+  }
+
   show('auto-loading'); hide('auto-preview'); hide('auto-guardar-wrap');
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const finRango = new Date(hoy); finRango.setMonth(finRango.getMonth() + 3);
+
   const fechasExistentes = new Set(todasLasFilas.map(r => r.fecha));
   const fechasAGenerar = [];
-  const cursor = new Date(hoy);
-  while (cursor <= finRango) {
+  const cursor = new Date(desde);
+  while (cursor <= hasta) {
     const dow = cursor.getDay();
     if (dow === 3 || dow === 6) {
       const f = fmtFecha(cursor);
@@ -617,29 +650,73 @@ function generarAutomatico() {
     }
     cursor.setDate(cursor.getDate() + 1);
   }
+
   if (fechasAGenerar.length === 0) {
     hide('auto-loading');
-    setText('auto-status', 'Ya existe programación para los próximos 3 meses.');
+    setText('auto-status', 'Ya existe programación para el rango elegido.');
     show('auto-guardar-wrap');
     autoResult = [];
     return;
   }
-  const indices = {};
-  ROLES.forEach(r => {
-    const listaKey = ROL_LISTA_MAP[r] || r;
-    indices[r] = todasLasFilas.length % Math.max((hermanos[listaKey]||[]).length, 1);
+
+  // ── Contar cuántas veces trabajó cada hermano en cada rol ──
+  const contadores = {}; // { nombre: { ROL: count } }
+  todasLasFilas.forEach(row => {
+    ROLES.forEach(r => {
+      const nombre = row[r];
+      if (!nombre) return;
+      if (!contadores[nombre]) contadores[nombre] = {};
+      contadores[nombre][r] = (contadores[nombre][r] || 0) + 1;
+    });
   });
+
+  function getCount(nombre, rol) {
+    return (contadores[nombre]?.[rol] || 0);
+  }
+
+  function elegirHermano(listaKey, rolKey, yaAsignados) {
+    const lista = hermanos[listaKey] || [];
+    const disponibles = lista.filter(h => !yaAsignados.has(h));
+    if (disponibles.length === 0) {
+      // Si todos están ocupados, usar cualquiera con menos usos
+      const fallback = [...lista].sort((a, b) => getCount(a, rolKey) - getCount(b, rolKey));
+      return fallback[0] || '';
+    }
+    // Ordenar por menor cantidad de veces que hizo ese rol
+    disponibles.sort((a, b) => {
+      const diff = getCount(a, rolKey) - getCount(b, rolKey);
+      if (diff !== 0) return diff;
+      // Empate: el que hace más tiempo no trabaja en ningún rol
+      const totalA = Object.values(contadores[a] || {}).reduce((s, v) => s + v, 0);
+      const totalB = Object.values(contadores[b] || {}).reduce((s, v) => s + v, 0);
+      return totalA - totalB;
+    });
+    return disponibles[0];
+  }
+
   autoResult = fechasAGenerar.map(({ fecha, dia }) => {
     const entry = { fecha, dia };
+    const yaAsignados = new Set(); // hermanos ya usados en esta reunión
+
     ROLES.forEach(r => {
+      if (r === 'PRESIDENTE' && dia === 'Miércoles') { entry[r] = ''; return; }
       const listaKey = ROL_LISTA_MAP[r] || r;
       const lista = hermanos[listaKey] || [];
       if (lista.length === 0) { entry[r] = ''; return; }
-      entry[r] = lista[indices[r] % lista.length];
-      indices[r]++;
+
+      const elegido = elegirHermano(listaKey, r, yaAsignados);
+      entry[r] = elegido;
+      if (elegido) {
+        yaAsignados.add(elegido);
+        // Actualizar contador local para que las siguientes reuniones lo tengan en cuenta
+        if (!contadores[elegido]) contadores[elegido] = {};
+        contadores[elegido][r] = (contadores[elegido][r] || 0) + 1;
+      }
     });
+
     return entry;
   });
+
   hide('auto-loading');
   renderAutoPreview(autoResult);
   show('auto-preview');
