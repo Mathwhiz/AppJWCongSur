@@ -155,8 +155,9 @@
 
   <!-- ── MENÚ ENCARGADO ── -->
   <div id="view-encargado" class="view" style="display:none;">
-    <p class="section-title" style="color:#7F77DD;">Encargado</p>
-    <p class="section-sub">Panel de gestión de asignaciones</p>
+  <div style="min-height:calc(100vh - 2rem);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:2rem 1rem;">
+    <p class="section-title" style="color:#7F77DD;margin-bottom:4px;">Encargado</p>
+    <p class="section-sub" style="margin-bottom:16px;">Panel de gestión de asignaciones</p>
     <div class="enc-menu">
       <button class="modo-card modo-editar" onclick="goToEditar()" style="max-width:320px;width:100%;">
         <div class="modo-icon" style="background:rgba(55,138,221,0.15);">
@@ -195,8 +196,9 @@
         </div>
       </button>
       <button class="btn-secondary" onclick="cerrarSesionEncargado()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
-    </div>
-  </div>
+    </div><!-- enc-menu -->
+  </div><!-- centrado -->
+</div><!-- view-encargado -->
 
   <!-- ── EDITAR ── -->
   <div id="view-editar" class="view" style="display:none;">
