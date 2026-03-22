@@ -1229,3 +1229,14 @@ function closeMapaPopup() {
   iframe.src = '';
   document.body.style.overflow = '';
 }
+
+
+window.addEventListener('online',  () => document.getElementById('offline-banner')?.classList.remove('visible'));
+window.addEventListener('offline', () => document.getElementById('offline-banner')?.classList.add('visible'));
+
+
+
+
+
+
+
