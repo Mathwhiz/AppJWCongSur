@@ -70,7 +70,7 @@
 .ui-btn-ok:hover { filter: brightness(1.15); }
 
 /* ═══════════════════════════════════════════
-   BOTTOM SHEET base (date, time, conductor)
+   BOTTOM SHEET base (date, time, conductor, territorio)
 ═══════════════════════════════════════════ */
 .bs-overlay {
   position: fixed; inset: 0;
@@ -264,6 +264,61 @@
   display: flex; align-items: center; justify-content: center;
 }
 .cp-sin-asignar-txt { font-size: 13px; color: #666; }
+
+/* ═══════════════════════════════════════════
+   TERRITORIO PICKER
+═══════════════════════════════════════════ */
+.tp-search-wrap {
+  padding: 0 14px 8px;
+  position: relative;
+}
+.tp-search-input {
+  width: 100%; padding: 9px 12px 9px 36px;
+  background: #1e1e1e; border: 0.5px solid #444; border-radius: 10px;
+  color: #eee; font-size: 14px; outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.tp-search-input:focus { border-color: #666; }
+.tp-search-icon {
+  position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
+  color: #555; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+}
+.tp-list {
+  max-height: 320px; overflow-y: auto;
+  padding: 0 6px 10px;
+}
+.tp-list::-webkit-scrollbar { width: 3px; }
+.tp-list::-webkit-scrollbar-track { background: transparent; }
+.tp-list::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+.tp-section-title {
+  font-size: 11px; font-weight: 700; color: #555;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 10px 10px 6px; margin-top: 4px;
+}
+.tp-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px; cursor: pointer;
+  transition: background 0.1s; border: none; background: transparent;
+  width: 100%; text-align: left;
+}
+.tp-item:hover { background: #2a2a2a; }
+.tp-item-num {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  background: #2e2e2e; border: 1px solid #3a3a3a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #aaa;
+}
+.tp-item-info { flex: 1; }
+.tp-item-label { font-size: 13px; font-weight: 500; color: #ddd; }
+.tp-item-days { font-size: 11px; color: #666; }
+.tp-empty { text-align: center; padding: 28px 16px; color: #555; font-size: 13px; }
+.tp-divider {
+  height: 0.5px; background: #2e2e2e;
+  margin: 2px 10px 6px;
+}
 
 /* ── Fake input (reemplaza select/date/time nativos) ── */
 .ui-fake-input {
@@ -789,6 +844,174 @@ window.uiConductorPicker = function({ conductores = [], value = '', label = 'Ele
           sel = btn.dataset.name;
           overlay.remove();
           resolve(sel);
+        };
+      });
+
+      overlay.querySelector('.bs-close-btn').onclick = () => { overlay.remove(); resolve(null); };
+      overlay.addEventListener('click', e => { if (e.target===overlay){overlay.remove();resolve(null);} });
+    }
+    render();
+  });
+};
+
+/* ─────────────────────────────────────────
+   TERRITORIO PICKER
+   uiTerritorioPicker({ territoriosData, allData, grupo, configData, label, color })
+   Returns Promise<string|null>
+───────────────────────────────────────── */
+window.uiTerritorioPicker = function({
+  territoriosData = {},
+  allData = {},
+  grupo = null,
+  configData = {},
+  label = 'Elegir territorio',
+  color = '#97C459'
+} = {}) {
+  return new Promise(resolve => {
+    let query = '';
+    const overlay = document.createElement('div');
+    overlay.className = 'bs-overlay';
+    document.body.appendChild(overlay);
+
+    function daysSince(ds) {
+      if (!ds) return 9999;
+      return Math.floor((new Date() - new Date(ds + 'T00:00:00')) / 86400000);
+    }
+
+    function daysColor(dias) {
+      if (dias === null || dias === undefined) return '#555';
+      if (dias <= 30)  return '#4CAF50';
+      if (dias <= 45)  return '#8BC34A';
+      if (dias <= 60)  return '#FFC107';
+      if (dias <= 90)  return '#FF9800';
+      if (dias <= 120) return '#FF5722';
+      return '#F44336';
+    }
+
+    function buildLista() {
+      const propios = [];
+      const enProgreso = [];
+
+      // Territorios propios
+      Object.keys(territoriosData).forEach(n => {
+        const estado = configData[n] || 'normal';
+        if (estado === 'no_predica') return;
+        const t = territoriosData[n];
+        const lastDate = t.lastFin || t.lastIni;
+        const dias = daysSince(lastDate);
+        propios.push({ n, dias, lastDate, grupo: grupo, enProgreso: t.enProgreso });
+      });
+
+      // Si es Congregación, agregar territorios en progreso de otros grupos
+      if (grupo === 'C' && allData) {
+        [1,2,3,4].forEach(g => {
+          const data = allData[g];
+          if (!data) return;
+          Object.keys(data).forEach(n => {
+            const t = data[n];
+            if (t.enProgreso) {
+              const lastDate = t.lastIni;
+              const dias = daysSince(lastDate);
+              enProgreso.push({ n, dias, lastDate, grupo: g, enProgreso: true });
+            }
+          });
+        });
+      }
+
+      propios.sort((a,b) => b.dias - a.dias);
+      enProgreso.sort((a,b) => b.dias - a.dias);
+
+      return { propios, enProgreso };
+    }
+
+    function filtered(lista) {
+      if (!query) return lista;
+      const q = query.trim();
+      return lista.filter(t => t.n.includes(q));
+    }
+
+    function render() {
+      const { propios, enProgreso } = buildLista();
+      const filteredPropios = filtered(propios);
+      const filteredProgreso = filtered(enProgreso);
+
+      let html = `
+        <div class="bs-card">
+          <div class="bs-handle"></div>
+          <div class="bs-header">
+            <div class="bs-title">${label}</div>
+            <button class="bs-close-btn">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="tp-search-wrap">
+            <span class="tp-search-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input class="tp-search-input" type="text" placeholder="Buscar por número..." value="${query}" autocomplete="off" inputmode="numeric">
+          </div>
+          <div class="tp-list">`;
+
+      // Sección propios
+      if (grupo === 'C') {
+        html += `<div class="tp-section-title">Congregación</div>`;
+      }
+      if (filteredPropios.length === 0 && !query) {
+        html += `<div class="tp-empty">Sin territorios disponibles</div>`;
+      } else if (filteredPropios.length === 0 && query) {
+        html += `<div class="tp-empty">Sin resultados</div>`;
+      } else {
+        filteredPropios.forEach(t => {
+          const col = daysColor(t.dias);
+          html += `<button class="tp-item" data-terr="${t.n}">
+            <span class="tp-item-num" style="color:${col};border-color:${col};">${t.n}</span>
+            <span class="tp-item-info">
+              <span class="tp-item-label">Territorio ${t.n}</span>
+              <span class="tp-item-days" style="color:${col};">${t.dias}d desde ${t.lastDate ? t.lastDate.split('-').reverse().join('/') : 'sin reg.'}</span>
+            </span>
+          </button>`;
+        });
+      }
+
+      // Sección en progreso (solo para Congregación)
+      if (grupo === 'C' && filteredProgreso.length > 0) {
+        html += `<div class="tp-divider" style="margin-top:8px;"></div>`;
+        html += `<div class="tp-section-title">⟳ En progreso (otros grupos)</div>`;
+        filteredProgreso.forEach(t => {
+          const col = daysColor(t.dias);
+          const grupoLabel = `Grupo ${t.grupo}`;
+          html += `<button class="tp-item" data-terr="${t.n}">
+            <span class="tp-item-num" style="color:${col};border-color:${col};">${t.n}</span>
+            <span class="tp-item-info">
+              <span class="tp-item-label">Territorio ${t.n} · ${grupoLabel}</span>
+              <span class="tp-item-days" style="color:${col};">En progreso desde ${t.lastDate ? t.lastDate.split('-').reverse().join('/') : '—'}</span>
+            </span>
+          </button>`;
+        });
+      }
+
+      html += `
+          </div>
+        </div>`;
+
+      overlay.innerHTML = html;
+
+      // Búsqueda
+      const searchInput = overlay.querySelector('.tp-search-input');
+      searchInput.addEventListener('input', e => { query = e.target.value; render(); });
+      setTimeout(() => searchInput.focus(), 80);
+
+      // Items
+      overlay.querySelectorAll('.tp-item').forEach(btn => {
+        btn.onclick = () => {
+          const terr = btn.dataset.terr;
+          overlay.remove();
+          resolve(terr);
         };
       });
 
