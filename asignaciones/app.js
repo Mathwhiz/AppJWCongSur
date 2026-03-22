@@ -659,59 +659,103 @@ function generarAutomatico() {
     return;
   }
 
-  // ── Contar cuántas veces trabajó cada hermano en cada rol ──
-  const contadores = {}; // { nombre: { ROL: count } }
+  // ── Contar historial por persona y rol-grupo ──
+  // Agrupamos SONIDO_1/SONIDO_2 como 'SONIDO' y MICROFONISTAS_1/2 como 'MICROFONISTAS'
+  function getRolGrupo(rol) {
+    if (rol === 'SONIDO_1' || rol === 'SONIDO_2') return 'SONIDO';
+    if (rol === 'MICROFONISTAS_1' || rol === 'MICROFONISTAS_2') return 'MICROFONISTAS';
+    return rol;
+  }
+
+  const contadores = {}; // { nombre: { rolGrupo: count } }
   todasLasFilas.forEach(row => {
     ROLES.forEach(r => {
       const nombre = row[r];
       if (!nombre) return;
+      const rg = getRolGrupo(r);
       if (!contadores[nombre]) contadores[nombre] = {};
-      contadores[nombre][r] = (contadores[nombre][r] || 0) + 1;
+      contadores[nombre][rg] = (contadores[nombre][rg] || 0) + 1;
     });
   });
 
-  function getCount(nombre, rol) {
-    return (contadores[nombre]?.[rol] || 0);
+  function getCount(nombre, rolGrupo) {
+    return (contadores[nombre]?.[rolGrupo] || 0);
   }
 
-  function elegirHermano(listaKey, rolKey, yaAsignados) {
-    const lista = hermanos[listaKey] || [];
-    const disponibles = lista.filter(h => !yaAsignados.has(h));
-    if (disponibles.length === 0) {
-      // Si todos están ocupados, usar cualquiera con menos usos
-      const fallback = [...lista].sort((a, b) => getCount(a, rolKey) - getCount(b, rolKey));
-      return fallback[0] || '';
-    }
-    // Ordenar por menor cantidad de veces que hizo ese rol
-    disponibles.sort((a, b) => {
-      const diff = getCount(a, rolKey) - getCount(b, rolKey);
-      if (diff !== 0) return diff;
-      // Empate: el que hace más tiempo no trabaja en ningún rol
-      const totalA = Object.values(contadores[a] || {}).reduce((s, v) => s + v, 0);
-      const totalB = Object.values(contadores[b] || {}).reduce((s, v) => s + v, 0);
-      return totalA - totalB;
-    });
-    return disponibles[0];
+  function incrementar(nombre, rolGrupo) {
+    if (!contadores[nombre]) contadores[nombre] = {};
+    contadores[nombre][rolGrupo] = (contadores[nombre][rolGrupo] || 0) + 1;
   }
+
+  // ── Definir slots por reunión ──
+  // Cada slot tiene: rolGrupo, listaKey, cantidad, roles[] (los campos a llenar)
+  const SLOTS_MIERC = [
+    { rolGrupo:'LECTOR',               listaKey:'LECTOR',               cantidad:1, roles:['LECTOR'] },
+    { rolGrupo:'SONIDO',               listaKey:'SONIDO_1',              cantidad:2, roles:['SONIDO_1','SONIDO_2'] },
+    { rolGrupo:'PLATAFORMA',           listaKey:'PLATAFORMA',            cantidad:1, roles:['PLATAFORMA'] },
+    { rolGrupo:'MICROFONISTAS',        listaKey:'MICROFONISTAS_1',       cantidad:2, roles:['MICROFONISTAS_1','MICROFONISTAS_2'] },
+    { rolGrupo:'ACOMODADOR_AUDITORIO', listaKey:'ACOMODADOR_AUDITORIO',  cantidad:1, roles:['ACOMODADOR_AUDITORIO'] },
+    { rolGrupo:'ACOMODADOR_ENTRADA',   listaKey:'ACOMODADOR_ENTRADA',    cantidad:1, roles:['ACOMODADOR_ENTRADA'] },
+    { rolGrupo:'REVISTAS',             listaKey:'REVISTAS',              cantidad:1, roles:['REVISTAS'] },
+    { rolGrupo:'PUBLICACIONES',        listaKey:'PUBLICACIONES',         cantidad:1, roles:['PUBLICACIONES'] },
+  ];
+
+  const SLOTS_SAB = [
+    ...SLOTS_MIERC,
+    { rolGrupo:'PRESIDENTE', listaKey:'PRESIDENTE', cantidad:1, roles:['PRESIDENTE'] },
+  ];
 
   autoResult = fechasAGenerar.map(({ fecha, dia }) => {
     const entry = { fecha, dia };
-    const yaAsignados = new Set(); // hermanos ya usados en esta reunión
+    const yaAsignados = new Set();
+    const slots = dia === 'Miércoles' ? SLOTS_MIERC : SLOTS_SAB;
 
-    ROLES.forEach(r => {
-      if (r === 'PRESIDENTE' && dia === 'Miércoles') { entry[r] = ''; return; }
-      const listaKey = ROL_LISTA_MAP[r] || r;
-      const lista = hermanos[listaKey] || [];
-      if (lista.length === 0) { entry[r] = ''; return; }
-
-      const elegido = elegirHermano(listaKey, r, yaAsignados);
-      entry[r] = elegido;
-      if (elegido) {
-        yaAsignados.add(elegido);
-        // Actualizar contador local para que las siguientes reuniones lo tengan en cuenta
-        if (!contadores[elegido]) contadores[elegido] = {};
-        contadores[elegido][r] = (contadores[elegido][r] || 0) + 1;
+    slots.forEach(slot => {
+      const lista = hermanos[slot.listaKey] || [];
+      if (lista.length === 0) {
+        slot.roles.forEach(r => { entry[r] = ''; });
+        return;
       }
+
+      // Ordenar disponibles por menor cantidad de veces en ese rolGrupo
+      const disponibles = lista
+        .filter(h => !yaAsignados.has(h))
+        .sort((a, b) => {
+          const diff = getCount(a, slot.rolGrupo) - getCount(b, slot.rolGrupo);
+          if (diff !== 0) return diff;
+          // Empate: menor carga total
+          const totalA = Object.values(contadores[a] || {}).reduce((s,v) => s+v, 0);
+          const totalB = Object.values(contadores[b] || {}).reduce((s,v) => s+v, 0);
+          return totalA - totalB;
+        });
+
+      // Tomar los primeros N según cantidad necesaria
+      const elegidos = disponibles.slice(0, slot.cantidad);
+
+      // Si no hay suficientes disponibles, completar con los menos usados aunque ya estén
+      if (elegidos.length < slot.cantidad) {
+        const faltantes = slot.cantidad - elegidos.length;
+        const yaElegidos = new Set(elegidos);
+        const extras = lista
+          .filter(h => !yaElegidos.has(h))
+          .sort((a, b) => getCount(a, slot.rolGrupo) - getCount(b, slot.rolGrupo))
+          .slice(0, faltantes);
+        elegidos.push(...extras);
+      }
+
+      slot.roles.forEach((r, i) => {
+        const nombre = elegidos[i] || '';
+        entry[r] = nombre;
+        if (nombre) {
+          yaAsignados.add(nombre);
+          incrementar(nombre, slot.rolGrupo);
+        }
+      });
+    });
+
+    // Rellenar roles que no están en slots (PRESIDENTE en Miércoles)
+    ROLES.forEach(r => {
+      if (!(r in entry)) entry[r] = '';
     });
 
     return entry;
@@ -722,7 +766,6 @@ function generarAutomatico() {
   show('auto-preview');
   show('auto-guardar-wrap');
 }
-
 function renderAutoPreview(rows) {
   const c = document.getElementById('auto-preview');
   if (!c) return;
