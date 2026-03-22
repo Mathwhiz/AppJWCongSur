@@ -917,7 +917,6 @@ window.uiTerritorioPicker = function({
       enProgreso.sort((a,b) => b.dias - a.dias);
       resto.sort((a,b) => b.dias - a.dias);
 
-      // Territorios de grupos 1-4 (solo para Congregación)
       const deGrupos = [];
       if (grupo === 'C' && allData) {
         [1,2,3,4].forEach(g => {
@@ -988,12 +987,11 @@ window.uiTerritorioPicker = function({
       if (fProgreso.length > 0) {
         html += `<div class="tp-section-title">⟳ En progreso</div>`;
         fProgreso.forEach(t => { html += itemHTML(t); });
-        if (fResto.length > 0 || (grupo === 'C')) html += `<div class="tp-divider"></div>`;
+        html += `<div class="tp-divider"></div>`;
       }
 
       // ── Propios ──
       if (!hayQuery && grupo === 'C') html += `<div class="tp-section-title">Congregación</div>`;
-
       if (fResto.length === 0 && fProgreso.length === 0 && !hayQuery) {
         html += `<div class="tp-empty">Sin territorios disponibles</div>`;
       } else {
@@ -1003,21 +1001,18 @@ window.uiTerritorioPicker = function({
       // ── Territorios de grupos (solo Congregación) ──
       if (grupo === 'C') {
         if (hayQuery) {
-          // Con búsqueda: mostrar resultados de grupos directamente
           if (fGrupos.length > 0) {
             html += `<div class="tp-divider"></div>`;
             html += `<div class="tp-section-title">Grupos 1–4</div>`;
             fGrupos.forEach(t => {
-              const col = daysColor(t.dias);
               const diasLabel = t.dias >= 9999 ? 'sin reg.' : `${t.dias}d`;
               const sub = `Grupo ${t.grupo} · ${t.enProgreso ? '<span style="color:#5DCAA5;">en progreso</span>' : diasLabel}`;
               html += itemHTML(t, sub);
             });
           } else if (fResto.length === 0 && fProgreso.length === 0) {
-            html += `<div class="tp-empty">Sin resultados</div>`;
+            html += `<div class="tp-empty">Sin resultados para "${query}"</div>`;
           }
         } else {
-          // Sin búsqueda: botón expandir/colapsar
           html += `<div class="tp-divider"></div>`;
           if (!gruposExpanded) {
             html += `<button class="tp-expand-btn" id="tp-expand-grupos">
@@ -1047,24 +1042,20 @@ window.uiTerritorioPicker = function({
         }
       }
 
-      // Sin resultados globales con búsqueda activa
-      if (hayQuery && fProgreso.length === 0 && fResto.length === 0 && fGrupos.length === 0) {
+      if (hayQuery && fProgreso.length === 0 && fResto.length === 0 && (grupo !== 'C' || fGrupos.length === 0)) {
         html += `<div class="tp-empty">Sin resultados para "${query}"</div>`;
       }
 
       html += `</div></div>`;
       overlay.innerHTML = html;
 
-      // Búsqueda
       const searchInput = overlay.querySelector('.tp-search-input');
       searchInput.addEventListener('input', e => { query = e.target.value; render(); });
       setTimeout(() => searchInput.focus(), 80);
 
-      // Toggle grupos
       const expandBtn = overlay.querySelector('#tp-expand-grupos');
       if (expandBtn) expandBtn.onclick = () => { gruposExpanded = !gruposExpanded; render(); };
 
-      // Items
       overlay.querySelectorAll('.tp-item').forEach(btn => {
         btn.onclick = () => { overlay.remove(); resolve(btn.dataset.terr); };
       });
