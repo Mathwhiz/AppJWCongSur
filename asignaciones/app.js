@@ -310,11 +310,11 @@ async function goToAutomatico() {
   const ultimaFecha = fechasOrdenadas[fechasOrdenadas.length - 1];
   let desdeDate = ultimaFecha ? new Date(ultimaFecha.split('/').reverse().map((v,i) => i===0 && v.length===2 ? '20'+v : v).join('-') + 'T00:00:00') : new Date(hoy);
   desdeDate.setDate(desdeDate.getDate() + 1);
-  for (let i = 0; i < 60; i++) {
-    const dow = desdeDate.getDay();
-    if ((dow === 3 || dow === 6) && !fechasExistentes.has(fmtFecha(desdeDate))) break;
-    desdeDate.setDate(desdeDate.getDate() + 1);
-  }
+    while (true) {
+      const dow = desdeDate.getDay();
+      if (dow === 3 || dow === 6) break;
+      desdeDate.setDate(desdeDate.getDate() + 1);
+    }
 
   // Fecha hasta: 3 meses desde desde
   const hastaDate = new Date(desdeDate);
