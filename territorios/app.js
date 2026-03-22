@@ -292,7 +292,7 @@ async function cerrarSesion() {
     msg: 'Vas a volver a la pantalla de grupos.',
     confirmText: 'Cerrar sesión',
     cancelText: 'Cancelar',
-    type: 'warn'
+    type: 'purple'
   });
   if (!ok) return;
   selectedGrupo = null;
