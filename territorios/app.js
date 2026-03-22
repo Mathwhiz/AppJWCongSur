@@ -520,6 +520,28 @@ function updateDiaLabel(id) {
   label.style.color = DIA_COLORS[nombre] || '#eee';
 }
 
+function reordenarSalidas() {
+  const container = document.getElementById('salidas-container');
+  // La primera card puede ser el bloque fijo de telefónica de Congregación (sin id de salida)
+  const fixedBlock = container.querySelector('.tipo-tel:not([id^="salida-card-"])');
+
+  const cards = [...container.querySelectorAll('[id^="salida-card-"]')];
+  cards.sort((a, b) => {
+    const idA = parseInt(a.id.replace('salida-card-', ''));
+    const idB = parseInt(b.id.replace('salida-card-', ''));
+    const fechaA = document.getElementById('sal-fecha-' + idA)?.value || '';
+    const fechaB = document.getElementById('sal-fecha-' + idB)?.value || '';
+    if (fechaA !== fechaB) return fechaA.localeCompare(fechaB);
+    const horaA  = document.getElementById('sal-hora-'  + idA)?.value || '';
+    const horaB  = document.getElementById('sal-hora-'  + idB)?.value || '';
+    return horaA.localeCompare(horaB);
+  });
+
+  // Reinsertar: el bloque fijo siempre primero (solo existe en Congregación)
+  if (fixedBlock) container.appendChild(fixedBlock);
+  cards.forEach(card => container.appendChild(card));
+}
+
 function addSalida(tipo, data = {}) {
   if (salidas.length >= 20) return;
   const id = ++salidaCounter;
@@ -604,7 +626,14 @@ function renderSalidaCard(s) {
   // Actualizar label del día cuando cambie la fecha
   const fechaInput = div.querySelector(`#sal-fecha-${s.id}`);
   if (fechaInput) {
-    fechaInput.addEventListener('change', () => updateDiaLabel(s.id));
+    fechaInput.addEventListener('change', () => {
+      updateDiaLabel(s.id);
+      reordenarSalidas();
+    });
+  }
+  const horaInput = div.querySelector(`#sal-hora-${s.id}`);
+  if (horaInput) {
+    horaInput.addEventListener('change', () => reordenarSalidas());
   }
 }
 
