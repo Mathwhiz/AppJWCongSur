@@ -257,3 +257,32 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 .preview-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
 .preview-title-line { font-size: 26px; font-weight: 500; line-height: 1.2; }
 .preview-sep { color: #555; margin: 0 6px; }
+
+/* ── Offline banner ── */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #2e1a1a;
+  border-bottom: 1.5px solid #A32D2D;
+  color: #F09595;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  padding: 10px;
+  z-index: 999;
+  display: none;
+}
+.offline-banner.visible {
+  display: block;
+}
+
+
+
+
+
+
+
+
+
