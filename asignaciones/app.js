@@ -220,7 +220,18 @@ function pinCancel() { hide('pin-modal'); pinBuffer = ''; }
 /* ─── Navegación ─── */
 function goToCover() { showView('view-cover'); }
 function goToPin()   { openPin(); }
-function cerrarSesionEncargado() { esEncargado = false; goToCover(); }
+async function cerrarSesionEncargado() {
+  const ok = await uiConfirm({
+    title: '¿Cerrar sesión?',
+    msg: 'Vas a volver a la pantalla de inicio.',
+    confirmText: 'Cerrar sesión',
+    cancelText: 'Cancelar',
+    type: 'warn'
+  });
+  if (!ok) return;
+  esEncargado = false;
+  goToCover();
+}
 function goToEncargado() { showView('view-encargado'); }
 
 async function goToVerSemana() {
