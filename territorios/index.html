@@ -38,26 +38,66 @@
     <div class="step" id="s3"></div>
   </div>
 
-  <!-- ── COVER ── -->
+ <!-- ── COVER ── -->
   <div id="view-cover" class="view">
-    <div class="cover">
-      <div class="cover-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-          <path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6M12 9v6" stroke="#97C459" stroke-width="1.5" stroke-linecap="round"/>
+    <div class="cs-module-cover">
+
+      <!-- Ícono del módulo -->
+      <div class="cs-module-icon-wrap" style="background:rgba(127,119,221,0.18);border:1px solid rgba(127,119,221,0.25);">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="9" cy="7" r="4" stroke="#7F77DD" stroke-width="1.5"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="cover-title">Territory<br>App</div>
-      <div class="cover-subtitle">Congregación Sur</div>
-      <div class="grupo-label">¿Con qué grupo trabajás?</div>
-      <div class="grupo-grid">
-        <button class="grupo-btn" data-grupo="1" onclick="selectGrupo(this,1)">1</button>
-        <button class="grupo-btn" data-grupo="2" onclick="selectGrupo(this,2)">2</button>
-        <button class="grupo-btn" data-grupo="3" onclick="selectGrupo(this,3)">3</button>
-        <button class="grupo-btn" data-grupo="4" onclick="selectGrupo(this,4)">4</button>
-        <button class="grupo-btn" data-grupo="C" onclick="selectGrupo(this,'C')" style="font-size:16px;width:88px;">Congr.</button>
-      </div>
-      <button class="btn-start" id="btn-start" onclick="openPin()">Empezar →</button>
-<a href="../index.html" style="margin-top:16px;font-size:13px;color:#555;text-decoration:none;display:inline-block;padding:8px 16px;border:0.5px solid #444;border-radius:8px;cursor:pointer;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='#aaa';this.style.borderColor='#666';" onmouseout="this.style.color='#555';this.style.borderColor='#444';">← Volver al inicio</a>
+
+      <div class="cs-module-title">Asignaciones</div>
+      <div class="cs-module-sub" style="color:#7F77DD;">Congregación Sur</div>
+      <div class="cs-module-label">¿Qué querés hacer?</div>
+
+      <button class="cs-module-card" onclick="goToVerSemana()" style="--card-hover-border:#1D9E75;--card-hover-bg:#1e2922;">
+        <div class="cs-module-card-icon" style="background:#0d2318;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#1D9E75" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="3" stroke="#1D9E75" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-module-card-title">Ver semana actual</div>
+          <div class="cs-module-card-sub">Programación de esta semana</div>
+        </div>
+      </button>
+
+      <button class="cs-module-card" onclick="goToBuscarHermano()" style="--card-hover-border:#378ADD;--card-hover-bg:#1e2430;">
+        <div class="cs-module-card-icon" style="background:#0d1a2e;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="#378ADD" stroke-width="1.8"/>
+            <path d="m21 21-4.35-4.35" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-module-card-title">Mi asignación</div>
+          <div class="cs-module-card-sub">Buscar mi nombre esta semana</div>
+        </div>
+      </button>
+
+      <button class="cs-module-card" onclick="goToPin()" style="--card-hover-border:#7F77DD;--card-hover-bg:#1e1e2e;">
+        <div class="cs-module-card-icon" style="background:#171730;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="11" width="18" height="11" rx="2" stroke="#7F77DD" stroke-width="1.8"/>
+            <path d="M7 11V7a5 5 0 0110 0v4" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-module-card-title">Acceso encargado</div>
+          <div class="cs-module-card-sub">Editar y generar programación</div>
+        </div>
+      </button>
+
+      <a href="../index.html" class="cs-module-card" style="margin-top:4px;justify-content:center;background:transparent;border-color:#2a2a2a;box-shadow:none;">
+        <span style="font-size:13px;color:#555;">← Volver al inicio</span>
+      </a>
+
     </div>
   </div>
 

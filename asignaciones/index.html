@@ -29,60 +29,66 @@
 
 <div class="app">
 
-  <!-- ── COVER ── -->
+<!-- ── COVER ── -->
   <div id="view-cover" class="view">
-    <div class="cover">
-      <div class="cover-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+    <div class="cs-module-cover">
+
+      <!-- Ícono del módulo -->
+      <div class="cs-module-icon-wrap" style="background:rgba(127,119,221,0.18);border:1px solid rgba(127,119,221,0.25);">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
           <circle cx="9" cy="7" r="4" stroke="#7F77DD" stroke-width="1.5"/>
           <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="cover-title">Asignaciones</div>
-      <div class="cover-subtitle">Congregación Sur</div>
-      <div class="grupo-label">¿Qué querés hacer?</div>
 
-      <button class="modo-card modo-ver" onclick="goToVerSemana()">
-        <div class="modo-icon" style="background:rgba(29,158,117,0.15);">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <div class="cs-module-title">Asignaciones</div>
+      <div class="cs-module-sub" style="color:#7F77DD;">Congregación Sur</div>
+      <div class="cs-module-label">¿Qué querés hacer?</div>
+
+      <button class="cs-module-card" onclick="goToVerSemana()" style="--card-hover-border:#1D9E75;--card-hover-bg:#1e2922;">
+        <div class="cs-module-card-icon" style="background:#0d2318;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#1D9E75" stroke-width="1.8"/>
             <circle cx="12" cy="12" r="3" stroke="#1D9E75" stroke-width="1.8"/>
           </svg>
         </div>
         <div>
-          <div class="modo-card-title">Ver semana actual</div>
-          <div class="modo-card-sub">Programación de esta semana</div>
+          <div class="cs-module-card-title">Ver semana actual</div>
+          <div class="cs-module-card-sub">Programación de esta semana</div>
         </div>
       </button>
 
-      <button class="modo-card modo-buscar" onclick="goToBuscarHermano()">
-        <div class="modo-icon" style="background:rgba(55,138,221,0.15);">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <button class="cs-module-card" onclick="goToBuscarHermano()" style="--card-hover-border:#378ADD;--card-hover-bg:#1e2430;">
+        <div class="cs-module-card-icon" style="background:#0d1a2e;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <circle cx="11" cy="11" r="8" stroke="#378ADD" stroke-width="1.8"/>
             <path d="m21 21-4.35-4.35" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
-          <div class="modo-card-title">Mi asignación</div>
-          <div class="modo-card-sub">Buscar mi nombre esta semana</div>
+          <div class="cs-module-card-title">Mi asignación</div>
+          <div class="cs-module-card-sub">Buscar mi nombre esta semana</div>
         </div>
       </button>
 
-      <button class="modo-card modo-encargado" onclick="goToPin()">
-        <div class="modo-icon" style="background:rgba(127,119,221,0.15);">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <button class="cs-module-card" onclick="goToPin()" style="--card-hover-border:#7F77DD;--card-hover-bg:#1e1e2e;">
+        <div class="cs-module-card-icon" style="background:#171730;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="11" width="18" height="11" rx="2" stroke="#7F77DD" stroke-width="1.8"/>
             <path d="M7 11V7a5 5 0 0110 0v4" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
-          <div class="modo-card-title">Acceso encargado</div>
-          <div class="modo-card-sub">Editar y generar programación</div>
+          <div class="cs-module-card-title">Acceso encargado</div>
+          <div class="cs-module-card-sub">Editar y generar programación</div>
         </div>
       </button>
 
-      <a href="../index.html" class="btn-secondary" style="width:100%;max-width:320px;text-align:center;text-decoration:none;margin-top:4px;">← Volver al inicio</a>
+      <a href="../index.html" class="cs-module-card" style="margin-top:4px;justify-content:center;background:transparent;border-color:#2a2a2a;box-shadow:none;">
+        <span style="font-size:13px;color:#555;">← Volver al inicio</span>
+      </a>
+
     </div>
   </div>
 

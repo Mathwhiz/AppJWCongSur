@@ -390,6 +390,80 @@
 }
 .cs-logo-sub { font-size: 14px; color: #888; }
 .cs-footer   { font-size: 12px; color: #555; margin-top: 4px; }
+.cs-module-cover {
+  min-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 2rem 1rem;
+  max-width: 340px;
+  margin: 0 auto;
+}
+ 
+.cs-module-icon-wrap {
+  width: 76px; height: 76px;
+  border-radius: 22px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+ 
+.cs-module-title {
+  font-size: 44px; font-weight: 700;
+  color: #efefef; letter-spacing: -0.5px;
+  line-height: 1;
+  text-align: center;
+}
+ 
+.cs-module-sub {
+  font-size: 15px; font-weight: 500;
+  text-align: center;
+  margin-bottom: 6px;
+}
+ 
+.cs-module-label {
+  font-size: 13px; color: #666;
+  text-align: center;
+  margin-bottom: 4px;
+}
+ 
+.cs-module-card {
+  width: 100%;
+  background: #232628;
+  border: 1px solid #2e3033;
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.18s, background 0.18s, transform 0.1s, box-shadow 0.18s;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  outline: none;
+}
+.cs-module-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+.cs-module-card:active { transform: scale(0.98); box-shadow: none; }
+ 
+.cs-module-card-icon {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+ 
+.cs-module-card-title {
+  font-size: 16px; font-weight: 600;
+  color: #e8e8e8; margin-bottom: 2px;
+}
+.cs-module-card-sub {
+  font-size: 13px; color: #666;
+}
 
 /* ═══════════════════════════════════════════
    TOAST
@@ -926,3 +1000,13 @@ const _uiObserver = new MutationObserver(mutations => {
   });
 });
 _uiObserver.observe(document.body, { childList: true, subtree: true });
+
+/* Auto-aplicar fondo oscuro a todos los módulos */
+(function() {
+  function _applyBg() {
+    if (!document.body.classList.contains('cs-home-body'))
+      document.body.classList.add('cs-home-body');
+  }
+  if (document.body) _applyBg();
+  else document.addEventListener('DOMContentLoaded', _applyBg);
+})();
