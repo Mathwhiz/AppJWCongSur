@@ -783,9 +783,15 @@ function generarAutomatico() {
     });
 
     return entry;
-  });
-
-function renderAutoPreview(rows) {
+    });
+  
+    hide('auto-loading');
+    renderAutoPreview(autoResult);
+    show('auto-preview');
+    show('auto-guardar-wrap');
+  }
+  
+  function renderAutoPreview(rows) {
   const c = document.getElementById('auto-preview');
   if (!c) return;
   c.innerHTML = `<div style="font-size:12px;color:#888;margin-bottom:10px;">${rows.length} reuniones a generar — revisá antes de guardar</div>`;
