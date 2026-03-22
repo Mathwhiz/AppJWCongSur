@@ -226,7 +226,11 @@ function pinCancel() { hide('pin-modal'); pinBuffer = ''; }
 /* ─── Navegación ─── */
 function goToCover() { showView('view-cover'); }
 function goToPin()   { openPin(); }
-function cerrarSesionEncargado() { esEncargado = false; goToCover(); }
+function cerrarSesionEncargado() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  esEncargado = false;
+  goToCover();
+}
 function goToEncargado() { showView('view-encargado'); }
 
 async function goToVerSemana() {
