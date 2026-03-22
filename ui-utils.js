@@ -335,11 +335,18 @@
    PANTALLA INICIAL (index.html)
 ═══════════════════════════════════════════ */
 .cs-home-body {
-  background: #1a1c1f;
-  background-image:
-    radial-gradient(ellipse at 60% 20%, rgba(46,134,193,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(79,195,195,0.04) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background:
+    radial-gradient(circle at 30% 20%, #1b1f2a 0%, transparent 40%),
+    radial-gradient(circle at 70% 80%, #151822 0%, transparent 40%),
+    #0b0d12;
+}
+.cs-home-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("noise.png");
+  opacity: 0.04;
 }
 
 .cs-nav-card {
@@ -381,8 +388,8 @@
   font-size: 34px; font-weight: 700;
   color: #f0f0f0; letter-spacing: -0.5px;
 }
-.cs-logo-sub { font-size: 14px; color: #555; }
-.cs-footer   { font-size: 12px; color: #3a3a3a; margin-top: 4px; }
+.cs-logo-sub { font-size: 14px; color: #888; }
+.cs-footer   { font-size: 12px; color: #555; margin-top: 4px; }
 
 /* ═══════════════════════════════════════════
    TOAST
@@ -411,27 +418,27 @@
 })();
 
 /* ─────────────────────────────────────────
-   LOGO SVG — Hexágono azul-teal
+   LOGO SVG — Hexágono violeta jw-style
 ───────────────────────────────────────── */
-window.CS_LOGO_SVG = `<svg class="cs-logo-svg" width="80" height="80" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+window.CS_LOGO_SVG = `<svg class="cs-logo-svg" width="100" height="100" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="csLogoGrad" x1="8" y1="4" x2="64" y2="68" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4FC3C3"/>
-      <stop offset="50%" stop-color="#2E86C1"/>
-      <stop offset="100%" stop-color="#1A5C9A"/>
+      <stop offset="0%" stop-color="#9B8FFF"/>
+      <stop offset="50%" stop-color="#7061E0"/>
+      <stop offset="100%" stop-color="#4A3FB5"/>
     </linearGradient>
     <linearGradient id="csIconGrad" x1="18" y1="18" x2="54" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#7DE8E8"/>
-      <stop offset="100%" stop-color="#4FB8E0"/>
+      <stop offset="0%" stop-color="#D4CFFF"/>
+      <stop offset="100%" stop-color="#9B8FFF"/>
     </linearGradient>
-    <filter id="csShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#1A5C9A" flood-opacity="0.5"/>
+    <filter id="csShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#3B2FA0" flood-opacity="0.55"/>
     </filter>
   </defs>
   <path d="M36 4 L64 20 L64 52 L36 68 L8 52 L8 20 Z"
     fill="url(#csLogoGrad)" filter="url(#csShadow)"/>
   <path d="M36 9 L60 23 L60 49 L36 63 L12 49 L12 23 Z"
-    fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <circle cx="28" cy="27" r="6" fill="url(#csIconGrad)"/>
   <path d="M16 48 C16 40 22 36 28 36 C31 36 33.5 37.2 35.5 39" stroke="url(#csIconGrad)" stroke-width="2.8" stroke-linecap="round" fill="none"/>
   <circle cx="40" cy="25" r="7" fill="url(#csIconGrad)"/>
