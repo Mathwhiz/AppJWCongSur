@@ -684,9 +684,12 @@ window.guardarSemana = async function() {
 // ─────────────────────────────────────────
 //   IMPORTACIÓN WOL
 // ─────────────────────────────────────────
+// Proxies en orden de preferencia — si uno falla se prueba el siguiente
 const WOL_PROXIES = [
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  { build: url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, text: r => r.text() },
+  { build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,      text: async r => { const j = await r.json(); return j.contents; } },
+  { build: url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,      text: r => r.text() },
+  { build: url => `https://corsproxy.io/?${encodeURIComponent(url)}`,                   text: r => r.text() },
 ];
 
 function wolUrl(fecha) {
@@ -694,19 +697,6 @@ function wolUrl(fecha) {
   return `https://wol.jw.org/es/wol/dt/r4/lp-s/${y}/${m}/${d}`;
 }
 
-async function fetchWithTimeout(url, ms = 10000) {
-  const ctrl = new AbortController();
-  const id   = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(id);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.text();
-  } catch(e) {
-    clearTimeout(id);
-    throw e;
-  }
-}
 
 function parseDur(text) {
   const m = text?.match(/\((\d+)\s*min/);
@@ -791,10 +781,17 @@ function parseWOL(html) {
 async function fetchWOL(fecha) {
   const target = wolUrl(fecha);
   let lastErr;
-  for (const proxyFn of WOL_PROXIES) {
+  for (const proxy of WOL_PROXIES) {
+    const ctrl = new AbortController();
+    const id   = setTimeout(() => ctrl.abort(), 10000);
     try {
-      return await fetchWithTimeout(proxyFn(target));
+      const res = await fetch(proxy.build(target), { signal: ctrl.signal });
+      clearTimeout(id);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await proxy.text(res);
     } catch(e) {
+      clearTimeout(id);
+      console.warn(`WOL proxy falló (${e.message}), probando siguiente…`);
       lastErr = e;
     }
   }
