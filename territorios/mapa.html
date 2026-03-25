@@ -345,7 +345,10 @@ async function initMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
   setTimeout(() => { map.invalidateSize(); }, 100);
 
-  renderTerritories();
+  // En modo encuentro el render se hace después de cargar el historial
+  if (_modoParam !== 'encuentro') {
+    renderTerritories();
+  }
 
   // En modo full cargamos el historial en background (el mapa ya está visible)
   if (_modoParam === 'full') {
@@ -353,6 +356,8 @@ async function initMap() {
   }
 
   if (_modoParam === 'encuentro') {
+    await cargarHistorialInfo();
+    renderTerritories();
     initEncuentroMode();
   } else if (_modoParam === 'picker' || _params.get('picker') === '1') {
     applyPickerFilter(_grupoParam);
@@ -370,7 +375,12 @@ async function initMap() {
   // Leyenda según modo
   const legend = document.getElementById('map-legend');
   if (_modoParam === 'encuentro') {
-    legend.style.display = 'none';
+    legend.innerHTML = `
+      <div class="legend-row"><div class="legend-dot" style="background:#4CAF50;"></div>≤ 30 días</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#FFC107;"></div>31–60 días</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#FF9800;"></div>61–90 días</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#F44336;"></div>&gt; 90 días</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#555;"></div>Sin registro</div>`;
   } else if (_modoParam === 'registrar') {
     legend.innerHTML = `<div class="legend-row"><div class="legend-dot" style="background:#EF9F27;"></div>En progreso</div>`;
   } else if (_modoParam === 'info' || _modoParam === 'picker') {
@@ -437,6 +447,21 @@ function renderTerritories() {
       polygon.on('click',     () => openPopup(polygon, t.num, t.grupo));
       polygon.on('mouseover', () => polygon.setStyle({ fillOpacity:0.65, weight:3 }));
       polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity:0.45, weight:2.5 }));
+      allLayers.push({ polygon, label, group:t.grupo, numero:t.num });
+      polygon.addTo(map); label.addTo(map);
+      return;
+    }
+
+    if (_modoParam === 'encuentro') {
+      if (String(t.grupo) !== String(_grupoParam)) return;
+      const info = territoriosInfo[baseNum(t.num)] || {};
+      const lastDate = info.lastFin || info.lastIni;
+      const c = colorByDias(lastDate ? daysSince(lastDate) : null);
+      const polygon = L.polygon(t.coords, { color:c.border, fillColor:c.fill, fillOpacity:0.22, weight:2, opacity:0.9 });
+      const label   = makeLabel(t.coords, c.fill, t.num);
+      polygon.on('click', (e) => { L.DomEvent.stopPropagation(e); selectEncuentroPoint(e.latlng); });
+      polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.45, weight: 2.5 }));
+      polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity: 0.22, weight: 2 }));
       allLayers.push({ polygon, label, group:t.grupo, numero:t.num });
       polygon.addTo(map); label.addTo(map);
       return;
@@ -590,30 +615,50 @@ async function selectEncuentroPoint(latlng) {
     }).addTo(map);
   }
 
-  const resultDiv   = document.getElementById('encuentro-result');
-  const addressDiv  = document.getElementById('encuentro-address');
-  const confirmBtn  = document.getElementById('encuentro-confirm');
+  const resultDiv  = document.getElementById('encuentro-result');
+  const addressDiv = document.getElementById('encuentro-address');
+  const confirmBtn = document.getElementById('encuentro-confirm');
   addressDiv.style.color = '#888';
   addressDiv.textContent = 'Buscando dirección…';
   confirmBtn.style.display = 'none';
   resultDiv.classList.add('visible');
 
   try {
-    const resp = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`,
-      { headers: { 'Accept-Language': 'es' } }
-    );
-    const data = await resp.json();
-    const addr = data.address || {};
+    // Consultas en paralelo: Overpass (calles cercanas) + Nominatim (dirección exacta)
+    const lat = latlng.lat, lng = latlng.lng;
+    const overpassQ = `[out:json];way["highway"]["name"](around:40,${lat},${lng});out tags;`;
+    const [overpassResp, nominatimResp] = await Promise.all([
+      fetch('https://overpass-api.de/api/interpreter', { method:'POST', body: overpassQ }),
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'es' } })
+    ]);
+
+    const [overpassData, nominatimData] = await Promise.all([
+      overpassResp.json(), nominatimResp.json()
+    ]);
+
+    // Calles únicas encontradas por Overpass en radio 40m
+    const calles = [...new Set(
+      (overpassData.elements || []).map(e => e.tags && e.tags.name).filter(Boolean)
+    )];
+
     let texto = '';
-    if (addr.road) {
-      texto = addr.road;
-      if (addr.house_number) texto += ' ' + addr.house_number;
+    if (calles.length >= 2) {
+      // Esquina detectada
+      texto = `${calles[0]} esq. ${calles[1]}`;
     } else {
-      texto = (data.display_name || '').split(',').slice(0, 2).join(', ').trim();
+      // Sin esquina → usar dirección de Nominatim
+      const addr = nominatimData.address || {};
+      if (addr.road) {
+        texto = addr.road;
+        if (addr.house_number) texto += ' ' + addr.house_number;
+      } else {
+        texto = (nominatimData.display_name || '').split(',').slice(0, 2).join(', ').trim();
+      }
     }
+
     addressDiv.style.color = '#eee';
-    addressDiv.textContent = texto || `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+    addressDiv.textContent = texto || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   } catch(e) {
     addressDiv.style.color = '#eee';
     addressDiv.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;

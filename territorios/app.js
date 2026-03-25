@@ -789,7 +789,7 @@ function openEncuentroPicker(salidaId) {
   const iframe  = document.getElementById('mapa-iframe');
   const title   = document.getElementById('mapa-popup-title');
   title.textContent = 'Elegir lugar de encuentro';
-  iframe.src = `mapa.html?modo=encuentro&salidaid=${salidaId}${terrVal ? '&terrid=' + encodeURIComponent(terrVal) : ''}`;
+  iframe.src = `mapa.html?modo=encuentro&salidaid=${salidaId}&grupo=${selectedGrupo}${terrVal ? '&terrid=' + encodeURIComponent(terrVal) : ''}`;
   popup.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
