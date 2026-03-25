@@ -110,6 +110,37 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   #map-loading.hidden { display: none; }
+
+  /* Encuentro bar */
+  .encuentro-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1001;
+    background: rgba(20,20,30,0.96); backdrop-filter: blur(8px);
+    border-top: 0.5px solid #3B6D11; padding: 12px 14px;
+    display: none; flex-direction: column; gap: 10px;
+  }
+  .encuentro-bar.visible { display: flex; }
+  .encuentro-corners { display: flex; gap: 6px; }
+  .corner-btn {
+    flex: 1; background: #1a1a2e; color: #97C459;
+    border: 0.5px solid #3B6D11; border-radius: 8px;
+    padding: 8px 4px; font-size: 14px; cursor: pointer;
+    text-align: center; line-height: 1.2;
+  }
+  .corner-btn:active { background: #1a2e0a; }
+  .encuentro-result {
+    display: none; flex-direction: column; gap: 8px;
+    padding-top: 8px; border-top: 0.5px solid #2a2a3a;
+  }
+  .encuentro-result.visible { display: flex; }
+  #encuentro-address {
+    font-size: 13px; color: #eee; text-align: center;
+    min-height: 18px; line-height: 1.4;
+  }
+  #encuentro-confirm {
+    background: #1a2e0a; color: #97C459; border: 0.5px solid #3B6D11;
+    border-radius: 8px; padding: 9px; font-size: 13px;
+    font-weight: 600; cursor: pointer; width: 100%;
+  }
 </style>
 </head>
 <body>
@@ -139,6 +170,20 @@
   <div id="picker-info">Tocá un territorio para seleccionarlo</div>
   <button id="picker-clear" style="display:none;" onclick="clearPickerSelection()">✕ Limpiar</button>
   <button id="picker-confirm" onclick="confirmPickerSelection()">Confirmar ✓</button>
+</div>
+
+<div class="encuentro-bar" id="encuentro-bar">
+  <div style="font-size:12px;color:#aaa;text-align:center;">Tocá el mapa o elegí una esquina del territorio</div>
+  <div class="encuentro-corners" id="encuentro-corners">
+    <button class="corner-btn" onclick="selectCorner('nw')">↖<br><span style="font-size:10px;color:#7aab5a;">NO</span></button>
+    <button class="corner-btn" onclick="selectCorner('ne')">↗<br><span style="font-size:10px;color:#7aab5a;">NE</span></button>
+    <button class="corner-btn" onclick="selectCorner('sw')">↙<br><span style="font-size:10px;color:#7aab5a;">SO</span></button>
+    <button class="corner-btn" onclick="selectCorner('se')">↘<br><span style="font-size:10px;color:#7aab5a;">SE</span></button>
+  </div>
+  <div class="encuentro-result" id="encuentro-result">
+    <div id="encuentro-address"></div>
+    <button id="encuentro-confirm" onclick="confirmEncuentro()">Usar esta dirección ✓</button>
+  </div>
 </div>
 
 <div class="map-toast" id="map-toast"></div>
@@ -185,6 +230,11 @@ const _grupoParam = _params.get('grupo') || 'all';
 const _modoParam  = _params.get('modo')  || 'full';
 const _enProgreso = (_params.get('enprogreso') || '').split(',').filter(Boolean);
 const _salidaId   = _params.get('salidaid') || null;
+const _terrIdParam = _params.get('terrid') || null;
+
+let encuentroMarker = null;
+let encuentroLatLng = null;
+let terrCorners     = null;
 
 // ── Cargar datos desde Firestore ──
 async function cargarTerritorios() {
@@ -302,7 +352,9 @@ async function initMap() {
     cargarHistorialInfo().catch(e => console.warn('Historial:', e));
   }
 
-  if (_modoParam === 'picker' || _params.get('picker') === '1') {
+  if (_modoParam === 'encuentro') {
+    initEncuentroMode();
+  } else if (_modoParam === 'picker' || _params.get('picker') === '1') {
     applyPickerFilter(_grupoParam);
   } else if (_grupoParam !== 'all') {
     filterGroup(_grupoParam);
@@ -317,7 +369,9 @@ async function initMap() {
 
   // Leyenda según modo
   const legend = document.getElementById('map-legend');
-  if (_modoParam === 'registrar') {
+  if (_modoParam === 'encuentro') {
+    legend.style.display = 'none';
+  } else if (_modoParam === 'registrar') {
     legend.innerHTML = `<div class="legend-row"><div class="legend-dot" style="background:#EF9F27;"></div>En progreso</div>`;
   } else if (_modoParam === 'info' || _modoParam === 'picker') {
     legend.innerHTML = `
@@ -486,6 +540,94 @@ function confirmPickerSelection() {
   else if (window.opener) window.opener.postMessage(msg, '*');
 }
 
+// ── Modo Encuentro ──
+function initEncuentroMode() {
+  document.getElementById('encuentro-bar').classList.add('visible');
+
+  if (_terrIdParam) {
+    const baseId = String(_terrIdParam).replace(/[A-Za-z]$/, '');
+    const terrLayers = allLayers.filter(l => String(l.numero).replace(/[A-Za-z]$/, '') === baseId);
+    if (terrLayers.length) {
+      const b = terrLayers[0].polygon.getBounds();
+      terrLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+      map.fitBounds(b, { padding: [30, 80] });
+      const sw = b.getSouthWest();
+      const ne = b.getNorthEast();
+      terrCorners = {
+        nw: L.latLng(ne.lat, sw.lng),
+        ne: L.latLng(ne.lat, ne.lng),
+        sw: L.latLng(sw.lat, sw.lng),
+        se: L.latLng(sw.lat, ne.lng),
+      };
+    } else {
+      document.getElementById('encuentro-corners').style.display = 'none';
+    }
+  } else {
+    document.getElementById('encuentro-corners').style.display = 'none';
+  }
+
+  map.on('click', function(e) { selectEncuentroPoint(e.latlng); });
+}
+
+window.selectCorner = function(corner) {
+  if (!terrCorners) return;
+  selectEncuentroPoint(terrCorners[corner]);
+};
+
+async function selectEncuentroPoint(latlng) {
+  encuentroLatLng = latlng;
+
+  if (encuentroMarker) {
+    encuentroMarker.setLatLng(latlng);
+  } else {
+    encuentroMarker = L.marker(latlng, {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:14px;height:14px;background:#EF9F27;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,0.6);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      })
+    }).addTo(map);
+  }
+
+  const resultDiv   = document.getElementById('encuentro-result');
+  const addressDiv  = document.getElementById('encuentro-address');
+  const confirmBtn  = document.getElementById('encuentro-confirm');
+  addressDiv.style.color = '#888';
+  addressDiv.textContent = 'Buscando dirección…';
+  confirmBtn.style.display = 'none';
+  resultDiv.classList.add('visible');
+
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`,
+      { headers: { 'Accept-Language': 'es' } }
+    );
+    const data = await resp.json();
+    const addr = data.address || {};
+    let texto = '';
+    if (addr.road) {
+      texto = addr.road;
+      if (addr.house_number) texto += ' ' + addr.house_number;
+    } else {
+      texto = (data.display_name || '').split(',').slice(0, 2).join(', ').trim();
+    }
+    addressDiv.style.color = '#eee';
+    addressDiv.textContent = texto || `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+  } catch(e) {
+    addressDiv.style.color = '#eee';
+    addressDiv.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+  }
+  confirmBtn.style.display = '';
+}
+
+window.confirmEncuentro = function() {
+  const texto = document.getElementById('encuentro-address').textContent;
+  const msg = { type: 'encuentro-result', salidaId: _salidaId, texto };
+  if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+  else if (window.opener) window.opener.postMessage(msg, '*');
+};
+
 function applyPickerFilter(grupo) {
   if (allLayers.length === 0) return;
 
@@ -539,7 +681,11 @@ function openPopup(layer, numero, grupo) {
 
 // ── handleBack ──
 window.handleBack = function() {
-  if (_modoParam === 'picker' || _params.get('picker') === '1') {
+  if (_modoParam === 'encuentro') {
+    const msg = { type: 'encuentro-cancel', salidaId: _salidaId };
+    if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+    else if (window.opener) window.opener.postMessage(msg, '*');
+  } else if (_modoParam === 'picker' || _params.get('picker') === '1') {
     const msg = { type: 'picker-cancel', salidaId: _salidaId };
     if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
     else if (window.opener) window.opener.postMessage(msg, '*');

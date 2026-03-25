@@ -684,7 +684,13 @@ function renderSalidaCard(s) {
     </div>
     <div>
       <label>Encuentro / Familia</label>
-      <input type="text" id="sal-enc-${s.id}" value="${s.encuentro}" placeholder="Ej: Flia. García / esq. X y Y">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="text" id="sal-enc-${s.id}" value="${s.encuentro}" placeholder="Ej: Flia. García / esq. X y Y" style="flex:1;">
+        <button type="button" onclick="openEncuentroPicker(${s.id})" title="Elegir en el mapa"
+          style="padding:6px 10px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">
+          📍
+        </button>
+      </div>
     </div>`;
   c.appendChild(div);
   if (window.upgradeInputs) upgradeInputs(div);
@@ -777,9 +783,30 @@ function openMapaPicker(salidaId) {
   document.body.style.overflow = 'hidden';
 }
 
+function openEncuentroPicker(salidaId) {
+  const terrVal = document.getElementById('sal-terr-' + salidaId)?.value || '';
+  const popup   = document.getElementById('mapa-popup');
+  const iframe  = document.getElementById('mapa-iframe');
+  const title   = document.getElementById('mapa-popup-title');
+  title.textContent = 'Elegir lugar de encuentro';
+  iframe.src = `mapa.html?modo=encuentro&salidaid=${salidaId}${terrVal ? '&terrid=' + encodeURIComponent(terrVal) : ''}`;
+  popup.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data || !data.type) return;
+
+  if (data.type === 'encuentro-result') {
+    closeMapaPopup();
+    const encInput = document.getElementById('sal-enc-' + data.salidaId);
+    if (encInput && data.texto) {
+      encInput.value = data.texto;
+      encInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    return;
+  }
 
   if (data.type === 'picker-result') {
     const { salidaId, territorios } = data;
@@ -1462,4 +1489,5 @@ window.cancelEdit = cancelEdit;
 window.saveEdit = saveEdit;
 window.deleteEntry = deleteEntry; 
 window.deleteHistorialDoc = deleteHistorialDoc;
-window.openMapaPicker = openMapaPicker;
+window.openMapaPicker      = openMapaPicker;
+window.openEncuentroPicker = openEncuentroPicker;
