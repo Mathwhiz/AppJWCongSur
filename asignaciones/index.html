@@ -12,7 +12,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Asignaciones — Congregación Sur</title>
-<link rel="stylesheet" href="styles.css?v=1.1">
+<link rel="stylesheet" href="styles.css?v=2.0">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
       </div>
 
       <div class="cs-module-title">Asignaciones</div>
-      <div class="cs-module-sub" style="color:#7F77DD;">Congregación Sur</div>
+      <div class="cs-module-sub" id="congre-sub" style="color:#7F77DD;">—</div>
       <div class="cs-module-label">¿Qué querés hacer?</div>
 
       <button class="cs-module-card" onclick="goToVerSemana()" style="--card-hover-border:#1D9E75;--card-hover-bg:#1e2922;">
@@ -85,7 +85,7 @@
         </div>
       </button>
 
-      <a href="../index.html" class="cs-back-btn">← Volver al inicio</a>
+      <a href="../index.html" class="cs-back-btn">← Volver al módulo</a>
 
     </div>
   </div>
@@ -195,6 +195,9 @@
           <div class="modo-card-sub">Agregar, editar y ver roles</div>
         </div>
       </button>
+      <button id="btn-ver-planilla" class="btn-secondary" onclick="abrirPlanilla()" style="width:100%;max-width:320px;display:none;">
+        📊 Ver planilla
+      </button>
       <button class="btn-secondary" onclick="cerrarSesionEncargado()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
     </div><!-- enc-menu -->
   </div><!-- centrado -->
@@ -223,6 +226,10 @@
     <div class="auto-info">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#7F77DD" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/></svg>
       <span>Genera asignaciones respetando rotación justa. Cada hermano máximo un rol por reunión.</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="btn-chip" onclick="setAutoDesde('ultima')">Desde última guardada</button>
+      <button class="btn-chip" onclick="setAutoDesde('hoy')">Desde hoy</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <div style="flex:1;">
@@ -255,8 +262,9 @@
       <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
       <button class="btn-primary" onclick="generarAutomatico()" style="flex:2;">⚡ Generar</button>
     </div>
-    <div id="auto-guardar-wrap" style="display:none;margin-top:8px;">
-      <button class="btn-guardar" style="width:100%;" onclick="guardarAutomatico()">Guardar en planilla</button>
+    <div id="auto-guardar-wrap" style="display:none;margin-top:8px;flex-direction:column;gap:8px;">
+      <button class="btn-guardar" style="width:100%;" onclick="guardarAutomatico()">Guardar</button>
+      <button id="btn-guardar-planilla" class="btn-secondary" style="width:100%;display:none;" onclick="guardarEnPlanilla()">Guardar también en planilla</button>
       <div class="save-status" id="auto-status"></div>
     </div>
   </div>
@@ -273,7 +281,7 @@
     <div id="imagen-content" style="display:none;">
       <div class="card-tabla" id="card-tabla">
         <div class="card-tabla-header">
-          <div class="card-tabla-top">Congregación Sur</div>
+          <div class="card-tabla-top" id="card-congre-nombre">Congregación Sur</div>
           <div class="card-tabla-main" id="imagen-titulo">Asignaciones de la semana</div>
         </div>
         <div id="tabla-reuniones"></div>
@@ -289,13 +297,30 @@
   <div id="view-gestionar" class="view" style="display:none;">
     <p class="section-title">Hermanos</p>
     <p class="section-sub">Lista completa · tocá para editar</p>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
       <div class="search-box" style="flex:1;margin-bottom:0;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#888" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="#888" stroke-width="1.8" stroke-linecap="round"/></svg>
         <input type="text" id="gestionar-search" placeholder="Buscar hermano..." oninput="filtrarLista()" autocomplete="off">
       </div>
       <button class="btn-primary" onclick="abrirNuevoHermano()" style="padding:10px 14px;white-space:nowrap;">+ Nuevo</button>
     </div>
+    <select id="gestionar-rol" onchange="filtrarLista()" style="width:100%;margin-bottom:12px;font-size:13px;padding:7px 10px;border:0.5px solid #555;border-radius:8px;background:#1e1e1e;color:#aaa;appearance:none;-webkit-appearance:none;">
+      <option value="">— Todos los roles —</option>
+      <option value="LECTOR">Lector</option>
+      <option value="SONIDO">Sonido</option>
+      <option value="PLATAFORMA">Plataforma</option>
+      <option value="MICROFONISTAS">Micrófonos</option>
+      <option value="ACOMODADOR_AUDITORIO">Acod. Auditorio</option>
+      <option value="ACOMODADOR_ENTRADA">Acod. Entrada</option>
+      <option value="PRESIDENTE">Presidente</option>
+      <option value="REVISTAS">Revistas</option>
+      <option value="PUBLICACIONES">Publicaciones</option>
+      <option value="CONDUCTOR_GRUPO_1">Conductor Grupo 1</option>
+      <option value="CONDUCTOR_GRUPO_2">Conductor Grupo 2</option>
+      <option value="CONDUCTOR_GRUPO_3">Conductor Grupo 3</option>
+      <option value="CONDUCTOR_GRUPO_4">Conductor Grupo 4</option>
+      <option value="CONDUCTOR_CONGREGACION">Conductor Congregación</option>
+    </select>
     <div id="gestionar-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
     <div id="gestionar-content" style="display:none;">
       <div id="gestionar-lista"></div>
@@ -362,6 +387,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="../ui-utils.js"></script>
-<script src="app.js?v=1.1"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

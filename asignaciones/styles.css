@@ -8,9 +8,9 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .btn-home {
   position: fixed; top: 14px; right: 14px; z-index: 100;
   width: 44px; height: 44px; border-radius: 12px;
-  background: #252525; border: 0.5px solid #444; color: #888;
+  background: #252525; border: 1px solid rgba(255,255,255,0.2); color: #ccc;
   cursor: pointer; display: none; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .btn-home.visible { display: flex; }
 .btn-home:hover { background: #333; color: #eee; }
@@ -190,6 +190,12 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
   display: inline-block;
 }
 .btn-secondary:hover { background: #333; }
+.btn-chip {
+  padding: 5px 12px; font-size: 12px; border: 0.5px solid #555;
+  border-radius: 20px; background: #252525; color: #aaa; cursor: pointer;
+  white-space: nowrap;
+}
+.btn-chip:hover { background: #333; color: #eee; border-color: #7F77DD; }
 .btn-guardar {
   width: 100%; padding: 12px; font-size: 15px; font-weight: 500;
   background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer;
@@ -241,9 +247,9 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .btn-home {
   position: fixed; top: 14px; right: 14px; z-index: 100;
   width: 44px; height: 44px; border-radius: 12px;
-  background: #252525; border: 0.5px solid #444; color: #888;
+  background: #252525; border: 1px solid rgba(255,255,255,0.2); color: #ccc;
   cursor: pointer; display: none; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .btn-home.visible { display: flex; }
 .btn-home:hover { background: #333; color: #eee; }

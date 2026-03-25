@@ -438,8 +438,8 @@
 .cs-nav-card-terr:hover  { border-color: #3a6b3a; background: #242826; }
 .cs-nav-card-asign:hover { border-color: #2e4070; background: #23252e; }
 
-.cs-nav-title { font-size: 17px; font-weight: 600; color: #e8e8e8; margin-bottom: 2px; }
-.cs-nav-sub   { font-size: 13px; color: #666; }
+.cs-nav-title { font-size: 21px; font-weight: 600; color: #e8e8e8; margin-bottom: 3px; }
+.cs-nav-sub   { font-size: 14px; color: #666; }
 
 .cs-logo-title {
   font-size: 34px; font-weight: 700;
@@ -447,8 +447,8 @@
 }
 .cs-logo-sub { font-size: 14px; color: #555; }
 .cs-footer   { font-size: 12px; color: #3a3a3a; margin-top: 4px; }
-.cs-back-btn { display:block; width:100%; max-width:320px; padding:11px; text-align:center; font-size:13px; color:#666; text-decoration:none; border:1px solid #333; border-radius:14px; transition:color 0.15s, border-color 0.15s, background 0.15s; margin-top:4px; }
-.cs-back-btn:hover { color:#eee; border-color:#666; background:#252525; }
+.cs-back-btn { display:block; width:100%; max-width:320px; padding:11px; text-align:center; font-size:13px; color:#bbb; text-decoration:none; border:1px solid rgba(255,255,255,0.2); border-radius:14px; transition:color 0.15s, border-color 0.15s, background 0.15s; margin-top:4px; }
+.cs-back-btn:hover { color:#eee; border-color:rgba(255,255,255,0.4); background:#252525; }
 
 /* ═══════════════════════════════════════════
    TOAST
