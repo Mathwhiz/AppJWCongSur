@@ -272,6 +272,52 @@ Formato de almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 
 ---
 
+## Módulo de Vida y Ministerio
+
+> Plan detallado en **[VIDA-MINISTERIO.md](./VIDA-MINISTERIO.md)**.
+
+Módulo para el **presidente de la reunión Vida y Ministerio Cristiano**: asignación automática
+de partes semanales, importación del programa desde WOL (wol.jw.org), edición rápida y
+gestión de roles por publicador.
+
+### Firestore
+
+```
+congregaciones/{congreId}/
+  └── vidaministerio/{semanaId}   ← semanaId = "YYYY-MM-DD" (lunes)
+        fecha, canciones, presidente, oraciones, tesoros{}, ministerio[], vidaCristiana[]
+```
+
+Campo nuevo en doc de congregación: `pinVidaMinisterio` (default `"1234"`).
+
+### Roles VM en publicadores
+
+`VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`,
+`VM_MINISTERIO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`, `VM_ESTUDIO_LECTOR`
+
+### Importación de WOL
+
+URL del programa: `https://wol.jw.org/es/wol/dt/r4/lp-s/{año}/{mes}/{día}`
+Fetch via CORS proxy (`allorigins.win`) + `DOMParser` en browser.
+IDs clave: `#section2`, `#section3`, `#section4`, `#p6`, `#p7`, `#p10`, `#p13–#p15`, `#p17–#p20`.
+
+### Auto-asignación
+
+Round-robin por rol (igual que Asignaciones). Restricciones:
+- Oración apertura ≠ cierre
+- Presidente ≠ oración
+- Conductor estudio ≠ lector
+
+### Acceso
+
+PIN propio `pinVidaMinisterio` — configurable desde `admin.html` (pendiente de agregar).
+
+### Ubicación
+
+`vida-ministerio/index.html`, `app.js`, `styles.css`
+
+---
+
 ## Lo que NO hacer
 
 - No eliminar la integración con Apps Script del módulo de asignaciones — es opcional pero funcional

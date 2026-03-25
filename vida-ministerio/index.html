@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vida y Ministerio — AppJW</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="stylesheet" href="styles.css?v=1.0">
+</head>
+<body>
+
+<button class="btn-home" id="btn-home" onclick="goToCover()" title="Inicio">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 21V12h6v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<div class="app-inner">
+
+  <!-- ── COVER ── -->
+  <div id="view-cover" class="view active">
+    <div class="cover">
+      <div class="cover-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+          <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="cover-title">Vida y Ministerio</div>
+      <div class="cover-subtitle" id="cover-congre">—</div>
+      <div class="cover-label">¿Qué querés hacer?</div>
+
+      <button class="modo-card modo-ver" onclick="goToVerPrograma()">
+        <div class="modo-icon" style="background:rgba(239,159,39,0.15);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="#EF9F27" stroke-width="1.8"/>
+            <path d="M16 2v4M8 2v4M3 10h18" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke="#EF9F27" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modo-card-title">Ver programa</div>
+          <div class="modo-card-sub">Programa de esta semana</div>
+        </div>
+      </button>
+
+      <button class="modo-card modo-encargado" onclick="goToPin()">
+        <div class="modo-icon" style="background:rgba(127,119,221,0.15);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="11" width="18" height="11" rx="2" stroke="#7F77DD" stroke-width="1.8"/>
+            <path d="M7 11V7a5 5 0 0110 0v4" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modo-card-title">Encargado</div>
+          <div class="modo-card-sub">Gestionar programa</div>
+        </div>
+      </button>
+
+      <div style="font-size:12px;color:#3a3a3a;margin-top:8px;">AppJW · Sistema interno</div>
+    </div>
+  </div>
+
+  <!-- ── PIN ── -->
+  <div id="view-pin" class="view">
+    <div class="pin-wrap">
+      <div class="pin-title">Encargado</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="vp0"></div>
+        <div class="pin-dot" id="vp1"></div>
+        <div class="pin-dot" id="vp2"></div>
+        <div class="pin-dot" id="vp3"></div>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+      <div class="pin-grid">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn" style="font-size:16px;" onclick="pinDelete()">⌫</button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn" style="color:#555;cursor:default;"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VER PROGRAMA (público) ── -->
+  <div id="view-programa-pub" class="view">
+    <div style="padding-top:4px;">
+      <div class="view-header">
+        <button class="btn-back" onclick="goToCover()">‹</button>
+        <div>
+          <div class="view-title" id="pub-semana-titulo">Programa</div>
+          <div class="view-sub">Esta semana</div>
+        </div>
+      </div>
+      <div id="pub-contenido">
+        <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SEMANAS LIST (encargado) ── -->
+  <div id="view-semanas" class="view">
+    <div style="padding-top:4px;">
+      <div class="view-header">
+        <button class="btn-back" onclick="goToCover()">‹</button>
+        <div style="flex:1">
+          <div class="view-title">Semanas</div>
+          <div class="view-sub" id="semanas-congre-sub">—</div>
+        </div>
+      </div>
+      <div id="semanas-list">
+        <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
+      </div>
+      <div style="height:14px;"></div>
+      <button class="btn-primary" onclick="goToNueva()">+ Nueva semana</button>
+      <div style="height:2rem;"></div>
+    </div>
+  </div>
+
+  <!-- ── PROGRAMA EDITABLE (encargado) ── -->
+  <div id="view-semana" class="view">
+    <div style="padding-top:4px;">
+      <div class="view-header">
+        <button class="btn-back" onclick="goToSemanas()">‹</button>
+        <div style="flex:1">
+          <div class="view-title" id="semana-titulo-display">—</div>
+          <div class="view-sub">Programa Vida y Ministerio</div>
+        </div>
+      </div>
+      <div id="semana-content"></div>
+    </div>
+  </div>
+
+  <!-- ── NUEVA SEMANA ── -->
+  <div id="view-nueva" class="view">
+    <div style="padding-top:4px;">
+      <div class="view-header">
+        <button class="btn-back" onclick="goToSemanas()">‹</button>
+        <div>
+          <div class="view-title">Nueva semana</div>
+          <div class="view-sub">Ingresá los datos básicos</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fecha (se ajusta al lunes de esa semana)</label>
+        <input type="date" id="nueva-fecha">
+      </div>
+      <div class="field">
+        <label>Partes en "Seamos Mejores Maestros"</label>
+        <select id="nueva-n-ministerio">
+          <option value="1">1 parte</option>
+          <option value="2" selected>2 partes</option>
+          <option value="3">3 partes</option>
+          <option value="4">4 partes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Partes extra en "Nuestra Vida Cristiana"</label>
+        <select id="nueva-n-vida">
+          <option value="0">Solo estudio bíblico</option>
+          <option value="1" selected>1 parte + estudio</option>
+          <option value="2">2 partes + estudio</option>
+          <option value="3">3 partes + estudio</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn-secondary" onclick="goToSemanas()">Cancelar</button>
+        <button class="btn-primary" onclick="crearSemana()" style="flex:2">Crear semana →</button>
+      </div>
+      <div style="height:2rem;"></div>
+    </div>
+  </div>
+
+</div><!-- /app-inner -->
+
+<script src="../ui-utils.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

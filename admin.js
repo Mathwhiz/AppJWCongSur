@@ -210,9 +210,10 @@ function startWizard(prefill = null) {
   wizardGrupos   = prefill?.grupos?.map(g => ({ ...g })) ?? GRUPOS_DEFAULT.map(g => ({ ...g }));
 
   const isEdit = !!editingCongreId;
-  document.getElementById('w-nombre').value  = prefill?.nombre       || '';
+  document.getElementById('w-nombre').value  = prefill?.nombre             || '';
   document.getElementById('w-id').value      = isEdit ? editingCongreId : '';
-  document.getElementById('w-pin').value     = prefill?.pinEncargado || '';
+  document.getElementById('w-pin').value     = prefill?.pinEncargado        || '';
+  document.getElementById('w-pin-vm').value  = prefill?.pinVidaMinisterio   || '';
   const initColor = prefill?.color || PALETA_COLORES[Math.floor(Math.random() * PALETA_COLORES.length)];
   renderColorSwatches(initColor);
   document.getElementById('kml-input').value = '';
@@ -245,7 +246,7 @@ async function editCongre(id) {
     const grupos = [];
     gruposSnap.forEach(d => grupos.push(d.data()));
     grupos.sort((a, b) => String(a.id) < String(b.id) ? -1 : 1);
-    startWizard({ nombre: data.nombre, pinEncargado: data.pinEncargado, color: data.color || null, grupos });
+    startWizard({ nombre: data.nombre, pinEncargado: data.pinEncargado, pinVidaMinisterio: data.pinVidaMinisterio || '', color: data.color || null, grupos });
   } catch(e) {
     uiLoading.hide();
     await uiAlert('Error al cargar los datos: ' + e.message);
@@ -264,7 +265,7 @@ async function deleteCongre(id, nombre) {
 
   uiLoading.show('Eliminando...');
   try {
-    const subcols = ['grupos', 'territorios', 'salidas', 'publicadores', 'asignaciones'];
+    const subcols = ['grupos', 'territorios', 'salidas', 'publicadores', 'asignaciones', 'vidaministerio'];
     for (const sub of subcols) {
       const snap = await getDocs(collection(db, 'congregaciones', id, sub));
       if (snap.empty) continue;
@@ -411,7 +412,7 @@ async function renameCongre(oldId, newId) {
   const oldSnap = await getDoc(doc(db, 'congregaciones', oldId));
   await setDoc(doc(db, 'congregaciones', newId), oldSnap.data());
 
-  const subcols = ['grupos', 'territorios', 'historial', 'salidas', 'publicadores', 'asignaciones'];
+  const subcols = ['grupos', 'territorios', 'historial', 'salidas', 'publicadores', 'asignaciones', 'vidaministerio'];
   for (const sub of subcols) {
     const snap = await getDocs(collection(db, 'congregaciones', oldId, sub));
     if (snap.empty) continue;
@@ -445,8 +446,9 @@ async function crearCongregacion(skipKml) {
     return;
   }
 
-  const nombre       = document.getElementById('w-nombre').value.trim();
-  const pinEncargado = document.getElementById('w-pin').value.trim();
+  const nombre            = document.getElementById('w-nombre').value.trim();
+  const pinEncargado      = document.getElementById('w-pin').value.trim();
+  const pinVidaMinisterio = document.getElementById('w-pin-vm').value.trim() || '1234';
   const status       = document.getElementById('wizard-status');
   status.textContent = '';
 
@@ -468,7 +470,7 @@ async function crearCongregacion(skipKml) {
       }
       congreId = editingCongreId;
       const color = document.getElementById('w-color')?.value || null;
-      await updateDoc(doc(db, 'congregaciones', congreId), { nombre, pinEncargado, ...(color && { color }) });
+      await updateDoc(doc(db, 'congregaciones', congreId), { nombre, pinEncargado, pinVidaMinisterio, ...(color && { color }) });
 
       // Reemplazar grupos: borrar existentes y crear los nuevos
       const existSnap = await getDocs(collection(db, 'congregaciones', congreId, 'grupos'));
@@ -488,6 +490,7 @@ async function crearCongregacion(skipKml) {
       await setDoc(doc(db, 'congregaciones', congreId), {
         nombre,
         pinEncargado,
+        pinVidaMinisterio,
         color,
         creadoEn: Timestamp.now(),
       });
