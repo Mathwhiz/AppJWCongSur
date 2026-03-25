@@ -569,13 +569,21 @@ function confirmPickerSelection() {
 function initEncuentroMode() {
   document.getElementById('encuentro-bar').classList.add('visible');
 
+  // Zoom al grupo completo (igual que el picker de territorios)
+  const grupoLayers = allLayers.filter(l => l.polygon.getBounds().isValid());
+  if (grupoLayers.length) {
+    const b = grupoLayers[0].polygon.getBounds();
+    grupoLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+    map.flyToBounds(b, { padding: [24, 24], maxZoom: 16, duration: 0.4 });
+  }
+
+  // Calcular esquinas del territorio seleccionado (si hay uno)
   if (_terrIdParam) {
     const baseId = String(_terrIdParam).replace(/[A-Za-z]$/, '');
     const terrLayers = allLayers.filter(l => String(l.numero).replace(/[A-Za-z]$/, '') === baseId);
     if (terrLayers.length) {
       const b = terrLayers[0].polygon.getBounds();
       terrLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
-      map.fitBounds(b, { padding: [30, 80] });
       const sw = b.getSouthWest();
       const ne = b.getNorthEast();
       terrCorners = {
@@ -623,46 +631,46 @@ async function selectEncuentroPoint(latlng) {
   confirmBtn.style.display = 'none';
   resultDiv.classList.add('visible');
 
+  const lat = latlng.lat, lng = latlng.lng;
+
+  // Overpass: calles nombradas en radio 40m (con timeout de 6s)
+  let calles = [];
   try {
-    // Consultas en paralelo: Overpass (calles cercanas) + Nominatim (dirección exacta)
-    const lat = latlng.lat, lng = latlng.lng;
-    const overpassQ = `[out:json];way["highway"]["name"](around:40,${lat},${lng});out tags;`;
-    const [overpassResp, nominatimResp] = await Promise.all([
-      fetch('https://overpass-api.de/api/interpreter', { method:'POST', body: overpassQ }),
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'Accept-Language': 'es' } })
-    ]);
-
-    const [overpassData, nominatimData] = await Promise.all([
-      overpassResp.json(), nominatimResp.json()
-    ]);
-
-    // Calles únicas encontradas por Overpass en radio 40m
-    const calles = [...new Set(
+    const overpassQ = `[out:json][timeout:6];way["highway"]["name"](around:40,${lat},${lng});out tags;`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const overpassResp = await fetch('https://overpass-api.de/api/interpreter',
+      { method:'POST', body: overpassQ, signal: ctrl.signal });
+    clearTimeout(timer);
+    const overpassData = await overpassResp.json();
+    calles = [...new Set(
       (overpassData.elements || []).map(e => e.tags && e.tags.name).filter(Boolean)
     )];
+  } catch(_) { /* Overpass falló o tardó demasiado — usamos solo Nominatim */ }
 
-    let texto = '';
-    if (calles.length >= 2) {
-      // Esquina detectada
-      texto = `${calles[0]} esq. ${calles[1]}`;
-    } else {
-      // Sin esquina → usar dirección de Nominatim
-      const addr = nominatimData.address || {};
+  let texto = '';
+  if (calles.length >= 2) {
+    texto = `${calles[0]} esq. ${calles[1]}`;
+  } else {
+    // Fallback: Nominatim para dirección exacta
+    try {
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'es' } }
+      );
+      const data = await resp.json();
+      const addr = data.address || {};
       if (addr.road) {
         texto = addr.road;
         if (addr.house_number) texto += ' ' + addr.house_number;
       } else {
-        texto = (nominatimData.display_name || '').split(',').slice(0, 2).join(', ').trim();
+        texto = (data.display_name || '').split(',').slice(0, 2).join(', ').trim();
       }
-    }
-
-    addressDiv.style.color = '#eee';
-    addressDiv.textContent = texto || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  } catch(e) {
-    addressDiv.style.color = '#eee';
-    addressDiv.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+    } catch(_) { texto = ''; }
   }
+
+  addressDiv.style.color = '#eee';
+  addressDiv.textContent = texto || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   confirmBtn.style.display = '';
 }
 
