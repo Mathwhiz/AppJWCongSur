@@ -712,12 +712,13 @@ function parseWOL(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
 
   // Debug: log estructura para diagnosticar
-  console.log('[WOL] HTML length:', html.length);
-  console.log('[WOL] title:', doc.title);
-  console.log('[WOL] #section2:', !!doc.querySelector('#section2'));
-  console.log('[WOL] article:', !!doc.querySelector('article'));
-  console.log('[WOL] .bodyTxt:', !!doc.querySelector('.bodyTxt'));
-  console.log('[WOL] first 500 chars:', html.slice(0, 500));
+  console.log('[WOL] length:', html.length);
+  // IDs de todos los divs con id que empiecen con 'section' o 'p' seguido de número
+  const allIds = [...doc.querySelectorAll('[id]')].map(el => el.id).filter(id => /^(section|p)\d/.test(id));
+  console.log('[WOL] IDs section/p:', allIds.join(', '));
+  // Clases principales del contenido
+  const mainClasses = [...doc.querySelectorAll('article, .bodyTxt, .docSubContent, [class*="section"], [class*="meeting"], [class*="program"]')].map(el => el.tagName + '.' + el.className.trim().split(' ')[0] + (el.id ? '#'+el.id : ''));
+  console.log('[WOL] elementos clave:', mainClasses.join(' | '));
 
   const s1 = doc.querySelector('#section2');  // Tesoros
   const s2 = doc.querySelector('#section3');  // Ministerio
