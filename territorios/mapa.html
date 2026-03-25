@@ -636,7 +636,7 @@ async function selectEncuentroPoint(latlng) {
   // Overpass: calles nombradas en radio 40m (con timeout de 6s)
   let calles = [];
   try {
-    const overpassQ = `[out:json][timeout:6];way["highway"]["name"](around:40,${lat},${lng});out tags;`;
+    const overpassQ = `[out:json][timeout:6];way["highway"]["name"](around:65,${lat},${lng});out tags;`;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 7000);
     const overpassResp = await fetch('https://overpass-api.de/api/interpreter',
@@ -650,7 +650,7 @@ async function selectEncuentroPoint(latlng) {
 
   let texto = '';
   if (calles.length >= 2) {
-    texto = `${calles[0]} esq. ${calles[1]}`;
+    texto = `${calles[0]} y ${calles[1]}`;
   } else {
     // Fallback: Nominatim para dirección exacta
     try {
