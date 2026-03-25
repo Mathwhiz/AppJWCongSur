@@ -713,6 +713,15 @@ function parseWOL(html) {
   // Usar article#article como raíz para evitar IDs duplicados de navegación
   const root = doc.querySelector('article#article') || doc;
 
+  // DEBUG: estructura de headings y strongs numerados
+  const h3s = Array.from(root.querySelectorAll('h3, h4')).map(e => e.textContent.trim().slice(0, 80));
+  const strongNums = Array.from(root.querySelectorAll('strong')).filter(s => /^\d+\./.test(s.textContent.trim())).map(s => s.textContent.trim().slice(0, 80));
+  console.log('[WOL-DBG] h3/h4:', JSON.stringify(h3s));
+  console.log('[WOL-DBG] strong#:', JSON.stringify(strongNums));
+  console.log('[WOL-DBG] p6:', root.querySelector('#p6')?.textContent?.trim().slice(0,100));
+  console.log('[WOL-DBG] p13:', root.querySelector('#p13')?.textContent?.trim().slice(0,100));
+  console.log('[WOL-DBG] p17:', root.querySelector('#p17')?.textContent?.trim().slice(0,100));
+
   const getText = id => limpiaTitulo(root.querySelector(id)?.textContent?.trim() || '');
 
   // ── Tesoros
