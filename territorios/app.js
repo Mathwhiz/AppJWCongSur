@@ -268,6 +268,7 @@ async function fetchConfig(grupo) {
         }
       });
       goToModo();
+      cargarConductores();
     });
   }
 })();
