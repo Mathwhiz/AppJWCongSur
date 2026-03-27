@@ -84,7 +84,24 @@ async function cargarConductores() {
 // ─────────────────────────────────────────
 //  HELPERS FECHA
 // ─────────────────────────────────────────
-// fmtDateLocal disponible como global desde ui-utils.js
+function fmtDateLocal(val) {
+  if (!val) return '—';
+  let d;
+  if (val && typeof val.toDate === 'function') {
+    d = val.toDate();
+  } else if (val instanceof Date) {
+    d = val;
+  } else if (typeof val === 'string') {
+    const [y, m, day] = val.split('-').map(Number);
+    d = new Date(y, m - 1, day);
+  } else {
+    return '—';
+  }
+  const dd   = String(d.getDate()).padStart(2, '0');
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
 const SPECIAL_TERR = { '11': true, '131': true };
 const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
