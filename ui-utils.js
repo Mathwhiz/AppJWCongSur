@@ -326,7 +326,7 @@
 .tp-expand-btn.expanded { color: #aaa; border-color: #444; }
 .tp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 5px; padding: 2px 4px 6px;
 }
 .tp-grid-item {
@@ -339,7 +339,7 @@
 .tp-grid-item:hover { background: #3a3a3a; transform: scale(1.04); }
 .tp-grid-item:active { transform: scale(0.93); }
 .tp-gi-num { font-size: 18px; font-weight: 700; line-height: 1; }
-.tp-gi-days { font-size: 9px; font-weight: 500; opacity: 0.75; line-height: 1; }
+.tp-gi-days { font-size: 10px; font-weight: 500; opacity: 0.75; line-height: 1; }
 .tp-grid-item.en-progreso::after {
   content: ''; position: absolute; top: 4px; right: 4px;
   width: 6px; height: 6px; border-radius: 50%; background: #5DCAA5;
