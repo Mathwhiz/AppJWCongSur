@@ -388,8 +388,8 @@ async function initMap() {
   } else if (_grupoParam !== 'all') {
     filterGroup(_grupoParam);
   } else if (allLayers.length) {
-    // Viewport inicial: ciudad principal con maxBounds dinámico
-    applyCityViewport(null);
+    // Viewport inicial: ciudad principal sin animación (evita mostrar ambas ciudades)
+    applyCityViewport(null, false);
   }
 
   // Leyenda según modo
@@ -784,14 +784,19 @@ function getCityBounds(ciudad) {
 }
 
 // Aplica maxBounds y minZoom recortados a una ciudad
-function applyCityViewport(ciudad) {
+// animate=false para el load inicial (sin transición), true para toggles de ciudad
+function applyCityViewport(ciudad, animate = true) {
   const tight = getCityBounds(ciudad);
   if (!tight) return;
-  const padded = tight.pad(0.45);
+  const padded = tight.pad(0.28);
   map.setMaxBounds(padded);
   const fitZoom = map.getBoundsZoom(tight, false);
   map.setMinZoom(Math.max(fitZoom - 1, 10));
-  map.flyToBounds(tight, { padding: [28, 28], maxZoom: 17, duration: 0.7 });
+  if (animate) {
+    map.flyToBounds(tight, { padding: [28, 28], maxZoom: 17, duration: 0.7 });
+  } else {
+    map.fitBounds(tight, { padding: [28, 28], maxZoom: 17 });
+  }
 }
 
 // ── Filtro por ciudad extra (toggle) ──
