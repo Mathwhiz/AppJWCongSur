@@ -231,8 +231,16 @@ window.goToCover = function() {
 };
 
 window.goToPin = function() {
+  pinBuffer = '';
+  updatePinDots();
   document.getElementById('pin-error').textContent = '';
-  showView('view-pin');
+  document.getElementById('pin-modal-vm').style.display = 'flex';
+};
+
+window.pinCancel = function() {
+  document.getElementById('pin-modal-vm').style.display = 'none';
+  pinBuffer = '';
+  updatePinDots();
 };
 
 window.goToVerPrograma = async function() {
@@ -363,6 +371,7 @@ function checkPin() {
     modoEncargado = true;
     pinBuffer = '';
     updatePinDots();
+    document.getElementById('pin-modal-vm').style.display = 'none';
     goToSemanas();
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto';

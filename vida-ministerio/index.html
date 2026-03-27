@@ -69,17 +69,17 @@
     </div>
   </div>
 
-  <!-- ── PIN ── -->
-  <div id="view-pin" class="view">
-    <div class="pin-wrap">
+  <!-- ── PIN MODAL ── -->
+  <div id="pin-modal-vm" class="pin-modal" style="display:none;">
+    <div class="pin-card">
       <div class="pin-title">Encargado</div>
+      <div class="pin-sub">Ingresá el PIN</div>
       <div class="pin-dots">
         <div class="pin-dot" id="vp0"></div>
         <div class="pin-dot" id="vp1"></div>
         <div class="pin-dot" id="vp2"></div>
         <div class="pin-dot" id="vp3"></div>
       </div>
-      <div class="pin-error" id="pin-error"></div>
       <div class="pin-grid">
         <button class="pin-btn" onclick="pinPress('1')">1</button>
         <button class="pin-btn" onclick="pinPress('2')">2</button>
@@ -90,10 +90,12 @@
         <button class="pin-btn" onclick="pinPress('7')">7</button>
         <button class="pin-btn" onclick="pinPress('8')">8</button>
         <button class="pin-btn" onclick="pinPress('9')">9</button>
-        <button class="pin-btn" style="font-size:16px;" onclick="pinDelete()">⌫</button>
+        <button class="pin-btn" style="visibility:hidden;"></button>
         <button class="pin-btn" onclick="pinPress('0')">0</button>
-        <button class="pin-btn" style="color:#555;cursor:default;"></button>
+        <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
       </div>
+      <div class="pin-error" id="pin-error"></div>
+      <button class="pin-cancel" onclick="pinCancel()">Cancelar</button>
     </div>
   </div>
 

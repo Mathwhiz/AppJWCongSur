@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Título Congregación</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1c1f;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+      gap: 60px;
+      background-image:
+        radial-gradient(ellipse at 18% 22%, rgba(55,138,221,0.13) 0%, transparent 52%),
+        radial-gradient(ellipse at 82% 78%, rgba(127,119,221,0.11) 0%, transparent 52%);
+    }
+
+    .demo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 340px;
+    }
+    .demo-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #444;
+      align-self: flex-start;
+    }
+
+    /* ── Módulos (igual en los 3) ── */
+    .mod-cards { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .mod-card {
+      background: #232628; border: 1px solid #2e3033; border-radius: 18px;
+      padding: 1rem 1.25rem; display: flex; align-items: center; gap: 14px;
+    }
+    .mod-icon {
+      width: 44px; height: 44px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .mod-title { font-size: 16px; font-weight: 600; color: #e8e8e8; margin-bottom: 2px; }
+    .mod-sub   { font-size: 13px; color: #666; }
+    .cs-logo-sub { font-size: 14px; color: #555; }
+
+    /* ══════════════════════════════════════
+       VARIANTE 1 — Chip minimalista
+       Ícono cuadrado con iniciales + nombre plano
+       (Similar a lo que ya hay, lo refino)
+    ══════════════════════════════════════ */
+    .v1-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .v1-icon {
+      width: 52px; height: 52px; border-radius: 16px;
+      background: rgba(55,138,221,0.18); border: 1px solid rgba(55,138,221,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #378ADD;
+    }
+    .v1-nombre {
+      font-size: 24px; font-weight: 700; color: #e8e8e8;
+      letter-spacing: -0.5px; text-align: center; line-height: 1.2;
+    }
+
+    /* ══════════════════════════════════════
+       VARIANTE 2 — Tag horizontal compacto
+       Nombre + chip inline en una pill
+    ══════════════════════════════════════ */
+    .v2-pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #232628; border: 1px solid #2e3033;
+      border-radius: 999px; padding: 8px 16px 8px 8px;
+    }
+    .v2-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(55,138,221,0.2); border: 1px solid rgba(55,138,221,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #378ADD; flex-shrink: 0;
+    }
+    .v2-nombre {
+      font-size: 16px; font-weight: 600; color: #e8e8e8;
+      letter-spacing: -0.2px; white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════
+       VARIANTE 3 — Header con etiqueta y acento
+       Label + nombre grande + línea de color
+    ══════════════════════════════════════ */
+    .v3-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .v3-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #378ADD;
+    }
+    .v3-nombre {
+      font-size: 30px; font-weight: 800; color: #e8e8e8;
+      letter-spacing: -1px; text-align: center; line-height: 1.1;
+    }
+    .v3-line {
+      width: 32px; height: 3px; border-radius: 2px;
+      background: #378ADD; margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════ VARIANTE 1 — Chip minimalista ════ -->
+  <div class="demo">
+    <div class="demo-label">Variante 1 — Chip minimalista</div>
+
+    <div class="v1-wrap">
+      <div class="v1-icon">CS</div>
+      <div class="v1-nombre">Congregación Sur</div>
+    </div>
+    <div class="cs-logo-sub">Seleccioná un módulo</div>
+
+    <div class="mod-cards">
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a3a1a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
+              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a2340;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#2a1e0a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ VARIANTE 2 — Tag horizontal ════ -->
+  <div class="demo">
+    <div class="demo-label">Variante 2 — Tag horizontal compacto</div>
+
+    <div class="v2-pill">
+      <div class="v2-dot">CS</div>
+      <div class="v2-nombre">Congregación Sur</div>
+    </div>
+    <div class="cs-logo-sub">Seleccioná un módulo</div>
+
+    <div class="mod-cards">
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a3a1a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
+              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a2340;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#2a1e0a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ VARIANTE 3 — Label + nombre grande + acento ════ -->
+  <div class="demo">
+    <div class="demo-label">Variante 3 — Label + nombre grande</div>
+
+    <div class="v3-wrap">
+      <div class="v3-label">Congregación</div>
+      <div class="v3-nombre">Sur</div>
+      <div class="v3-line"></div>
+    </div>
+    <div class="cs-logo-sub">Seleccioná un módulo</div>
+
+    <div class="mod-cards">
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a3a1a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
+              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#1a2340;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon" style="background:#2a1e0a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
