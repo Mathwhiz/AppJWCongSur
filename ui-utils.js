@@ -1264,6 +1264,29 @@ _uiObserver.observe(document.body, { childList: true, subtree: true });
 })();
 
 /* ─────────────────────────────────────────
+   fmtDateLocal — formatea fecha local sin bug UTC
+───────────────────────────────────────── */
+window.fmtDateLocal = function(val) {
+  if (!val) return '—';
+  let d;
+  if (val && typeof val.toDate === 'function') {
+    d = val.toDate(); // Firestore Timestamp
+  } else if (val instanceof Date) {
+    d = val;
+  } else if (typeof val === 'string') {
+    // "YYYY-MM-DD" → parsear local, sin bug UTC
+    const [y, m, day] = val.split('-').map(Number);
+    d = new Date(y, m - 1, day);
+  } else {
+    return '—';
+  }
+  const dd   = String(d.getDate()).padStart(2, '0');
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+/* ─────────────────────────────────────────
    CSS MÓDULOS (covers de territorios/asignaciones)
 ───────────────────────────────────────── */
 (function injectModuleCSS() {

@@ -4,6 +4,11 @@ import {
   query, where, orderBy, limit, Timestamp,
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
+// Fuerza recarga si la página viene del caché (back/forward)
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) window.location.reload();
+});
+
 // ── congreId viene de sessionStorage (seteado en index.html al elegir congregación) ──
 if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';

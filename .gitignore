@@ -2,3 +2,5 @@ tools/serviceAccountKey.json
 .agents/
 .claude/
 skills-lock.json
+tools/merge_publicadores_duplicados.py
+tools/Copia de Reunión Vida y Ministerio Cristiano.xlsx
