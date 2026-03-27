@@ -365,17 +365,21 @@ async function initMap() {
     cargarHistorialInfo().catch(e => console.warn('Historial:', e));
   }
 
-  // Botones de ciudad (modo full, si hay ciudades extra)
-  if (_modoParam === 'full' && ciudadesExtras.length > 0) {
-    const bar = document.getElementById('map-filters-bar');
+  // Botones de ciudad (modo full y picker, si hay ciudades extra)
+  const esPicker = _modoParam === 'picker' || _params.get('picker') === '1';
+  if ((_modoParam === 'full' || esPicker) && ciudadesExtras.length > 0) {
+    // En picker: agregar al picker-bar (map-filters está oculto); en full: a la barra de filtros
+    const bar = esPicker
+      ? document.getElementById('picker-bar')
+      : document.getElementById('map-filters-bar');
     ciudadesExtras.forEach(c => {
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
       btn.id = `filter-ciudad-${c.offset}`;
-      btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;';
+      btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;flex-shrink:0;';
       btn.textContent = `📍 ${c.nombre}`;
       btn.onclick = () => filterCiudad(c.nombre, `filter-ciudad-${c.offset}`);
-      bar.appendChild(btn);
+      bar.insertBefore(btn, bar.firstChild);
     });
   }
 
@@ -384,9 +388,17 @@ async function initMap() {
     renderTerritories();
     initEncuentroMode();
   } else if (_modoParam === 'picker' || _params.get('picker') === '1') {
-    applyPickerFilter(_grupoParam);
+    // Con ciudades extra: ir directo a ciudad principal (evita conflicto de animaciones)
+    // Sin ciudades extra: zoom al grupo del picker
+    if (ciudadesExtras.length > 0 && allLayers.length) {
+      applyCityViewport(null, false);
+    } else {
+      applyPickerFilter(_grupoParam);
+    }
   } else if (_grupoParam !== 'all') {
     filterGroup(_grupoParam);
+    // Viewport inicial a ciudad principal si hay multi-ciudad
+    if (ciudadesExtras.length > 0 && allLayers.length) applyCityViewport(null, false);
   } else if (allLayers.length) {
     // Viewport inicial: ciudad principal sin animación (evita mostrar ambas ciudades)
     applyCityViewport(null, false);

@@ -1,4 +1,4 @@
-const CACHE = 'appjw-v1';
+const CACHE = 'appjw-v2';
 
 // Archivos estáticos que se pre-cachean al instalar
 const SHELL = [
@@ -34,14 +34,22 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: solo interceptamos mismo origen
+// Fetch: network-first para mismo origen (garantiza archivos frescos)
 // Firebase, CDN (Leaflet, Firebase SDK, PostHog) son cross-origin → pasan directo a red
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
 
-  // Cache first, luego red como fallback
+  // Network first: intenta red, actualiza cache, cae en cache si está offline
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
