@@ -385,14 +385,8 @@ async function initMap() {
   } else if (_grupoParam !== 'all') {
     filterGroup(_grupoParam);
   } else if (allLayers.length) {
-    // Fitear solo ciudad principal para no alejar el mapa por territorios lejanos
-    const mainLayers = allLayers.filter(l => !l.ciudad && l.polygon.getBounds().isValid());
-    const fitLayers = mainLayers.length ? mainLayers : allLayers.filter(l => l.polygon.getBounds().isValid());
-    if (fitLayers.length) {
-      const b = fitLayers[0].polygon.getBounds();
-      fitLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
-      map.fitBounds(b, { padding: [20, 20] });
-    }
+    // Viewport inicial: ciudad principal con maxBounds dinámico
+    applyCityViewport(null);
   }
 
   // Leyenda según modo
@@ -770,6 +764,29 @@ window.handleBack = function() {
   }
 };
 
+// ── Bounds dinámicos por ciudad ──
+// Devuelve los bounds ajustados de las capas de una ciudad (null = ciudad principal)
+function getCityBounds(ciudad) {
+  const layers = allLayers.filter(l =>
+    (ciudad === null ? !l.ciudad : l.ciudad === ciudad) && l.polygon.getBounds().isValid()
+  );
+  if (!layers.length) return null;
+  const b = layers[0].polygon.getBounds();
+  layers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+  return b;
+}
+
+// Aplica maxBounds y minZoom recortados a una ciudad
+function applyCityViewport(ciudad) {
+  const tight = getCityBounds(ciudad);
+  if (!tight) return;
+  const padded = tight.pad(0.45);
+  map.setMaxBounds(padded);
+  const fitZoom = map.getBoundsZoom(tight, false);
+  map.setMinZoom(Math.max(fitZoom - 1, 10));
+  map.flyToBounds(tight, { padding: [28, 28], maxZoom: 17, duration: 0.7 });
+}
+
 // ── Filtro por ciudad extra (toggle) ──
 let _ciudadFiltro = null;
 
@@ -779,21 +796,9 @@ window.filterCiudad = function(nombre, btnId) {
   if (_ciudadFiltro) {
     const btn = document.getElementById(btnId);
     if (btn) btn.classList.add('active');
-    // fly a la ciudad seleccionada
-    const cityValid = allLayers.filter(l => l.ciudad === _ciudadFiltro && l.polygon.getBounds().isValid());
-    if (cityValid.length) {
-      const b = cityValid[0].polygon.getBounds();
-      cityValid.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
-      map.flyToBounds(b, { padding: [24, 24], maxZoom: 16, duration: 0.6 });
-    }
+    applyCityViewport(nombre);
   } else {
-    // volver a ciudad principal
-    const mainValid = allLayers.filter(l => !l.ciudad && l.polygon.getBounds().isValid());
-    if (mainValid.length) {
-      const b = mainValid[0].polygon.getBounds();
-      mainValid.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
-      map.flyToBounds(b, { padding: [24, 24], maxZoom: 16, duration: 0.6 });
-    }
+    applyCityViewport(null);
   }
   filterGroup(activeFilter);
   map.closePopup();
