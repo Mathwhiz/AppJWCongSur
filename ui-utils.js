@@ -196,11 +196,13 @@
    CONDUCTOR PICKER
 ═══════════════════════════════════════════ */
 .cp-search-wrap {
-  padding: 4px 14px 10px;
+  padding: 0 14px 10px;
+}
+.cp-search-field {
   position: relative;
 }
 .cp-search-input {
-  width: 100%; padding: 9px 12px 9px 36px;
+  width: 100%; padding: 9px 12px 9px 34px;
   background: #1e1e1e; border: 0.5px solid #444; border-radius: 10px;
   color: #eee; font-size: 14px; outline: none;
   transition: border-color 0.15s;
@@ -208,10 +210,10 @@
 }
 .cp-search-input:focus { border-color: #666; }
 .cp-search-icon {
-  position: absolute; left: 26px; top: 4px; bottom: 10px;
+  position: absolute; left: 10px; top: 0; bottom: 0;
   color: #555; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px;
+  display: flex; align-items: center;
+  width: 16px;
 }
 .cp-list {
   max-height: 280px; overflow-y: auto;
@@ -269,11 +271,13 @@
    TERRITORIO PICKER
 ═══════════════════════════════════════════ */
 .tp-search-wrap {
-  padding: 4px 14px 10px;
+  padding: 0 14px 10px;
+}
+.tp-search-field {
   position: relative;
 }
 .tp-search-input {
-  width: 100%; padding: 9px 12px 9px 36px;
+  width: 100%; padding: 9px 12px 9px 34px;
   background: #1e1e1e; border: 0.5px solid #444; border-radius: 10px;
   color: #eee; font-size: 14px; outline: none;
   transition: border-color 0.15s;
@@ -281,9 +285,9 @@
 }
 .tp-search-input:focus { border-color: #666; }
 .tp-search-icon {
-  position: absolute; left: 26px; top: 4px; bottom: 10px;
+  position: absolute; left: 10px; top: 0; bottom: 0;
   color: #555; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center;
   width: 16px;
 }
 .tp-list {
@@ -330,19 +334,20 @@
 .tp-expand-btn.expanded { color: #aaa; border-color: #444; }
 .tp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
   gap: 5px; padding: 2px 4px 6px;
 }
 .tp-grid-item {
-  aspect-ratio: 1; border-radius: 10px;
+  border-radius: 10px; padding: 7px 4px 6px;
   border: 1.5px solid #3a3a3a; background: #2e2e2e;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700; color: #aaa;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   cursor: pointer; transition: background 0.12s, transform 0.1s;
   position: relative;
 }
-.tp-grid-item:hover { background: #3a3a3a; transform: scale(1.06); }
+.tp-grid-item:hover { background: #3a3a3a; transform: scale(1.04); }
 .tp-grid-item:active { transform: scale(0.93); }
+.tp-gi-num { font-size: 15px; font-weight: 700; line-height: 1; }
+.tp-gi-days { font-size: 9px; font-weight: 500; opacity: 0.75; line-height: 1; }
 .tp-grid-item.en-progreso::after {
   content: ''; position: absolute; top: 4px; right: 4px;
   width: 6px; height: 6px; border-radius: 50%; background: #5DCAA5;
@@ -824,13 +829,15 @@ window.uiConductorPicker = function({ conductores = [], value = '', label = 'Ele
             </button>
           </div>
           <div class="cp-search-wrap">
-            <span class="cp-search-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <input class="cp-search-input" type="text" placeholder="Buscar..." value="${query}" autocomplete="off">
+            <div class="cp-search-field">
+              <span class="cp-search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                  <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <input class="cp-search-input" type="text" placeholder="Buscar..." value="${query}" autocomplete="off">
+            </div>
           </div>
           <div class="cp-list">
             <button class="cp-sin-asignar" data-clear>
@@ -983,7 +990,11 @@ window.uiTerritorioPicker = function({
       const col = daysColor(t.dias);
       const esProg = enProgresoOverride !== undefined ? enProgresoOverride : !!t.enProgreso;
       const classes = ['tp-grid-item', esProg ? 'en-progreso' : '', t.notas ? 'tiene-notas' : ''].filter(Boolean).join(' ');
-      return `<button class="${classes}" data-terr="${t.n}" style="border-color:${col}55;color:${col};">${t.n}</button>`;
+      const diasLabel = esProg ? '⟳' : (t.dias >= 9999 ? '—' : `${t.dias}d`);
+      return `<button class="${classes}" data-terr="${t.n}" style="border-color:${col}55;color:${col};">
+        <span class="tp-gi-num">${t.n}</span>
+        <span class="tp-gi-days">${diasLabel}</span>
+      </button>`;
     }
 
     function render() {
@@ -1005,13 +1016,15 @@ window.uiTerritorioPicker = function({
             </button>
           </div>
           <div class="tp-search-wrap">
-            <span class="tp-search-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <input class="tp-search-input" type="text" placeholder="Buscar por número..." value="${query}" autocomplete="off" inputmode="numeric">
+            <div class="tp-search-field">
+              <span class="tp-search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                  <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <input class="tp-search-input" type="text" placeholder="Buscar por número..." value="${query}" autocomplete="off" inputmode="numeric">
+            </div>
           </div>
           <div class="tp-list">`;
 
