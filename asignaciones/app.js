@@ -1046,7 +1046,7 @@ async function guardarAutomatico() {
 async function apiFetch(params) {
   const qs = Object.entries(params).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
   // no-cors: evita errores de CORS; la respuesta es opaca pero la request llega al servidor
-  await fetch(`${SCRIPT_URL}?${qs}`, { mode: 'no-cors' });
+  await fetch(`${SCRIPT_URL}?${qs}`, { mode: 'no-cors', keepalive: true });
   return { ok: true };
 }
 
