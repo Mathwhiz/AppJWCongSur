@@ -86,7 +86,7 @@
   background: #252525;
   border: 1px solid #3a3a3a;
   border-radius: 24px 24px 0 0;
-  width: 100%; max-width: 380px;
+  width: 100%; max-width: 480px;
   box-shadow: 0 -16px 48px rgba(0,0,0,0.5);
   animation: bsSlideUp 0.22s cubic-bezier(.22,.68,0,1.2);
   user-select: none; overflow: hidden;
@@ -196,7 +196,7 @@
    CONDUCTOR PICKER
 ═══════════════════════════════════════════ */
 .cp-search-wrap {
-  padding: 0 14px 8px;
+  padding: 4px 14px 10px;
   position: relative;
 }
 .cp-search-input {
@@ -208,7 +208,7 @@
 }
 .cp-search-input:focus { border-color: #666; }
 .cp-search-icon {
-  position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
+  position: absolute; left: 26px; top: 4px; bottom: 10px;
   color: #555; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
   width: 16px; height: 16px;
@@ -269,7 +269,7 @@
    TERRITORIO PICKER
 ═══════════════════════════════════════════ */
 .tp-search-wrap {
-  padding: 0 14px 8px;
+  padding: 4px 14px 10px;
   position: relative;
 }
 .tp-search-input {
@@ -281,13 +281,13 @@
 }
 .tp-search-input:focus { border-color: #666; }
 .tp-search-icon {
-  position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
+  position: absolute; left: 26px; top: 4px; bottom: 10px;
   color: #555; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px;
+  width: 16px;
 }
 .tp-list {
-  max-height: 320px; overflow-y: auto;
+  max-height: min(55vh, 420px); overflow-y: auto;
   padding: 0 6px 10px;
 }
 .tp-list::-webkit-scrollbar { width: 3px; }
@@ -328,6 +328,29 @@
 }
 .tp-expand-btn:hover { background: #2a2a2a; color: #aaa; }
 .tp-expand-btn.expanded { color: #aaa; border-color: #444; }
+.tp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 5px; padding: 2px 4px 6px;
+}
+.tp-grid-item {
+  aspect-ratio: 1; border-radius: 10px;
+  border: 1.5px solid #3a3a3a; background: #2e2e2e;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #aaa;
+  cursor: pointer; transition: background 0.12s, transform 0.1s;
+  position: relative;
+}
+.tp-grid-item:hover { background: #3a3a3a; transform: scale(1.06); }
+.tp-grid-item:active { transform: scale(0.93); }
+.tp-grid-item.en-progreso::after {
+  content: ''; position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%; background: #5DCAA5;
+}
+.tp-grid-item.tiene-notas::before {
+  content: ''; position: absolute; top: 4px; left: 4px;
+  width: 5px; height: 5px; border-radius: 50%; background: #888;
+}
 
 /* ── Fake input (reemplaza select/date/time nativos) ── */
 .ui-fake-input {
@@ -956,6 +979,13 @@ window.uiTerritorioPicker = function({
       </button>`;
     }
 
+    function gridItemHTML(t, enProgresoOverride) {
+      const col = daysColor(t.dias);
+      const esProg = enProgresoOverride !== undefined ? enProgresoOverride : !!t.enProgreso;
+      const classes = ['tp-grid-item', esProg ? 'en-progreso' : '', t.notas ? 'tiene-notas' : ''].filter(Boolean).join(' ');
+      return `<button class="${classes}" data-terr="${t.n}" style="border-color:${col}55;color:${col};">${t.n}</button>`;
+    }
+
     function render() {
       const { enProgreso, resto, deGrupos } = buildLista();
       const hayQuery = query.trim() !== '';
@@ -988,8 +1018,9 @@ window.uiTerritorioPicker = function({
       // ── En progreso ──
       if (fProgreso.length > 0) {
         html += `<div class="tp-section-title">⟳ En progreso</div>`;
-        fProgreso.forEach(t => { html += itemHTML(t); });
-        html += `<div class="tp-divider"></div>`;
+        html += `<div class="tp-grid">`;
+        fProgreso.forEach(t => { html += gridItemHTML(t, true); });
+        html += `</div><div class="tp-divider"></div>`;
       }
 
       // ── Propios (principal + extra por ciudad) ──
@@ -1004,15 +1035,19 @@ window.uiTerritorioPicker = function({
       if (!hayQuery && grupo === 'C' && hayCiudades) html += `<div class="tp-section-title">Congregación</div>`;
       if (restoMain.length === 0 && fProgreso.length === 0 && !hayCiudades && !hayQuery) {
         html += `<div class="tp-empty">Sin territorios disponibles</div>`;
-      } else {
-        restoMain.forEach(t => { html += itemHTML(t); });
+      } else if (restoMain.length > 0) {
+        html += `<div class="tp-grid">`;
+        restoMain.forEach(t => { html += gridItemHTML(t); });
+        html += `</div>`;
       }
 
       // ── Ciudades extra ──
       Object.entries(restoCiudad).forEach(([ciudad, terrs]) => {
         html += `<div class="tp-divider"></div>`;
         html += `<div class="tp-section-title">${ciudad}</div>`;
-        terrs.forEach(t => { html += itemHTML(t); });
+        html += `<div class="tp-grid">`;
+        terrs.forEach(t => { html += gridItemHTML(t); });
+        html += `</div>`;
       });
 
       // ── Territorios de grupos (solo Congregación) ──
@@ -1021,11 +1056,9 @@ window.uiTerritorioPicker = function({
           if (fGrupos.length > 0) {
             html += `<div class="tp-divider"></div>`;
             html += `<div class="tp-section-title">Grupos 1–4</div>`;
-            fGrupos.forEach(t => {
-              const diasLabel = t.dias >= 9999 ? 'sin reg.' : `${t.dias}d`;
-              const sub = `Grupo ${t.grupo} · ${t.enProgreso ? '<span style="color:#5DCAA5;">en progreso</span>' : diasLabel}`;
-              html += itemHTML(t, sub);
-            });
+            html += `<div class="tp-grid">`;
+            fGrupos.forEach(t => { html += gridItemHTML(t); });
+            html += `</div>`;
           } else if (fResto.length === 0 && fProgreso.length === 0) {
             html += `<div class="tp-empty">Sin resultados para "${query}"</div>`;
           }
@@ -1049,11 +1082,9 @@ window.uiTerritorioPicker = function({
               const lista = deGrupos.filter(t => t.grupo === g);
               if (lista.length === 0) return;
               html += `<div class="tp-section-title" style="color:#555;">Grupo ${g}</div>`;
-              lista.forEach(t => {
-                const diasLabel = t.dias >= 9999 ? 'sin reg.' : `${t.dias}d · ${t.lastDate ? t.lastDate.split('-').slice(1).reverse().join('/') : '—'}`;
-                const sub = t.enProgreso ? '<span style="color:#5DCAA5;">⟳ En progreso</span>' : diasLabel;
-                html += itemHTML(t, sub);
-              });
+              html += `<div class="tp-grid">`;
+              lista.forEach(t => { html += gridItemHTML(t); });
+              html += `</div>`;
             });
           }
         }
@@ -1068,7 +1099,12 @@ window.uiTerritorioPicker = function({
 
       const searchInput = overlay.querySelector('.tp-search-input');
       searchInput.addEventListener('input', e => { query = e.target.value; render(); });
-      setTimeout(() => searchInput.focus(), 80);
+      if (query) {
+        searchInput.focus();
+        searchInput.setSelectionRange(query.length, query.length);
+      } else {
+        setTimeout(() => searchInput.focus(), 80);
+      }
 
       const expandBtn = overlay.querySelector('#tp-expand-grupos');
       if (expandBtn) expandBtn.onclick = () => { gruposExpanded = !gruposExpanded; render(); };
