@@ -4,6 +4,10 @@ import {
   setDoc, query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) window.location.reload();
+});
+
 if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';
 const CONGRE_NOMBRE = sessionStorage.getItem('congreNombre') || CONGRE_ID;
