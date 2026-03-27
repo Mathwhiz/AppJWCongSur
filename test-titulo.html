@@ -14,214 +14,206 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 3rem 1rem;
-      gap: 60px;
+      padding: 3rem 1rem 4rem;
+      gap: 64px;
       background-image:
         radial-gradient(ellipse at 18% 22%, rgba(55,138,221,0.13) 0%, transparent 52%),
         radial-gradient(ellipse at 82% 78%, rgba(127,119,221,0.11) 0%, transparent 52%);
     }
 
+    /* ── Demo wrapper ── */
     .demo {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
       width: 100%;
       max-width: 340px;
     }
     .demo-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #444;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #333;
       align-self: flex-start;
     }
+    .cs-logo-sub { font-size: 14px; color: #555; text-align: center; }
 
     /* ── Módulos (igual en los 3) ── */
     .mod-cards { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .mod-card {
       background: #232628; border: 1px solid #2e3033; border-radius: 18px;
       padding: 1rem 1.25rem; display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.18s, background 0.18s, transform 0.1s;
+      cursor: pointer;
     }
+    .mod-card:hover { transform: translateY(-1px); }
     .mod-icon {
       width: 44px; height: 44px; border-radius: 13px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .mod-title { font-size: 16px; font-weight: 600; color: #e8e8e8; margin-bottom: 2px; }
     .mod-sub   { font-size: 13px; color: #666; }
-    .cs-logo-sub { font-size: 14px; color: #555; }
 
     /* ══════════════════════════════════════
-       VARIANTE 1 — Chip minimalista
-       Ícono cuadrado con iniciales + nombre plano
-       (Similar a lo que ya hay, lo refino)
+       VARIANTE A — Nombre + línea de color centrada
+       La línea es el acento, no gradiente de texto
     ══════════════════════════════════════ */
-    .v1-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .v1-icon {
-      width: 52px; height: 52px; border-radius: 16px;
-      background: rgba(55,138,221,0.18); border: 1px solid rgba(55,138,221,0.35);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 700; color: #378ADD;
-    }
-    .v1-nombre {
-      font-size: 24px; font-weight: 700; color: #e8e8e8;
+    .va-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .va-nombre {
+      font-size: 28px; font-weight: 700; color: #e8e8e8;
       letter-spacing: -0.5px; text-align: center; line-height: 1.2;
     }
+    .va-line {
+      width: 48px; height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, transparent, #378ADD 30%, #378ADD 70%, transparent);
+    }
 
     /* ══════════════════════════════════════
-       VARIANTE 2 — Tag horizontal compacto
-       Nombre + chip inline en una pill
+       VARIANTE B — Card header con borde izquierdo
+       Nombre dentro de una card con acento lateral
     ══════════════════════════════════════ */
-    .v2-pill {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: #232628; border: 1px solid #2e3033;
-      border-radius: 999px; padding: 8px 16px 8px 8px;
+    .vb-card {
+      width: 100%;
+      background: #232628;
+      border: 1px solid #2e3033;
+      border-left: 3px solid #378ADD;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .v2-dot {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(55,138,221,0.2); border: 1px solid rgba(55,138,221,0.4);
+    .vb-dot {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(55,138,221,0.18);
+      border: 1px solid rgba(55,138,221,0.3);
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 800; color: #378ADD; flex-shrink: 0;
+      font-size: 13px; font-weight: 800; color: #378ADD;
     }
-    .v2-nombre {
-      font-size: 16px; font-weight: 600; color: #e8e8e8;
-      letter-spacing: -0.2px; white-space: nowrap;
-    }
+    .vb-nombre { font-size: 18px; font-weight: 700; color: #e8e8e8; letter-spacing: -0.3px; }
+    .vb-sub    { font-size: 12px; color: #555; margin-top: 1px; }
 
     /* ══════════════════════════════════════
-       VARIANTE 3 — Header con etiqueta y acento
-       Label + nombre grande + línea de color
+       VARIANTE C — Iniciales · Nombre (inline)
+       Minimalista horizontal, initials en color
     ══════════════════════════════════════ */
-    .v3-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .v3-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-      text-transform: uppercase; color: #378ADD;
+    .vc-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .vc-row  { display: flex; align-items: center; gap: 10px; }
+    .vc-initials {
+      font-size: 15px; font-weight: 800; color: #378ADD;
+      letter-spacing: -0.5px;
     }
-    .v3-nombre {
-      font-size: 30px; font-weight: 800; color: #e8e8e8;
-      letter-spacing: -1px; text-align: center; line-height: 1.1;
+    .vc-sep {
+      width: 1px; height: 20px; background: #333;
     }
-    .v3-line {
-      width: 32px; height: 3px; border-radius: 2px;
-      background: #378ADD; margin-top: 4px;
+    .vc-nombre {
+      font-size: 22px; font-weight: 700; color: #e8e8e8;
+      letter-spacing: -0.4px;
+    }
+    .vc-line {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, #2e3033 20%, #2e3033 80%, transparent);
     }
   </style>
 </head>
 <body>
 
-  <!-- ════ VARIANTE 1 — Chip minimalista ════ -->
+  <!-- ════ VARIANTE A — Nombre + línea centrada ════ -->
   <div class="demo">
-    <div class="demo-label">Variante 1 — Chip minimalista</div>
+    <div class="demo-label">Variante A</div>
 
-    <div class="v1-wrap">
-      <div class="v1-icon">CS</div>
-      <div class="v1-nombre">Congregación Sur</div>
+    <div class="va-wrap">
+      <div class="va-nombre">Congregación Sur</div>
+      <div class="va-line"></div>
     </div>
     <div class="cs-logo-sub">Seleccioná un módulo</div>
 
     <div class="mod-cards">
-      <div class="mod-card">
+      <div class="mod-card" style="--hover-border:#3a6b3a;">
         <div class="mod-icon" style="background:#1a3a1a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
-              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7" stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#1a2340;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
         <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#2a1e0a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ════ VARIANTE 2 — Tag horizontal ════ -->
+  <!-- ════ VARIANTE B — Card con borde izquierdo ════ -->
   <div class="demo">
-    <div class="demo-label">Variante 2 — Tag horizontal compacto</div>
+    <div class="demo-label">Variante B</div>
 
-    <div class="v2-pill">
-      <div class="v2-dot">CS</div>
-      <div class="v2-nombre">Congregación Sur</div>
+    <div class="vb-card">
+      <div class="vb-dot">CS</div>
+      <div>
+        <div class="vb-nombre">Congregación Sur</div>
+        <div class="vb-sub">Sistema interno</div>
+      </div>
     </div>
     <div class="cs-logo-sub">Seleccioná un módulo</div>
 
     <div class="mod-cards">
       <div class="mod-card">
         <div class="mod-icon" style="background:#1a3a1a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
-              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7" stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#1a2340;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
         <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#2a1e0a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ════ VARIANTE 3 — Label + nombre grande + acento ════ -->
+  <!-- ════ VARIANTE C — CS · Congregación Sur ════ -->
   <div class="demo">
-    <div class="demo-label">Variante 3 — Label + nombre grande</div>
+    <div class="demo-label">Variante C</div>
 
-    <div class="v3-wrap">
-      <div class="v3-label">Congregación</div>
-      <div class="v3-nombre">Sur</div>
-      <div class="v3-line"></div>
+    <div class="vc-wrap">
+      <div class="vc-row">
+        <div class="vc-initials">CS</div>
+        <div class="vc-sep"></div>
+        <div class="vc-nombre">Congregación Sur</div>
+      </div>
+      <div class="vc-line"></div>
     </div>
     <div class="cs-logo-sub">Seleccioná un módulo</div>
 
     <div class="mod-cards">
       <div class="mod-card">
         <div class="mod-icon" style="background:#1a3a1a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"
-              stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7" stroke="#5DB85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Territorios</div><div class="mod-sub">Planificar y registrar salidas</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#1a2340;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="#5B8DDE" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
         <div><div class="mod-title">Asignaciones</div><div class="mod-sub">Acomodadores, sonido y más</div></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon" style="background:#2a1e0a;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="mod-title">Vida y Ministerio</div><div class="mod-sub">Programa de la reunión semanal</div></div>
       </div>
