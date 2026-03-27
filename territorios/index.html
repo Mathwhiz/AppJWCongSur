@@ -8,6 +8,9 @@
     api_host: 'https://app.posthog.com',
     person_profiles: 'identified_only'
   })
+  if (localStorage.getItem('posthog_dev')) {
+    posthog.identify('malco-dev', { name: 'Malco Scalese', is_tester: true })
+  }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
