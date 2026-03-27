@@ -44,6 +44,8 @@ let publicadores = [];
 let semanaData  = null;  // programa de la semana actualmente cargada/editada
 let modoEncargado = false;
 let tieneAuxiliar = false;
+let semanasLista = [];   // cache para navegación encargado (orden desc)
+let pubFecha    = null;  // fecha activa en vista pública
 
 // ─────────────────────────────────────────
 //   UTILS
@@ -214,9 +216,36 @@ window.goToPin = function() {
 };
 
 window.goToVerPrograma = async function() {
+  pubFecha = lunesDeHoy();
   showView('view-programa-pub');
   await cargarProgramaPublico();
 };
+
+window.navSemanaPublico = async function(dir) {
+  const d = new Date((pubFecha || lunesDeHoy()) + 'T12:00:00');
+  d.setDate(d.getDate() + dir * 7);
+  pubFecha = fmtDate(d);
+  await cargarProgramaPublico();
+};
+
+window.navSemana = async function(dir) {
+  if (!semanasLista.length || !semanaData) return;
+  // semanasLista está en orden desc: dir=+1 (siguiente/más nueva) → índice menor
+  const idx = semanasLista.findIndex(s => s.fecha === semanaData.fecha);
+  if (idx === -1) return;
+  const nextIdx = idx + (-dir);
+  if (nextIdx >= 0 && nextIdx < semanasLista.length) {
+    await goToSemana(semanasLista[nextIdx].fecha);
+  }
+};
+
+function updateNavBtnsSemana() {
+  const idx = semanasLista.findIndex(s => s.fecha === semanaData?.fecha);
+  const btnPrev = document.getElementById('btn-sem-prev');
+  const btnNext = document.getElementById('btn-sem-next');
+  if (btnPrev) btnPrev.disabled = idx === -1 || idx >= semanasLista.length - 1;
+  if (btnNext) btnNext.disabled = idx === -1 || idx <= 0;
+}
 
 window.goToSemanas = async function() {
   document.getElementById('semanas-congre-sub').textContent = congreNombre || '—';
@@ -265,6 +294,7 @@ window.goToSemana = async function(fecha) {
   document.getElementById('semana-titulo-display').textContent = 'Semana del ' + fmtDisplay(semanaData.fecha);
   renderSemanaEdit();
   showView('view-semana');
+  updateNavBtnsSemana();
 };
 
 window.goToNueva = function() {
@@ -339,6 +369,7 @@ async function cargarSemanas() {
     const snap = await getDocs(q);
     const semanas = [];
     snap.forEach(d => semanas.push(d.data()));
+    semanasLista = semanas;
     renderSemanas(semanas);
   } catch(e) {
     list.innerHTML = `<div class="error-wrap">Error al cargar: ${e.message}</div>`;
@@ -346,12 +377,12 @@ async function cargarSemanas() {
 }
 
 async function cargarProgramaPublico() {
-  const lunes = lunesDeHoy();
+  const fecha = pubFecha || lunesDeHoy();
   const el = document.getElementById('pub-contenido');
-  document.getElementById('pub-semana-titulo').textContent = 'Semana del ' + fmtDisplay(lunes);
+  document.getElementById('pub-semana-titulo').textContent = 'Semana del ' + fmtDisplay(fecha);
   el.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
   try {
-    const snap = await getDoc(doc(db, 'congregaciones', congreId, 'vidaministerio', lunes));
+    const snap = await getDoc(doc(db, 'congregaciones', congreId, 'vidaministerio', fecha));
     if (!snap.exists()) {
       el.innerHTML = '<div class="empty-state">No hay programa cargado para esta semana.<br><span style="color:#3a3a3a;">El encargado todavía no lo subió.</span></div>';
       return;

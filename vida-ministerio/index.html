@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vida y Ministerio — AppJW</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=1.1">
+  <link rel="stylesheet" href="styles.css?v=1.2">
 </head>
 <body>
 
@@ -96,10 +96,12 @@
     <div style="padding-top:4px;">
       <div class="view-header">
         <button class="btn-back" onclick="goToCover()">‹</button>
-        <div>
+        <div style="flex:1">
           <div class="view-title" id="pub-semana-titulo">Programa</div>
-          <div class="view-sub">Esta semana</div>
+          <div class="view-sub">Vida y Ministerio</div>
         </div>
+        <button class="btn-nav-sem" onclick="navSemanaPublico(-1)" title="Semana anterior">‹</button>
+        <button class="btn-nav-sem" onclick="navSemanaPublico(1)" title="Semana siguiente">›</button>
       </div>
       <div id="pub-contenido">
         <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
@@ -141,6 +143,8 @@
           <div class="view-title" id="semana-titulo-display">—</div>
           <div class="view-sub">Programa Vida y Ministerio</div>
         </div>
+        <button class="btn-nav-sem" id="btn-sem-prev" onclick="navSemana(-1)" title="Semana anterior">‹</button>
+        <button class="btn-nav-sem" id="btn-sem-next" onclick="navSemana(1)" title="Semana siguiente">›</button>
       </div>
       <div id="semana-content"></div>
     </div>

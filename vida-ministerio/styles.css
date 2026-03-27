@@ -160,8 +160,8 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 }
 .parte-label-text { font-size: 13px; font-weight: 600; color: #ccc; flex: 1; }
 .parte-dur-badge {
-  font-size: 11px; color: #666; background: #333; border-radius: 6px;
-  padding: 2px 7px; flex-shrink: 0;
+  font-size: 12px; font-weight: 600; color: #ccc; background: rgba(255,255,255,0.07);
+  border-radius: 6px; padding: 2px 8px; flex-shrink: 0;
 }
 .btn-quitar-parte {
   background: none; border: none; color: #555; font-size: 16px; cursor: pointer;
@@ -271,6 +271,16 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .sala-divider::after {
   content: ''; flex: 1; height: 1px; background: rgba(239,159,39,0.2);
 }
+
+/* ── Botones nav semana ── */
+.btn-nav-sem {
+  background: #252525; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  color: #aaa; font-size: 18px; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: background 0.15s, color 0.15s;
+}
+.btn-nav-sem:hover { color: #eee; background: #333; }
+.btn-nav-sem:disabled { opacity: 0.22; cursor: default; }
 
 /* ── Botón configuración en header de semanas ── */
 .btn-config-vm {
