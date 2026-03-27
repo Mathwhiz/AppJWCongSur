@@ -113,15 +113,19 @@
     }
 
     /* ── Título de congregación ── */
+    .menu-congre { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .menu-congre-icon {
+      width: 54px; height: 54px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
     #menu-titulo {
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      background-image: linear-gradient(135deg, #f0f0f0 0%, #a0b8f0 100%);
-      font-size: 42px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      line-height: 1.1;
+      font-size: 26px;
+      font-weight: 700;
+      color: #e8e8e8;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
       text-align: center;
     }
 
@@ -165,6 +169,7 @@
     }
     .btn-instalar:hover { background: #1c2420; border-color: rgba(29,158,117,0.6); color: #25c491; }
     .btn-instalar.oculto { display: none; }
+    body.en-menu .btn-instalar { display: none !important; }
 
   </style>
 </head>
@@ -189,7 +194,10 @@
   <div id="view-menu" class="view" style="display:none">
     <div class="menu-wrap">
       <div class="logo">
-        <div id="menu-titulo">—</div>
+        <div class="menu-congre">
+          <div class="menu-congre-icon" id="menu-congre-icon"></div>
+          <div id="menu-titulo">—</div>
+        </div>
         <div class="cs-logo-sub">Seleccioná un módulo</div>
       </div>
 
@@ -324,15 +332,20 @@
       el.style.animation = '';
     }
 
-    const btnAdmin = document.querySelector('.btn-admin');
-    const titulo   = document.getElementById('menu-titulo');
+    const btnAdmin   = document.querySelector('.btn-admin');
+    const titulo     = document.getElementById('menu-titulo');
+    const congreIcon = document.getElementById('menu-congre-icon');
 
     function mostrarMenu(nombre, color) {
+      const col = color || '#7F77DD';
+      congreIcon.textContent  = iniciales(nombre);
+      congreIcon.style.background = hexToRgba(col, 0.18);
+      congreIcon.style.border     = `1px solid ${hexToRgba(col, 0.35)}`;
+      congreIcon.style.color      = col;
       titulo.textContent = nombre;
-      const col = color || '#a0b8f0';
-      titulo.style.backgroundImage = `linear-gradient(160deg, #ffffff 0%, ${col} 75%)`;
       document.getElementById('menu-footer').textContent = nombre + ' · App interna';
       btnAdmin.classList.add('hidden');
+      document.body.classList.add('en-menu');
       showView('view-menu');
     }
 
@@ -341,6 +354,7 @@
       sessionStorage.removeItem('congreNombre');
       sessionStorage.removeItem('congreColor');
       btnAdmin.classList.remove('hidden');
+      document.body.classList.remove('en-menu');
       showView('view-congres');
     };
 

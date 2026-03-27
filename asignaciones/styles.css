@@ -235,18 +235,18 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 /* ── Botones comunes ── */
 .btn-primary {
-  padding: 10px 16px; font-size: 14px; font-weight: 500;
-  background: #7F77DD; color: white; border: none; border-radius: 8px;
+  padding: 12px 20px; font-size: 15px; font-weight: 600; font-family: inherit;
+  background: #7F77DD; color: #fff; border: none; border-radius: 10px;
   cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .btn-primary:hover { background: #6a62c4; }
 .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-secondary {
-  padding: 10px 16px; font-size: 14px; border: 0.5px solid #555;
-  border-radius: 8px; background: #2a2a2a; color: #ccc; cursor: pointer;
-  display: inline-block;
+  padding: 12px 20px; font-size: 15px; font-family: inherit;
+  border: 1px solid #444; border-radius: 10px; background: transparent; color: #aaa;
+  cursor: pointer; display: inline-block;
 }
-.btn-secondary:hover { background: #333; }
+.btn-secondary:hover { background: rgba(255,255,255,0.05); }
 .btn-chip {
   padding: 5px 12px; font-size: 12px; border: 0.5px solid #555;
   border-radius: 20px; background: #252525; color: #aaa; cursor: pointer;
@@ -254,14 +254,14 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 }
 .btn-chip:hover { background: #333; color: #eee; border-color: #7F77DD; }
 .btn-guardar {
-  width: 100%; padding: 12px; font-size: 15px; font-weight: 500;
-  background: #1D9E75; color: white; border: none; border-radius: 8px; cursor: pointer;
+  width: 100%; padding: 12px 20px; font-size: 15px; font-weight: 600; font-family: inherit;
+  background: #1D9E75; color: #fff; border: none; border-radius: 10px; cursor: pointer;
 }
 .btn-guardar:hover { background: #0F6E56; }
 .btn-guardar:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-save {
-  padding: 10px 16px; font-size: 14px; font-weight: 500;
-  background: #7F77DD; color: white; border: none; border-radius: 8px; cursor: pointer;
+  padding: 12px 20px; font-size: 15px; font-weight: 600; font-family: inherit;
+  background: #7F77DD; color: #fff; border: none; border-radius: 10px; cursor: pointer;
 }
 .btn-save:hover { background: #6a62c4; }
 .save-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 20px; }

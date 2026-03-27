@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AppJW">
   <link rel="apple-touch-icon" href="/favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=1.4">
+  <link rel="stylesheet" href="styles.css?v=1.5">
 </head>
 <body>
 
@@ -26,19 +26,19 @@
 
   <!-- ── COVER ── -->
   <div id="view-cover" class="view active">
-    <div class="cover">
-      <div class="cover-icon">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+    <div class="cs-module-cover">
+      <div class="cs-module-icon-wrap" style="background:rgba(239,159,39,0.15);border:1px solid rgba(239,159,39,0.3);">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
           <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <div class="cover-title">Vida y Ministerio</div>
-      <div class="cover-subtitle" id="cover-congre">—</div>
-      <div class="cover-label">¿Qué querés hacer?</div>
+      <div class="cs-module-title">Vida y Ministerio</div>
+      <div class="cs-module-sub" id="cover-congre" style="color:#EF9F27;">—</div>
+      <div class="cs-module-label">¿Qué querés hacer?</div>
 
-      <button class="modo-card modo-ver" onclick="goToVerPrograma()">
-        <div class="modo-icon" style="background:rgba(239,159,39,0.15);">
+      <button class="cs-module-card" style="--card-hover-border:rgba(239,159,39,0.5);--card-hover-bg:rgba(239,159,39,0.06);" onclick="goToVerPrograma()">
+        <div class="cs-module-card-icon" style="background:rgba(239,159,39,0.15);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="4" width="18" height="18" rx="2" stroke="#EF9F27" stroke-width="1.8"/>
             <path d="M16 2v4M8 2v4M3 10h18" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/>
@@ -46,26 +46,26 @@
           </svg>
         </div>
         <div>
-          <div class="modo-card-title">Ver programa</div>
-          <div class="modo-card-sub">Programa de esta semana</div>
+          <div class="cs-module-card-title">Ver programa</div>
+          <div class="cs-module-card-sub">Programa de esta semana</div>
         </div>
       </button>
 
-      <button class="modo-card modo-encargado" onclick="goToPin()">
-        <div class="modo-icon" style="background:rgba(127,119,221,0.15);">
+      <button class="cs-module-card" style="--card-hover-border:rgba(127,119,221,0.5);--card-hover-bg:rgba(127,119,221,0.07);" onclick="goToPin()">
+        <div class="cs-module-card-icon" style="background:rgba(127,119,221,0.15);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="11" width="18" height="11" rx="2" stroke="#7F77DD" stroke-width="1.8"/>
             <path d="M7 11V7a5 5 0 0110 0v4" stroke="#7F77DD" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
-          <div class="modo-card-title">Encargado</div>
-          <div class="modo-card-sub">Gestionar programa</div>
+          <div class="cs-module-card-title">Encargado</div>
+          <div class="cs-module-card-sub">Gestionar programa</div>
         </div>
       </button>
 
-      <div style="font-size:12px;color:#3a3a3a;margin-top:8px;">AppJW · Sistema interno</div>
-      <a href="../index.html" class="cs-back-btn" style="margin-top:4px;">← Volver al módulo</a>
+      <div class="cs-footer">AppJW · Sistema interno</div>
+      <a href="../index.html" class="cs-back-btn">← Volver al módulo</a>
     </div>
   </div>
 
