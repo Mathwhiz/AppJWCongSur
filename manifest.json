@@ -1,0 +1,17 @@
+{
+  "name": "AppJW",
+  "short_name": "AppJW",
+  "description": "Sistema de congregación — territorios, asignaciones y vida y ministerio",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1c1f",
+  "theme_color": "#1a1c1f",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

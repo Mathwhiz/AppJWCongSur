@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Programa Vida y Ministerio</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a1c1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AppJW">
+  <link rel="apple-touch-icon" href="/favicon.svg">
   <link rel="stylesheet" href="styles.css?v=1.4">
   <style>
     .prog-header {
@@ -72,6 +78,7 @@
   <div style="height:2rem;"></div>
 </div>
 
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');</script>
 <script type="module" src="programa.js"></script>
 </body>
 </html>
