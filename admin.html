@@ -78,7 +78,12 @@
     /* KML */
     .kml-drop { border: 2px dashed #444; border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; color: #888; font-size: 14px; transition: .2s; }
     .kml-drop:hover, .kml-drop.drag { border-color: #7F77DD; color: #bbb; }
+    .kml-drop-sm { padding: 10px 14px; border-radius: 8px; }
     .kml-preview { background: #2a2a2a; border-radius: 10px; padding: 12px 14px; margin-top: 12px; font-size: 14px; color: #5DCAA5; }
+
+    /* Ciudades extra */
+    .ciudad-extra-row { background: #2a2a2a; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .ciudades-extra-hdr { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 8px; }
 
     .loading-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 24px; color: #888; font-size: 14px; }
     .spinner { width: 20px; height: 20px; border: 2px solid #444; border-top-color: #7F77DD; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
@@ -166,6 +171,10 @@
         <input type="text" id="w-pin-vm" placeholder="4 dígitos (default 1234)" maxlength="4" inputmode="numeric" autocomplete="off">
       </div>
       <div class="field">
+        <label>Ciudad principal (opcional)</label>
+        <input type="text" id="w-ciudad-principal" placeholder="Ej: Santa Rosa" autocomplete="off">
+      </div>
+      <div class="field">
         <label>Color de la congregación</label>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;">
           <div id="w-color-swatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -200,6 +209,11 @@
       </div>
       <input type="file" id="kml-input" accept=".kml" style="display:none" onchange="onKmlFile(this)">
       <div id="kml-preview" class="kml-preview" style="display:none"></div>
+
+      <div class="ciudades-extra-hdr">Ciudades extra (opcional)</div>
+      <div id="ciudades-extra-list"></div>
+      <button class="btn-add-grupo" onclick="addCiudadExtra()">+ Agregar ciudad extra</button>
+
       <div class="btn-row">
         <button class="btn-secondary" onclick="wizardPrev()">← Volver</button>
         <button class="btn-secondary" onclick="crearCongregacion(true)" style="flex:1;">Omitir KML</button>

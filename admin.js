@@ -161,10 +161,11 @@ const GRUPOS_DEFAULT = [
   { id: 'C', label: 'Congregación', color: '#7F77DD', pin: '5555' },
 ];
 
-let wizardStep      = 0;
-let kmlTerritories  = null;
-let wizardGrupos    = [];
-let editingCongreId = null;
+let wizardStep        = 0;
+let kmlTerritories    = null;
+let wizardGrupos      = [];
+let editingCongreId   = null;
+let ciudadesExtrasKml = []; // [{ nombre, offset, territories }]
 
 function renderGruposConfig() {
   const gc = document.getElementById('grupos-config');
@@ -210,10 +211,13 @@ function startWizard(prefill = null) {
   wizardGrupos   = prefill?.grupos?.map(g => ({ ...g })) ?? GRUPOS_DEFAULT.map(g => ({ ...g }));
 
   const isEdit = !!editingCongreId;
-  document.getElementById('w-nombre').value  = prefill?.nombre             || '';
-  document.getElementById('w-id').value      = isEdit ? editingCongreId : '';
-  document.getElementById('w-pin').value     = prefill?.pinEncargado        || '';
-  document.getElementById('w-pin-vm').value  = prefill?.pinVidaMinisterio   || '';
+  document.getElementById('w-nombre').value           = prefill?.nombre            || '';
+  document.getElementById('w-id').value               = isEdit ? editingCongreId : '';
+  document.getElementById('w-pin').value              = prefill?.pinEncargado       || '';
+  document.getElementById('w-pin-vm').value           = prefill?.pinVidaMinisterio  || '';
+  document.getElementById('w-ciudad-principal').value = prefill?.ciudadPrincipal    || '';
+  ciudadesExtrasKml = prefill?.ciudadesExtras?.map(c => ({ nombre: c.nombre, offset: c.offset, territories: null })) ?? [];
+  renderCiudadesExtra();
   const initColor = prefill?.color || PALETA_COLORES[Math.floor(Math.random() * PALETA_COLORES.length)];
   renderColorSwatches(initColor);
   document.getElementById('kml-input').value = '';
@@ -246,7 +250,15 @@ async function editCongre(id) {
     const grupos = [];
     gruposSnap.forEach(d => grupos.push(d.data()));
     grupos.sort((a, b) => String(a.id) < String(b.id) ? -1 : 1);
-    startWizard({ nombre: data.nombre, pinEncargado: data.pinEncargado, pinVidaMinisterio: data.pinVidaMinisterio || '', color: data.color || null, grupos });
+    startWizard({
+      nombre:            data.nombre,
+      pinEncargado:      data.pinEncargado,
+      pinVidaMinisterio: data.pinVidaMinisterio || '',
+      color:             data.color || null,
+      ciudadPrincipal:   data.ciudadPrincipal || '',
+      ciudadesExtras:    data.ciudadesExtras || [],
+      grupos,
+    });
   } catch(e) {
     uiLoading.hide();
     await uiAlert('Error al cargar los datos: ' + e.message);
@@ -403,6 +415,73 @@ function parseKML(text) {
 }
 
 // ─────────────────────────────────────────
+//   CIUDADES EXTRA
+// ─────────────────────────────────────────
+function renderCiudadesExtra() {
+  const list = document.getElementById('ciudades-extra-list');
+  if (!list) return;
+  list.innerHTML = ciudadesExtrasKml.map((c, i) => `
+    <div class="ciudad-extra-row" data-idx="${i}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <input class="ce-nombre gc-label" value="${c.nombre}" placeholder="Nombre de la ciudad (ej: Ataliva Roca)" style="flex:1;">
+        <button class="btn-remove-grupo" onclick="removeCiudadExtra(${i})" title="Eliminar">×</button>
+      </div>
+      <div class="kml-drop kml-drop-sm" onclick="document.getElementById('ce-kml-${i}').click()">
+        ${c.territories
+          ? `<span style="color:#5DCAA5;font-size:12px;">✓ ${c.territories.length} territorios cargados (IDs +${c.offset})</span>`
+          : `<span style="font-size:12px;color:#888;">Subir KML · se numeran desde 1, se guardan con ID +${c.offset}</span>`}
+      </div>
+      <input type="file" id="ce-kml-${i}" accept=".kml" style="display:none" onchange="onCiudadExtraKmlFile(${i}, this)">
+    </div>`).join('');
+}
+
+function syncCiudadesExtraFromDOM() {
+  document.querySelectorAll('#ciudades-extra-list .ciudad-extra-row').forEach((row, i) => {
+    if (ciudadesExtrasKml[i]) {
+      ciudadesExtrasKml[i].nombre = row.querySelector('.ce-nombre')?.value.trim() || '';
+    }
+  });
+}
+
+function addCiudadExtra() {
+  syncCiudadesExtraFromDOM();
+  const maxOffset = ciudadesExtrasKml.length > 0
+    ? Math.max(...ciudadesExtrasKml.map(c => c.offset || 0))
+    : 0;
+  ciudadesExtrasKml.push({ nombre: '', offset: maxOffset + 1000, territories: null });
+  renderCiudadesExtra();
+}
+
+function removeCiudadExtra(idx) {
+  syncCiudadesExtraFromDOM();
+  ciudadesExtrasKml.splice(idx, 1);
+  renderCiudadesExtra();
+}
+
+function onCiudadExtraKmlFile(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      syncCiudadesExtraFromDOM();
+      const offset = ciudadesExtrasKml[idx].offset;
+      const terrs = parseKML(e.target.result).map(t => ({
+        ...t,
+        id:     t.id + offset,
+        nombre: `Territorio ${t.id}`,
+        grupoId: 'C',
+      }));
+      ciudadesExtrasKml[idx].territories = terrs;
+      renderCiudadesExtra();
+    } catch(err) {
+      uiAlert('Error al procesar el KML: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────
 //   RENAME CONGREGACIÓN (copia + elimina)
 // ─────────────────────────────────────────
 async function renameCongre(oldId, newId) {
@@ -449,8 +528,14 @@ async function crearCongregacion(skipKml) {
   const nombre            = document.getElementById('w-nombre').value.trim();
   const pinEncargado      = document.getElementById('w-pin').value.trim();
   const pinVidaMinisterio = document.getElementById('w-pin-vm').value.trim() || '1234';
+  const ciudadPrincipal   = document.getElementById('w-ciudad-principal').value.trim();
   const status       = document.getElementById('wizard-status');
   status.textContent = '';
+
+  syncCiudadesExtraFromDOM();
+  const ciudadesExtrasMetadata = ciudadesExtrasKml
+    .filter(ec => ec.nombre)
+    .map(ec => ({ nombre: ec.nombre, offset: ec.offset }));
 
   const grupos = wizardGrupos;
 
@@ -470,7 +555,12 @@ async function crearCongregacion(skipKml) {
       }
       congreId = editingCongreId;
       const color = document.getElementById('w-color')?.value || null;
-      await updateDoc(doc(db, 'congregaciones', congreId), { nombre, pinEncargado, pinVidaMinisterio, ...(color && { color }) });
+      await updateDoc(doc(db, 'congregaciones', congreId), {
+        nombre, pinEncargado, pinVidaMinisterio,
+        ciudadPrincipal: ciudadPrincipal || null,
+        ciudadesExtras: ciudadesExtrasMetadata,
+        ...(color && { color }),
+      });
 
       // Reemplazar grupos: borrar existentes y crear los nuevos
       const existSnap = await getDocs(collection(db, 'congregaciones', congreId, 'grupos'));
@@ -491,6 +581,8 @@ async function crearCongregacion(skipKml) {
         nombre,
         pinEncargado,
         pinVidaMinisterio,
+        ciudadPrincipal: ciudadPrincipal || null,
+        ciudadesExtras: ciudadesExtrasMetadata,
         color,
         creadoEn: Timestamp.now(),
       });
@@ -504,14 +596,28 @@ async function crearCongregacion(skipKml) {
     await gruposBatch.commit();
 
     // Territorios del KML en batches de 400
+    const terrColRef = collection(db, 'congregaciones', congreId, 'territorios');
     if (!skipKml && kmlTerritories?.length > 0) {
       const total = kmlTerritories.length;
-      const terrCol = collection(db, 'congregaciones', congreId, 'territorios');
       for (let i = 0; i < total; i += 400) {
         uiLoading.show(`Subiendo territorios... (${Math.min(i + 400, total)}/${total})`);
         const batch = writeBatch(db);
         kmlTerritories.slice(i, i + 400).forEach(t => {
-          batch.set(doc(terrCol, String(t.id)), t);
+          batch.set(doc(terrColRef, String(t.id)), t);
+        });
+        await batch.commit();
+      }
+    }
+
+    // Territorios de ciudades extra
+    for (const ec of ciudadesExtrasKml) {
+      if (!ec.nombre || !ec.territories?.length) continue;
+      const total = ec.territories.length;
+      for (let i = 0; i < total; i += 400) {
+        uiLoading.show(`Subiendo ${ec.nombre}... (${Math.min(i + 400, total)}/${total})`);
+        const batch = writeBatch(db);
+        ec.territories.slice(i, i + 400).forEach(t => {
+          batch.set(doc(terrColRef, String(t.id)), { ...t, ciudad: ec.nombre });
         });
         await batch.commit();
       }
@@ -625,8 +731,12 @@ function renderTerrList() {
             style="border-color:#555;${!cur ? 'background:#555;' : ''}"
             onclick="assignGrupo('${t._docId}','')">—</button>`,
         ].join('');
+        const displayNum = t.nombre ? t.nombre.replace('Territorio ', '') : String(t.id);
         return `<div class="terr-row${changed ? ' changed' : ''}" id="terr-row-${t._docId}">
-          <span class="terr-num">${t.id}</span>
+          <div style="min-width:36px;">
+            <span class="terr-num">${displayNum}</span>
+            ${t.ciudad ? `<div style="font-size:9px;color:#888;line-height:1.2;margin-top:1px;">${t.ciudad}</div>` : ''}
+          </div>
           <div class="terr-g-btns">${btns}</div>
         </div>`;
       }).join('');
@@ -706,8 +816,11 @@ window.wizardNext        = wizardNext;
 window.wizardPrev        = wizardPrev;
 window.addGrupo          = addGrupo;
 window.removeGrupo       = removeGrupo;
-window.onKmlFile         = onKmlFile;
-window.crearCongregacion = crearCongregacion;
+window.onKmlFile             = onKmlFile;
+window.addCiudadExtra        = addCiudadExtra;
+window.removeCiudadExtra     = removeCiudadExtra;
+window.onCiudadExtraKmlFile  = onCiudadExtraKmlFile;
+window.crearCongregacion     = crearCongregacion;
 window.openTerritorios   = openTerritorios;
 window.setTerrFiltro     = setTerrFiltro;
 window.assignGrupo       = assignGrupo;

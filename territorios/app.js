@@ -1,7 +1,7 @@
 import { db } from '../firebase.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, limit, Timestamp
+  query, where, orderBy, limit, Timestamp,
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // ── congreId viene de sessionStorage (seteado en index.html al elegir congregación) ──
@@ -29,6 +29,19 @@ let _conductoresResolvers = [];
 function conductoresListos() {
   if (_conductoresListos) return Promise.resolve();
   return new Promise(res => _conductoresResolvers.push(res));
+}
+
+async function cargarConfigCongre() {
+  try {
+    const snap = await getDoc(congreRef());
+    if (snap.exists()) {
+      const d = snap.data();
+      ciudadesExtras  = d.ciudadesExtras  || [];
+      ciudadPrincipal = d.ciudadPrincipal || '';
+    }
+  } catch(e) {
+    console.warn('No se pudo cargar config congregación:', e);
+  }
 }
 
 async function cargarConductores() {
@@ -77,6 +90,8 @@ let selectedGrupo = null;
 let selected      = [];
 let territoriosData = {};
 let allTerritoriosData = {};
+let ciudadesExtras  = [];   // [{ nombre, offset }]
+let ciudadPrincipal = '';   // nombre de la ciudad principal
 let configData    = {};
 let modalTerr     = null;
 let editingRow    = null;   // doc ID en Firestore
@@ -231,7 +246,7 @@ async function fetchGrupo(grupo) {
       enProgreso = !h.fechaFin;
     }
 
-    result[id] = { lastFin, lastIni, enProgreso, tipo: terr.tipo || 'normal' };
+    result[id] = { lastFin, lastIni, enProgreso, tipo: terr.tipo || 'normal', ciudad: terr.ciudad || null };
   }));
 
   return result;
@@ -269,6 +284,7 @@ async function fetchConfig(grupo) {
       });
       goToModo();
       cargarConductores();
+      cargarConfigCongre();
     });
   }
 })();
@@ -441,6 +457,7 @@ function checkPin() {
     pinBuffer = '';
     goToModo();
     cargarConductores();
+    cargarConfigCongre();
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto, intentá de nuevo';
     pinBuffer = '';
@@ -1189,23 +1206,55 @@ function daysColor(dias) {
   return '#F44336';
 }
 
+function renderInfoBtn(container, n) {
+  const t = territoriosData[n];
+  const estado = configData[n] || 'normal';
+  const lastDate = t.lastFin || t.lastIni;
+  const btn = document.createElement('button');
+  btn.className = `info-btn estado-${estado}`;
+  const estadoLabel = estado === 'normal' ? '' : estado === 'peligroso' ? '⚠ peligroso' : '✕ no predica';
+  const dias    = lastDate ? daysSince(lastDate) : null;
+  const col     = daysColor(dias);
+  const diasTxt = dias !== null ? `${dias}d` : '—';
+  btn.innerHTML = `<div class="info-btn-num">${n}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-days" style="color:${col};">${diasTxt}</div><div class="info-btn-estado">${estadoLabel}</div>`;
+  btn.onclick = () => openModal(n);
+  container.appendChild(btn);
+}
+
 function renderInfoGrid() {
   const g = document.getElementById('info-grid');
   g.innerHTML = '';
-  Object.keys(territoriosData).sort((a,b) => parseInt(a)-parseInt(b)).forEach(n => {
-    const t = territoriosData[n];
-    const estado = configData[n] || 'normal';
-    const lastDate = t.lastFin || t.lastIni;
-    const btn = document.createElement('button');
-    btn.className = `info-btn estado-${estado}`;
-    const estadoLabel = estado === 'normal' ? '' : estado === 'peligroso' ? '⚠ peligroso' : '✕ no predica';
-    const dias    = lastDate ? daysSince(lastDate) : null;
-    const col     = daysColor(dias);
-    const diasTxt = dias !== null ? `${dias}d` : '—';
-    btn.innerHTML = `<div class="info-btn-num">${n}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-days" style="color:${col};">${diasTxt}</div><div class="info-btn-estado">${estadoLabel}</div>`;
-    btn.onclick = () => openModal(n);
-    g.appendChild(btn);
-  });
+  const nums = Object.keys(territoriosData).sort((a,b) => parseInt(a)-parseInt(b));
+
+  const hasCiudades = nums.some(n => territoriosData[n].ciudad);
+  if (hasCiudades) {
+    // Modo ciudad: contenedor actúa como bloque, sub-grids por ciudad
+    g.style.display = 'block';
+    const grupos = new Map();
+    grupos.set(null, []);
+    nums.forEach(n => {
+      const c = territoriosData[n].ciudad || null;
+      if (!grupos.has(c)) grupos.set(c, []);
+      grupos.get(c).push(n);
+    });
+
+    grupos.forEach((lista, ciudad) => {
+      if (lista.length === 0) return;
+      const hdr = document.createElement('div');
+      hdr.className = 'info-ciudad-hdr';
+      hdr.textContent = ciudad
+        ? `Territorios de ${ciudad}`
+        : `Territorios de ${ciudadPrincipal || CONGRE_NOMBRE}`;
+      g.appendChild(hdr);
+      const grid = document.createElement('div');
+      grid.className = 'info-grid';
+      lista.forEach(n => renderInfoBtn(grid, n));
+      g.appendChild(grid);
+    });
+  } else {
+    g.style.display = '';
+    nums.forEach(n => renderInfoBtn(g, n));
+  }
 }
 
 function handleModalBg(e) {

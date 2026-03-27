@@ -164,6 +164,7 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .info-btn.estado-peligroso .info-btn-estado { color: #FAC775; }
 .info-btn.estado-no_predica .info-btn-estado { color: #F09595; }
 .info-btn.estado-normal .info-btn-estado { color: #888; }
+.info-ciudad-hdr { font-size: 12px; font-weight: 600; color: #888; margin: 14px 0 8px; letter-spacing: .3px; }
 .info-legend { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }

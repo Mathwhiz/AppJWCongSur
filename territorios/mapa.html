@@ -201,7 +201,7 @@
 <script type="module">
 import { db } from '../firebase.js';
 import {
-  collection, getDocs, query, where, orderBy, limit
+  collection, doc, getDoc, getDocs, query, where, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const CONGRE_ID = sessionStorage.getItem('congreId') || 'sur';
@@ -216,8 +216,9 @@ const GRUPO_COLORS = {
 
 const GRUPO_LABEL = { '1':'Grupo 1','2':'Grupo 2','3':'Grupo 3','4':'Grupo 4','C':'Congregación' };
 
-// Territorios cargados desde Firestore — formato: [{num, grupo, coords, punto, tipo}]
-let TERRITORIOS = [];
+// Territorios cargados desde Firestore — formato: [{num, grupo, coords, punto, tipo, ciudad}]
+let TERRITORIOS  = [];
+let ciudadesExtras = []; // [{ nombre, offset }] — cargado del doc de congregación
 
 let map;
 let allLayers = [];
@@ -262,6 +263,7 @@ async function cargarTerritorios() {
       coords: normCoords(poly),
       punto:  normPunto(t.punto),
       tipo:   t.tipo || 'normal',
+      ciudad: t.ciudad || null,
     })).filter(entry => entry.coords.length >= 3);
   });
 }
@@ -302,11 +304,19 @@ async function cargarHistorialInfo() {
   }
 }
 
+// ── Carga ciudades extra del doc de congregación ──
+async function cargarCiudadesExtras() {
+  try {
+    const snap = await getDoc(doc(db, 'congregaciones', CONGRE_ID));
+    if (snap.exists()) ciudadesExtras = snap.data().ciudadesExtras || [];
+  } catch(e) { /* sin ciudades extras */ }
+}
+
 // ── Init ──
 async function initMap() {
   try {
     document.getElementById('loading-text').textContent = 'Cargando territorios...';
-    await cargarTerritorios();
+    await Promise.all([cargarTerritorios(), cargarCiudadesExtras()]);
 
     // En info/picker el historial es necesario antes de renderizar (colorea polígonos)
     if (_modoParam === 'info' || _modoParam === 'picker') {
@@ -353,6 +363,20 @@ async function initMap() {
   // En modo full cargamos el historial en background (el mapa ya está visible)
   if (_modoParam === 'full') {
     cargarHistorialInfo().catch(e => console.warn('Historial:', e));
+  }
+
+  // Botones de ciudad (modo full, si hay ciudades extra)
+  if (_modoParam === 'full' && ciudadesExtras.length > 0) {
+    const bar = document.getElementById('map-filters-bar');
+    ciudadesExtras.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.id = `filter-ciudad-${c.offset}`;
+      btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;';
+      btn.textContent = `📍 ${c.nombre}`;
+      btn.onclick = () => zoomCiudad(c.nombre);
+      bar.appendChild(btn);
+    });
   }
 
   if (_modoParam === 'encuentro') {
@@ -447,7 +471,7 @@ function renderTerritories() {
       polygon.on('click',     () => openPopup(polygon, t.num, t.grupo));
       polygon.on('mouseover', () => polygon.setStyle({ fillOpacity:0.65, weight:3 }));
       polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity:0.45, weight:2.5 }));
-      allLayers.push({ polygon, label, group:t.grupo, numero:t.num });
+      allLayers.push({ polygon, label, group:t.grupo, numero:t.num, ciudad:t.ciudad||null });
       polygon.addTo(map); label.addTo(map);
       return;
     }
@@ -462,7 +486,7 @@ function renderTerritories() {
       polygon.on('click', (e) => { L.DomEvent.stopPropagation(e); selectEncuentroPoint(e.latlng); });
       polygon.on('mouseover', () => polygon.setStyle({ fillOpacity: 0.45, weight: 2.5 }));
       polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity: 0.22, weight: 2 }));
-      allLayers.push({ polygon, label, group:t.grupo, numero:t.num });
+      allLayers.push({ polygon, label, group:t.grupo, numero:t.num, ciudad:t.ciudad||null });
       polygon.addTo(map); label.addTo(map);
       return;
     }
@@ -489,7 +513,7 @@ function renderTerritories() {
         if (!pickerSelected.has(t.num))
           polygon.setStyle({ fillOpacity: fillOp, weight });
       });
-      allLayers.push({ polygon, label, group:t.grupo, numero:t.num, baseStyle:{ fillOp, weight, opacity, isMainGroup }, c });
+      allLayers.push({ polygon, label, group:t.grupo, numero:t.num, ciudad:t.ciudad||null, baseStyle:{ fillOp, weight, opacity, isMainGroup }, c });
       polygon.addTo(map); label.addTo(map);
       return;
     }
@@ -508,7 +532,7 @@ function renderTerritories() {
     polygon.on('click',     () => openPopup(polygon, t.num, t.grupo));
     polygon.on('mouseover', () => polygon.setStyle({ fillOpacity:0.45, weight:2.5 }));
     polygon.on('mouseout',  () => polygon.setStyle({ fillOpacity:0.22, weight:2 }));
-    allLayers.push({ polygon, label, group:t.grupo, numero:t.num });
+    allLayers.push({ polygon, label, group:t.grupo, numero:t.num, ciudad:t.ciudad||null });
     polygon.addTo(map); label.addTo(map);
   });
 }
@@ -745,6 +769,15 @@ window.handleBack = function() {
   } else {
     history.back();
   }
+};
+
+// ── Zoom a ciudad extra ──
+window.zoomCiudad = function(nombreCiudad) {
+  const cityLayers = allLayers.filter(l => l.ciudad === nombreCiudad && l.polygon.getBounds().isValid());
+  if (!cityLayers.length) return;
+  const b = cityLayers[0].polygon.getBounds();
+  cityLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+  map.flyToBounds(b, { padding: [24, 24], maxZoom: 16, duration: 0.6 });
 };
 
 // ── Filtros (modo full) ──

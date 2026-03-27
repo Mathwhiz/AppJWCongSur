@@ -907,10 +907,11 @@ window.uiTerritorioPicker = function({
         const t = territoriosData[n];
         const lastDate = t.lastFin || t.lastIni;
         const dias = daysSince(lastDate);
+        const ciudad = t.ciudad || null;
         if (t.enProgreso) {
-          enProgreso.push({ n, dias, lastDate });
+          enProgreso.push({ n, dias, lastDate, ciudad });
         } else {
-          resto.push({ n, dias, lastDate });
+          resto.push({ n, dias, lastDate, ciudad });
         }
       });
 
@@ -990,13 +991,28 @@ window.uiTerritorioPicker = function({
         html += `<div class="tp-divider"></div>`;
       }
 
-      // ── Propios ──
-      if (!hayQuery && grupo === 'C') html += `<div class="tp-section-title">Congregación</div>`;
-      if (fResto.length === 0 && fProgreso.length === 0 && !hayQuery) {
+      // ── Propios (principal + extra por ciudad) ──
+      const restoMain   = fResto.filter(t => !t.ciudad);
+      const restoCiudad = {};
+      fResto.filter(t => t.ciudad).forEach(t => {
+        if (!restoCiudad[t.ciudad]) restoCiudad[t.ciudad] = [];
+        restoCiudad[t.ciudad].push(t);
+      });
+      const hayCiudades = Object.keys(restoCiudad).length > 0;
+
+      if (!hayQuery && grupo === 'C' && hayCiudades) html += `<div class="tp-section-title">Congregación</div>`;
+      if (restoMain.length === 0 && fProgreso.length === 0 && !hayCiudades && !hayQuery) {
         html += `<div class="tp-empty">Sin territorios disponibles</div>`;
       } else {
-        fResto.forEach(t => { html += itemHTML(t); });
+        restoMain.forEach(t => { html += itemHTML(t); });
       }
+
+      // ── Ciudades extra ──
+      Object.entries(restoCiudad).forEach(([ciudad, terrs]) => {
+        html += `<div class="tp-divider"></div>`;
+        html += `<div class="tp-section-title">${ciudad}</div>`;
+        terrs.forEach(t => { html += itemHTML(t); });
+      });
 
       // ── Territorios de grupos (solo Congregación) ──
       if (grupo === 'C') {
