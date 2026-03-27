@@ -365,22 +365,39 @@ async function initMap() {
     cargarHistorialInfo().catch(e => console.warn('Historial:', e));
   }
 
-  // Botones de ciudad (modo full y picker, si hay ciudades extra)
+  // Botones de ciudad (todos los modos embebidos cuando hay ciudades extra)
   const esPicker = _modoParam === 'picker' || _params.get('picker') === '1';
-  if ((_modoParam === 'full' || esPicker) && ciudadesExtras.length > 0) {
-    // En picker: agregar al picker-bar (map-filters está oculto); en full: a la barra de filtros
-    const bar = esPicker
-      ? document.getElementById('picker-bar')
-      : document.getElementById('map-filters-bar');
-    ciudadesExtras.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn';
-      btn.id = `filter-ciudad-${c.offset}`;
-      btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;flex-shrink:0;';
-      btn.textContent = `📍 ${c.nombre}`;
-      btn.onclick = () => filterCiudad(c.nombre, `filter-ciudad-${c.offset}`);
-      bar.insertBefore(btn, bar.firstChild);
-    });
+  if (ciudadesExtras.length > 0) {
+    if (esPicker) {
+      // Picker: agregar al picker-bar (map-filters está oculto)
+      const bar = document.getElementById('picker-bar');
+      ciudadesExtras.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.id = `filter-ciudad-${c.offset}`;
+        btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;flex-shrink:0;';
+        btn.textContent = `📍 ${c.nombre}`;
+        btn.onclick = () => filterCiudad(c.nombre, `filter-ciudad-${c.offset}`);
+        bar.insertBefore(btn, bar.firstChild);
+      });
+    } else {
+      // Full, registrar, info: agregar a la barra de filtros y mostrarla
+      const bar = document.getElementById('map-filters-bar');
+      ciudadesExtras.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.id = `filter-ciudad-${c.offset}`;
+        btn.style.cssText = 'border-color:#5DCAA5;color:#5DCAA5;flex-shrink:0;';
+        btn.textContent = `📍 ${c.nombre}`;
+        btn.onclick = () => filterCiudad(c.nombre, `filter-ciudad-${c.offset}`);
+        bar.appendChild(btn);
+      });
+      // En modos sin header (registrar/info): ocultar botones de grupo, solo mostrar ciudad
+      if (_modoParam !== 'full') {
+        document.querySelectorAll('#map-filters-bar .filter-btn:not([id^="filter-ciudad-"])').forEach(b => b.style.display = 'none');
+        document.querySelector('.map-filters').style.display = '';
+      }
+    }
   }
 
   if (_modoParam === 'encuentro') {
