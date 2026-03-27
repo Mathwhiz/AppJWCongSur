@@ -347,9 +347,6 @@ async function initMap() {
     zoom: 13,
     zoomControl: false,
     attributionControl: false,
-    maxBounds: [[-36.85, -64.75], [-36.40, -63.95]],
-    maxBoundsViscosity: 1.0,
-    minZoom: 11,
   });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
@@ -388,10 +385,12 @@ async function initMap() {
   } else if (_grupoParam !== 'all') {
     filterGroup(_grupoParam);
   } else if (allLayers.length) {
-    const validLayers = allLayers.filter(l => l.polygon.getBounds().isValid());
-    if (validLayers.length) {
-      const b = validLayers[0].polygon.getBounds();
-      validLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+    // Fitear solo ciudad principal para no alejar el mapa por territorios lejanos
+    const mainLayers = allLayers.filter(l => !l.ciudad && l.polygon.getBounds().isValid());
+    const fitLayers = mainLayers.length ? mainLayers : allLayers.filter(l => l.polygon.getBounds().isValid());
+    if (fitLayers.length) {
+      const b = fitLayers[0].polygon.getBounds();
+      fitLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
       map.fitBounds(b, { padding: [20, 20] });
     }
   }

@@ -246,7 +246,7 @@ async function fetchGrupo(grupo) {
       enProgreso = !h.fechaFin;
     }
 
-    result[id] = { lastFin, lastIni, enProgreso, tipo: terr.tipo || 'normal', ciudad: terr.ciudad || null };
+    result[id] = { lastFin, lastIni, enProgreso, tipo: terr.tipo || 'normal', ciudad: terr.ciudad || null, nombre: terr.nombre || null };
   }));
 
   return result;
@@ -1216,7 +1216,8 @@ function renderInfoBtn(container, n) {
   const dias    = lastDate ? daysSince(lastDate) : null;
   const col     = daysColor(dias);
   const diasTxt = dias !== null ? `${dias}d` : '—';
-  btn.innerHTML = `<div class="info-btn-num">${n}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-days" style="color:${col};">${diasTxt}</div><div class="info-btn-estado">${estadoLabel}</div>`;
+  const displayNum = t.nombre ? t.nombre.replace(/^Territorio\s+/, '') : n;
+  btn.innerHTML = `<div class="info-btn-num">${displayNum}</div><div class="info-btn-date">${lastDate ? formatShortFull(lastDate) : 'Sin reg.'}</div><div class="info-btn-days" style="color:${col};">${diasTxt}</div><div class="info-btn-estado">${estadoLabel}</div>`;
   btn.onclick = () => openModal(n);
   container.appendChild(btn);
 }
