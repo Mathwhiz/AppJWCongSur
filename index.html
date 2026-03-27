@@ -118,7 +118,7 @@
     .menu-congre-wrapper {
       position: relative;
       width: 100%;
-      border-radius: 14px;
+      border-radius: 20px;
       padding: 3px;
       overflow: hidden;
       --neon-color: #7F77DD;
@@ -134,10 +134,12 @@
       background: conic-gradient(
         from 0deg,
         transparent 0%,
-        transparent 58%,
-        rgba(255,255,255,0.06) 65%,
-        var(--neon-color) 72%,
-        var(--neon-color-dim) 82%,
+        transparent 50%,
+        rgba(255,255,255,0.15) 60%,
+        var(--neon-color) 68%,
+        white 73%,
+        var(--neon-color) 78%,
+        var(--neon-color-dim) 87%,
         transparent 100%
       );
       animation: menu-border-spin 2.8s linear infinite;
@@ -149,23 +151,23 @@
     .menu-congre-inner {
       position: relative;
       background: #232628;
-      border-radius: 12px;
-      padding: 12px 16px;
+      border-radius: 18px;
+      padding: 18px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       z-index: 1;
     }
     .menu-congre-icon {
-      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800;
+      font-size: 17px; font-weight: 800;
     }
     #menu-titulo {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 700;
       color: #e8e8e8;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
     }
 
     /* ── Botón admin ── */
@@ -384,7 +386,7 @@
       const col = color || '#7F77DD';
       congreWrap.style.setProperty('--neon-color', col);
       congreWrap.style.setProperty('--neon-color-dim', hexToRgba(col, 0.3));
-      congreWrap.style.boxShadow = `0 0 28px ${hexToRgba(col, 0.12)}, 0 0 10px ${hexToRgba(col, 0.15)}`;
+      congreWrap.style.boxShadow = `0 0 40px ${hexToRgba(col, 0.35)}, 0 0 16px ${hexToRgba(col, 0.5)}, 0 0 6px ${hexToRgba(col, 0.6)}`;
       congreIcon.textContent      = iniciales(nombre);
       congreIcon.style.background = hexToRgba(col, 0.18);
       congreIcon.style.border     = `1px solid ${hexToRgba(col, 0.3)}`;
