@@ -15,7 +15,7 @@ Canción de apertura + Oración apertura
 ├── SECCIÓN 1: TESOROS DE LA PALABRA DE DIOS
 │   ├── Discurso (10 min)                ← hermano
 │   ├── Joyas Espirituales (10 min)      ← hermano
-│   └── Lectura Bíblica (N min)          ← hermano estudiante (+ lector?)
+│   └── Lectura Bíblica (N min)          ← hermano estudiante (+ lector auxiliar si hay sala)
 │
 ├── Canción intermedia
 │
@@ -49,48 +49,51 @@ congregaciones/{congreId}/
 
 ```js
 {
-  fecha: "2026-03-23",             // lunes de la semana
+  fecha: "2026-03-23",
   cancionApertura:   123,
   cancionIntermedia: 456,
   cancionCierre:     789,
 
-  presidente:    "pubId",          // quien preside
+  presidente:      "pubId",
   oracionApertura: "pubId",
   oracionCierre:   "pubId",
 
   tesoros: {
-    discurso:      { titulo: "...", duracion: 10, pubId: null },
-    joyas:         { titulo: "Joyas Espirituales", duracion: 10, pubId: null },
-    lecturaBiblica:{ titulo: "Lea Hechos 7:1-16 (N min.)", duracion: 4, pubId: null, ayudante: null }
+    discurso:       { titulo: "...", duracion: 10, pubId: null },
+    joyas:          { titulo: "Joyas Espirituales", duracion: 10, pubId: null },
+    lecturaBiblica: { titulo: "Lea Hechos 7:1-16 (N min.)", duracion: 4, pubId: null, ayudante: null,
+                      salaAux: { pubId: null, ayudante: null } }  // si tieneAuxiliar
   },
 
-  ministerio: [                    // array variable (2-4 partes)
-    { titulo: "...", tipo: "video"|"discurso"|"demostracion", duracion: N, pubId: null, ayudante: null },
+  ministerio: [
+    { titulo: "...", tipo: "video"|"discurso"|"demostracion", duracion: N,
+      pubId: null, ayudante: null,
+      salaAux: { pubId: null, ayudante: null } },  // si tieneAuxiliar y tipo != discurso
     ...
   ],
 
-  vidaCristiana: [                 // array variable (1-3 partes + estudio)
+  vidaCristiana: [
     { titulo: "...", tipo: "parte"|"estudio_biblico", duracion: N, pubId: null, ayudante: null },
     ...
   ],
 
-  // Metadata de importación
+  tipoEspecial: null | "conmemoracion" | "superintendente" | "asamblea",
+
   importadoDeWOL: true,
   creadoEn: timestamp
 }
 ```
 
-### Campo nuevo en doc de congregación
+### Campos en doc de congregación
 
 ```js
-pinVidaMinisterio: "1234"    // PIN del presidente/encargado de este módulo
+pinVidaMinisterio: "1234"   // PIN del presidente/encargado
+tieneAuxiliar: false         // toggle desde config del módulo
 ```
-
-Se agrega también en `admin.html` (editar congregación) y en `admin.js`.
 
 ---
 
-## Roles de publicadores (nuevos — se agregan a publicadores existentes)
+## Roles de publicadores
 
 Los publicadores ya existen en `congregaciones/{congreId}/publicadores`.
 Se agregan nuevos roles a la lista de cada uno:
@@ -109,71 +112,26 @@ Se agregan nuevos roles a la lista de cada uno:
 | `VM_VIDA_CRISTIANA` | Discurso Vida Cristiana | Hermanos |
 | `VM_ESTUDIO_CONDUCTOR` | Conductor Estudio | Hermanos |
 
-> **Nota:** El lector del estudio bíblico ya está en el módulo de Asignaciones — no se duplica aquí.
-
-Los roles VM se agregan al array `roles` de los mismos publicadores de `congregaciones/{congreId}/publicadores`.
-La gestión de roles VM se hace desde la vista "Hermanos" del módulo VM (muestra solo roles VM, mismos IDs de persona).
+> El lector del estudio bíblico viene del módulo de Asignaciones — no se duplica aquí.
 
 ---
 
-## Importación del programa desde WOL
+## Importación del programa desde WOL (✅ implementado)
 
-WOL (Watchtower Online Library) publica cada semana en:
-```
-https://wol.jw.org/es/wol/dt/r4/lp-s/{año}/{mes}/{día}
-```
-Donde `{día}` es el lunes de la semana (o cualquier día de esa semana — WOL muestra la semana completa).
+URL: `https://wol.jw.org/es/wol/dt/r4/lp-s/{año}/{mes}/{día}`
 
-### Estrategia — Cloudflare Worker propio (✅ implementado)
+Fetch via Cloudflare Worker propio (`https://super-math-a40f.mnsmys12.workers.dev/`) + fallbacks.
 
-wol.jw.org bloquea proxies públicos conocidos. Se usa un Worker propio:
-
-```
-https://super-math-a40f.mnsmys12.workers.dev/?url=<encoded-wol-url>
-```
-
-Con fallbacks a `codetabs.com` y `allorigins.win` (pueden estar bloqueados).
-El Worker hace el fetch server-to-server y devuelve el HTML con `Access-Control-Allow-Origin: *`.
-
-### Parser real (✅ implementado — los IDs `#pN` son inútiles)
-
-**Estructura actual de WOL**: los títulos de cada parte están en `h3`/`h4` con texto `"N. Título..."`.
-Los IDs `#p6`, `#p7`, etc. apuntan a párrafos de cuerpo (duración o body), no a los títulos.
-Los IDs varían cada semana según la cantidad de párrafos de cada parte.
-
-```js
-// Partes numeradas: h3/h4 con texto "N. Título..."
-const allH3   = Array.from(root.querySelectorAll('h3, h4'));
-const numbered = allH3.filter(h => /^\d+\.\s/.test(h.textContent.trim()));
-
-// Frontera Ministerio / Vida Cristiana:
-// h3 con texto exactamente "Canción N" (sin "y oración") = canción intermedia
-const midSongH3 = allH3.find(h => /^Canción\s+\d+$/.test(h.textContent.trim()));
-
-// Tesoros: siempre los primeros 3 h3 numerados (discurso, joyas, lectura)
-// Ministerio: numerados antes del midSong
-// Vida Cristiana: numerados después del midSong (último = estudio bíblico)
-
-// Duración: primer elemento con "(X mins.)" entre un h3 y el siguiente
-// NO filtrar por hojas — párrafos de ministerio tienen <a> adentro
-```
-
-### Canciones — parsing desde h3
-
-```js
-// Apertura:    h3 con "Canción N y oración | Palabras de introducción"
-// Intermedia:  h3 con texto exactamente "Canción N"
-// Cierre:      h3 con "Palabras de conclusión | Canción N"
-const songNum = h => h.textContent.match(/Canción\s+(\d+)/)?.[1] || '';
-```
+**Parser real** (los IDs `#pN` varían — NO usarlos):
+- Títulos en `h3/h4` con texto `"N. Título..."`.
+- Frontera Ministerio/VC: `h3` con texto exactamente `"Canción N"`.
+- Duración: primer `"(X mins.)"` después del `h3` correspondiente.
+- Tesoros: siempre los primeros 3 h3 numerados.
+- Canciones: por posición (apertura / intermedia / cierre).
 
 ---
 
-## Detección automática de tipo de parte (para auto-asignación)
-
-El título importado de WOL se analiza para determinar qué rol se necesita.
-
-### Seamos Mejores Maestros — mapeo título → rol
+## Detección de tipo de parte (para auto-asignación)
 
 ```js
 function tipoMinisterioDesdeWOL(titulo) {
@@ -182,177 +140,111 @@ function tipoMinisterioDesdeWOL(titulo) {
   if (t.includes('revisita'))      return 'revisita';
   if (t.includes('escenificación') || t.includes('escenificacion')) return 'escenificacion';
   if (t.includes('discurso'))      return 'discurso'; // varón, sin ayudante
-  return 'conversacion'; // fallback
+  return 'conversacion';
 }
 
 const TIPO_ROL_MAP = {
   conversacion:  'VM_MINISTERIO_CONVERSACION',
   revisita:      'VM_MINISTERIO_REVISITA',
   escenificacion:'VM_MINISTERIO_ESCENIFICACION',
-  discurso:      'VM_MINISTERIO_DISCURSO',  // varones, sin ayudante
+  discurso:      'VM_MINISTERIO_DISCURSO',
 };
 ```
 
-**Regla de ayudante:**
-- `tipo === 'discurso'` → sin ayudante (es un varón solo)
-- Todos los demás tipos → tienen ayudante (orador + ayudante, pueden ser h/h)
-
-El campo `tipo` se guarda en Firestore al importar de WOL para que el auto-asignador lo use.
-Si la semana fue creada manualmente sin WOL, el encargado puede editar el tipo de cada parte.
+Regla: `tipo === 'discurso'` → sin ayudante. Los demás → tienen ayudante.
 
 ---
 
-## Algoritmo de auto-asignación
+## Semanas especiales (`tipoEspecial`)
 
-Igual que el módulo de Asignaciones: **round-robin por rol** con índice persistente.
+Campo en el doc de semana. Tres valores:
+
+| Valor | Cuándo | Efecto |
+|-------|--------|--------|
+| `"conmemoracion"` | 1x año | Si entre semana: no hay reunión VM. Si finde: no hay reunión de fin de semana. |
+| `"superintendente"` | ~2x año | Reunión pasa de miércoles a martes. Estudio Bíblico reemplazado por discurso del sup. Finde sin lector. |
+| `"asamblea"` | ~2x año | No hay ninguna reunión esa semana. |
+
+La UI ya muestra aviso/banner cuando `tipoEspecial` está seteado.
+**Pendiente**: que el generador automático de Asignaciones lo respete al generar (ver más abajo).
+
+---
+
+## Algoritmo de auto-asignación (Fase 4 — pendiente)
+
+Round-robin por rol con índice persistente, igual que el módulo de Asignaciones:
 
 ```js
-// Índices por rol
-const indices = {
-  VM_PRESIDENTE: 0, VM_ORACION: 0, VM_TESOROS: 0, VM_JOYAS: 0,
-  VM_LECTURA: 0, VM_MINISTERIO_CONVERSACION: 0, VM_MINISTERIO_REVISITA: 0,
-  VM_MINISTERIO_ESCENIFICACION: 0, VM_MINISTERIO_DISCURSO: 0,
-  VM_VIDA_CRISTIANA: 0, VM_ESTUDIO_CONDUCTOR: 0,
-};
+const indices = { VM_PRESIDENTE: 0, VM_ORACION: 0, /* ... */ };
 
 // Por semana:
 const enEstaSemana = new Set();
 for (const slot of slotsOrdenados) {
-  const rol = slot.rolRequerido;
-  const lista = publicadoresConRol(rol);
-  let i = indices[rol];
+  const lista = publicadoresConRol(slot.rolRequerido);
+  let i = indices[slot.rolRequerido];
   while (enEstaSemana.has(lista[i % lista.length]?.id)) i++;
   slot.pubId = lista[i % lista.length]?.id;
   enEstaSemana.add(slot.pubId);
-  indices[rol] = (i + 1) % lista.length;
+  indices[slot.rolRequerido] = (i + 1) % lista.length;
 }
 ```
 
 **Reglas especiales:**
-- `VM_ORACION` apertura y cierre: distintas personas (índice +1 para el segundo)
+- `VM_ORACION` apertura ≠ cierre (índice +1 para el segundo)
 - Presidente ≠ oración apertura ni cierre
-- Conductor estudio ≠ lector (lector viene de Asignaciones, no se asigna aquí)
-- Tipo `discurso` en Ministerio: sin ayudante, solo varones (`VM_MINISTERIO_DISCURSO`)
+- Conductor estudio ≠ lector
+- `tipo === 'discurso'` en Ministerio: sin ayudante, solo varones
+- Si `tipoEspecial === 'asamblea'` → saltear semana completa
+- Si `tipoEspecial === 'superintendente'` → sin `vidaCristiana[last]` (discurso del sup)
+- Si `tipoEspecial === 'conmemoracion'` entre semana → saltear reunión VM
+
+**Sala auxiliar (si `tieneAuxiliar`):**
+- `tesoros.lecturaBiblica.salaAux.pubId` = siguiente en lista `VM_LECTURA`
+- Partes de ministerio tipo demo: `salaAux.pubId` y `salaAux.ayudante` = siguientes en lista
 
 ---
 
-## Vistas del módulo
+## Estado de implementación
 
-### Vista 1 — Lista de semanas
-- Grid de semanas (próximas + historial)
-- Card por semana: fecha, estado (✓ completa / ⚠ incompleta / vacía)
-- Botón "+ Nueva semana" → import WOL o entrada manual
-- Botón "Generar automático" para rango de fechas
-
-### Vista 2 — Programa de la semana
-- Encabezado: fecha, canciones
-- Las 3 secciones con todos los slots
-- Por cada slot: título de la parte + botón asignar publicador
-- Indicador visual si slot vacío (rojo) o asignado (nombre del hermano)
-- Botón guardar + botón editar canciones
-
-### Vista 3 — Generar automático
-- Picker rango de fechas
-- Checkbox "Importar programa de WOL automáticamente"
-- Checkbox "Tener en cuenta historial previo"
-- Checkbox "Reemplazar semanas existentes"
-- Botón Generar
-
-### Vista 4 — Gestionar hermanos (VM)
-- Lista de publicadores con roles VM
-- Filtro por rol VM
-- Editar roles de cada uno
+### ✅ Fase 1 — MVP
+### ✅ Fase 2 — Importación WOL
+### ✅ Sala auxiliar
+### ✅ Importación historial Excel (`tools/import_vm_historial.py`)
+### ✅ Semanas especiales — UI (banner/aviso en vista semana)
+### ✅ PIN VM configurable desde superadmin
+### ✅ Navegación ← → entre semanas
+### ✅ Vista mensual de semanas
+### ✅ Editar títulos de partes manualmente
+### ✅ Duración de partes visible
+### ✅ Export / Compartir programa (Sheets + captura)
 
 ---
 
-## Estructura de archivos
+## Pendiente
 
-```
-vida-ministerio/
-  ├── index.html      # App (misma estructura que los otros módulos)
-  ├── app.js          # Lógica principal
-  └── styles.css
-```
+### Fase 4 — Auto-asignación VM
 
-Se agrega la card "Vida y Ministerio" en `index.html` (selector de módulo) con:
-- Color acento: `#EF9F27` (naranja) o uno nuevo de la paleta
-- Ícono: libro/podio
+1. **Guardar `tipo` al importar WOL** — `tipoMinisterioDesdeWOL(titulo)` en el parser
+2. **Gestión de hermanos VM** — nueva vista: lista publicadores con toggle de roles VM
+3. **Vista "Generar automático"** — rango fechas + checkboxes historial/reemplazar + botón Generar
+   - Por cada semana: import WOL si no existe → asignar publicadores
+   - Respetar `tipoEspecial` al generar
+4. **Algoritmo round-robin** — ver sección arriba
+5. **Sala auxiliar en auto-asignación** — asignar pares para ambas salas en ministerio
 
----
+### Semanas especiales en generador de Asignaciones
 
-## PIN y acceso
-
-| Actor | PIN | Puede |
-|-------|-----|-------|
-| Presidente | `pinVidaMinisterio` (default `"1234"`) | Ver, editar, asignar, generar |
-| Visitante | — | (futuro: modo solo lectura del programa) |
-
-El PIN se agrega al doc de congregación y se configura desde `admin.html`.
-
----
-
-## Fases de implementación
-
-### ✅ Fase 1 — MVP (completo)
-1. Estructura Firestore + PIN en admin
-2. Cover de módulo + card en index.html
-3. Vista lista de semanas
-4. Vista programa de semana (entrada manual de partes + asignación de publicadores)
-
-### ✅ Fase 2 — Importación WOL (completo)
-5. Parser WOL via Cloudflare Worker + DOMParser
-6. Botón "Importar de WOL" en crear semana + reimportar
-7. Extrae títulos, duraciones y números de canciones
-
-### Fase 3 — Import historial Excel (pendiente)
-8. Script Python `tools/sync_vm_historial.py` que lea `Copia de Reunión Vida y Ministerio Cristiano.xlsx`
-   y suba ~1 año de reuniones a `congregaciones/{congreId}/vidaministerio/`
-   - Detectar columnas: fecha lunes, canciones, presidente, cada parte + asignado
-   - Crear documentos con la misma estructura que crea el módulo manualmente
-   - Idempotente: no sobreescribir si ya existe el doc para esa fecha
-
-### Fase 4 — Auto-asignación VM (próxima)
-
-**Roles VM** — se agregan a `publicadores.roles[]` (mismos docs que Asignaciones):
-`VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`,
-`VM_MINISTERIO_CONVERSACION`, `VM_MINISTERIO_REVISITA`, `VM_MINISTERIO_ESCENIFICACION`,
-`VM_MINISTERIO_DISCURSO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`
-
-**Pasos de implementación:**
-
-9. **Guardar `tipo` al importar WOL** — `tipoMinisterioDesdeWOL(titulo)` en el parser → campo `tipo` en cada parte de `ministerio[]`
-10. **Gestión de hermanos VM** — nueva vista en el módulo (botón en cover/encargado):
-    - Lista publicadores con filtro por rol VM
-    - Toggle por rol VM (igual UI que Asignaciones)
-    - Muestra solo roles VM, mismos pubId
-11. **Vista "Generar automático"** — igual que Asignaciones:
-    - Picker rango de fechas (desde / hasta)
-    - Checkbox "Tener en cuenta historial previo"
-    - Checkbox "Reemplazar semanas existentes"
-    - Botón Generar → crea/actualiza docs en `vidaministerio/`
-    - Por cada semana: importa WOL automáticamente si no existe, luego asigna publicadores
-12. **Algoritmo round-robin** — ver sección "Algoritmo de auto-asignación" arriba
-    - Si la semana tiene una `semanasEspeciales` de tipo `asamblea` → saltar
-    - Si es `superintendente` → `tesoros.lecturaBiblica` asignar igual, pero `vidaCristiana[last]` = discurso del superintendente (sin asignar pubId)
-
-**Sala auxiliar (si aplica):**
-- `tesoros.lecturaBiblica` tiene `ayudanteAux` además de `ayudante`
-- Partes de ministerio tipo demo tienen `ayudanteAux`
-- En auto-asignación: el `ayudante` del salón principal es siguiente en la lista, `ayudanteAux` es el siguiente después de ese
-
-### Fase 5 — Polish / UI
-12. Estado de completitud por semana (✓ / ⚠ / vacía) — ya parcialmente hecho en lista
-13. ~~`pinVidaMinisterio` configurable desde `admin.html`~~ ✅ hecho
-14. **Mejorar formato export a Sheets** — el layout actual es funcional pero feo; hacer más legible/imprimible
-15. **Reposicionar botón "Exportar a Sheets"** — actualmente queda al fondo de view-semanas y pasa desapercibido; moverlo al header o como acción destacada
-16. **UI general del módulo VM** — revisión visual completa: espaciados, tipografía, jerarquía de cards, colores de sección; hacerlo en sesión dedicada de diseño
+Al generar un rango de fechas en Asignaciones, si una semana tiene `tipoEspecial`:
+- `"asamblea"` → no generar ninguna reunión esa semana
+- `"conmemoracion"` entre semana → no generar roles de reunión VM/entre semana
+- `"superintendente"` → reunión pasa a martes, sin lector de finde
 
 ---
 
 ## Lo que NO hacer
 
 - No hardcodear el programa de ninguna congregación
-- **No usar IDs de párrafo WOL (`#p6`, `#p7`, etc.)** — varían cada semana según el contenido. Usar `h3/h4` numerados.
+- **No usar IDs de párrafo WOL (`#p6`, `#p7`, etc.)** — varían cada semana
 - No mezclar roles VM con roles de Asignaciones en la misma lista
 - No usar `confirm()`, `alert()`, `prompt()` nativos
 - No usar `toISOString()` para fechas

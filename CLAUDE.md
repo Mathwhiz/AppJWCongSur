@@ -14,30 +14,37 @@ opcional "Guardar también en planilla" del módulo de asignaciones).
 
 ```
 congregaciones/{congreId}/
-  ├── (doc: nombre, pinEncargado, color, creadoEn, scriptUrl?, sheetsUrl?)
+  ├── (doc: nombre, pinEncargado, color, creadoEn, scriptUrl?, sheetsUrl?,
+  │         pinVidaMinisterio?, tieneAuxiliar?,
+  │         ciudadPrincipal?, ciudadesExtras?)
   ├── grupos/{grupoId}         → id, label, color, pin
-  ├── territorios/{terrId}     → id, nombre, tipo, grupoId, punto, poligonos
+  ├── territorios/{terrId}     → id, nombre, tipo, grupoId, punto, poligonos, ciudad?
   ├── historial/{entryId}      → conductor, fechaInicio, fechaFin, territorioId
-  ├── salidas/{salidaId}       → salidas por semana
+  ├── salidas/{salidaId}       → grupoId, fechaReg, salidas[]
   ├── publicadores/{pubId}     → nombre, roles, activo
-  └── asignaciones/{docId}     → fecha, diaSemana, roles
+  ├── asignaciones/{docId}     → fecha, diaSemana, roles
+  └── vidaministerio/{semanaId} → fecha, canciones, presidente, oraciones, tesoros, ministerio[], vidaCristiana[], tipoEspecial?
 
 config/superadmin              → pin  ← PIN del panel de admin
 ```
 
 ### Campos opcionales del doc de congregación
+
 | Campo | Descripción |
 |-------|-------------|
-| `color` | Hex del color de la card en index.html (ej: `"#1D9E75"`). Si no existe, se deriva por hash del ID. |
-| `scriptUrl` | URL del Apps Script de la hoja de asignaciones. Activa el botón "Guardar también en planilla". |
-| `sheetsUrl` | URL del Google Sheets. Activa el botón "Ver planilla" en el panel del encargado. |
+| `color` | Hex del color de la card en index.html. Si no existe, se deriva por hash del ID. |
+| `scriptUrl` | URL del Apps Script de asignaciones. Activa "Guardar también en planilla". |
+| `sheetsUrl` | URL del Google Sheets. Activa "Ver planilla" en el panel del encargado. |
+| `pinVidaMinisterio` | PIN del módulo VM (default `"1234"`). |
+| `tieneAuxiliar` | `bool` — activa la sala auxiliar en el módulo VM. |
+| `ciudadPrincipal` | Nombre de la ciudad principal (ej: `"Santa Rosa"`). |
+| `ciudadesExtras` | Array `[{ nombre, offset }]` — ciudades extra con su offset de IDs (+1000, +2000…). |
 
-Flujo de navegación:
-1. `index.html` — elige congregación **y** módulo (dos vistas en la misma página, sin navegar)
-   - Vista 1: lista de congregaciones
-   - Vista 2: selector de módulo (Territorios o Asignaciones) — aparece al hacer click
+### Navegación
+
+1. `index.html` — elige congregación **y** módulo (dos vistas en la misma página)
    - Si hay `congreId` en `sessionStorage`, salta directo a la vista 2
-2. `territorios/index.html` o `asignaciones/index.html`
+2. `territorios/index.html`, `asignaciones/index.html` o `vida-ministerio/index.html`
 3. Al volver ("← Volver al módulo") → `../index.html` → muestra vista 2 automáticamente
 
 El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al crear.
@@ -48,32 +55,36 @@ El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al c
 
 ```
 /
-├── index.html          # SPA: vista 1 = elegir congregación · vista 2 = elegir módulo
-│                       # Botón Admin (engranaje morado) fijo abajo a la derecha
-├── menu.html           # Redirect → index.html (conservado por compatibilidad)
-├── admin.html          # Panel de superadmin (acceso por URL + PIN)
-├── admin.js            # Lógica del panel de admin
-├── firebase.js         # Inicialización compartida de Firebase (exporta `db`)
-├── ui-utils.js         # Componentes UI: modales, pickers, loading, toast
+├── index.html              # SPA: elegir congregación → elegir módulo
+├── menu.html               # Redirect → index.html (compatibilidad)
+├── admin.html              # Panel de superadmin (URL + PIN)
+├── admin.js                # Lógica del panel de admin
+├── firebase.js             # Inicialización compartida de Firebase (exporta `db`)
+├── ui-utils.js             # Componentes UI: modales, pickers, loading, toast
 ├── favicon.svg
 ├── territorios/
-│   ├── index.html      # App de territorios
-│   ├── app.js          # Lógica principal (100% Firestore)
+│   ├── index.html          # App de territorios
+│   ├── app.js              # Lógica principal (100% Firestore)
 │   ├── styles.css
-│   └── mapa.html       # Mapa Leaflet — polígonos desde Firestore
+│   └── mapa.html           # Mapa Leaflet — polígonos desde Firestore
 ├── asignaciones/
-│   ├── index.html      # App de asignaciones
-│   ├── app.js          # Lógica de asignaciones (100% Firestore)
+│   ├── index.html          # App de asignaciones
+│   ├── app.js              # Lógica de asignaciones (100% Firestore)
 │   └── styles.css
-└── tools/              # Scripts de migración y sync (conservar como referencia)
+├── vida-ministerio/
+│   ├── index.html          # App de VM
+│   ├── app.js              # Lógica principal
+│   └── styles.css
+└── tools/                  # Scripts de migración y sync (conservar como referencia)
     ├── kml_to_json.py
     ├── migrate_sheets.py
     ├── upload_territorios.py
-    ├── sync_historial.py       # Sync incremental de historial desde Excel → Firestore
-    ├── codigodeappscript       # Apps Script de la hoja de asignaciones (Congregación Sur)
+    ├── sync_historial.py
+    ├── import_vm_historial.py   # Importa historial VM desde Excel → Firestore
+    ├── codigodeappscript        # Apps Script de asignaciones (Congregación Sur)
     ├── territorios_sur.json
     └── congregacionsur.kml
-    # *.xlsx → fuente de datos (no commitear)
+    # *.xlsx y serviceAccountKey.json → en .gitignore, nunca commitear
 ```
 
 ---
@@ -85,28 +96,27 @@ Acceso: URL directa → PIN (desde `config/superadmin → { pin }` en Firestore)
 **Funcionalidades:**
 - Listar congregaciones existentes
 - **Crear congregación** (wizard 3 pasos):
-  1. Nombre + ID slug (auto-sugerido) + PIN encargado + **color** (random de paleta, editable con swatches)
-  2. Configurar grupos: label, color, PIN — se pueden agregar/quitar grupos
-  3. Subir KML de Google My Maps (opcional) → parsea polígonos client-side
-- **Editar** congregación (nombre, PIN, color, grupos)
-- **Eliminar** congregación (borra todas las subcolecciones + doc)
-- **Asignar territorios a grupos** (📍): lista de territorios con botones de color,
-  filtros por grupo, barra de guardado con batch update
+  1. Nombre + ID slug + PIN encargado + PIN VM + **color** (random de paleta, editable) + ciudad principal
+  2. Configurar grupos: label, color, PIN
+  3. KML ciudad principal (opcional) + **ciudades extra** (nombre + KML c/u, IDs con offset automático)
+- **Editar** congregación (mismos campos)
+- **Eliminar** congregación (borra todas las subcolecciones)
+- **Asignar territorios a grupos** (📍): lista con filtros, batch update
 
-**Paleta de colores** (`PALETA_COLORES` en `admin.js`):
+**Paleta de colores** (`PALETA_COLORES`):
 `#378ADD`, `#97C459`, `#7F77DD`, `#EF9F27`, `#1D9E75`, `#D85A30`
 
-**KML parser** (`parseKML` en `admin.js`):
-- Soporta nombres `"1"`, `"92a"`, `"Territorio 1"`, `"Territorio 1a"`
-- Usa `getElementsByTagName` (compatible con distintos formatos de Google My Maps)
-- Coordenadas KML en formato `lng,lat,alt` → convierte a `{ lat, lng }`
+**KML parser** (`parseKML`):
+- Soporta `"1"`, `"92a"`, `"Territorio 1"`, `"Territorio 1a"`
+- Para ciudades extra: `id = parsedNum + offset` (ej: territorio 1 de ciudad extra 1 → ID 1001)
+- El campo `ciudad` se setea al momento de guardar (no al parsear el KML)
 
 ---
 
 ## Stack
 
 - **Frontend:** HTML + CSS + JS vanilla (sin frameworks, sin bundler)
-- **Hosting:** GitHub Pages (repo testpa)
+- **Hosting:** GitHub Pages (repo AppJWCongSur), dominio `congsur.lat`
 - **Base de datos:** Firebase Firestore (`appjw-3697e`)
 - **Mapa:** Leaflet.js + OpenStreetMap
 - **Imagen para compartir:** html2canvas (CDN)
@@ -118,42 +128,45 @@ Acceso: URL directa → PIN (desde `config/superadmin → { pin }` en Firestore)
 ## Firebase
 
 ```js
-// Importar así en cada módulo:
 import { db } from '../firebase.js';
 ```
 
 - Firebase SDK 11.6.0 (ES modules via gstatic CDN)
-- Scripts que usan firebase.js necesitan `type="module"` en el HTML
-- `tools/serviceAccountKey.json` está en `.gitignore` — nunca commitear
+- Scripts con firebase.js necesitan `type="module"` en el HTML
 
 ---
 
 ## Módulo de Territorios
 
-### Grupos (defaults — vienen de Firestore en runtime)
+### Grupos (vienen de Firestore en runtime)
 
-| Grupo | Color | PIN |
-|-------|-------|-----|
+| Grupo | Color | PIN (default) |
+|-------|-------|---------------|
 | 1 | `#378ADD` | 1111 |
 | 2 | `#EF9F27` | 2222 |
 | 3 | `#97C459` | 3333 |
 | 4 | `#D85A30` | 4444 |
 | Congregación | `#7F77DD` | 5555 |
 
-Los PINs se cargan desde `congregaciones/{congreId}/grupos` al iniciar `territorios/app.js`.
-
 ### Territorios especiales
 - Tipo `no_predica`: territorio 131
 - Tipo `peligroso`: territorio 11
 
-### Multi-ciudad (pendiente)
-Algunas congregaciones tienen territorios en más de una ciudad/localidad.
-Pendiente agregar campo `ciudad` (string, opcional) al doc de territorio y filtros por ciudad en la app y en el mapa.
+### Multi-ciudad (✅ implementado)
+
+Algunas congregaciones predican en más de una ciudad. Soporte completo:
+- Campo `ciudad` (string | null) en cada territorio: `null` = ciudad principal, `"Ataliva Roca"` = ciudad extra
+- Territorios de ciudades extra siempre pertenecen al grupo `'C'` (Congregación)
+- IDs con offset: ciudad extra 1 → +1000, ciudad extra 2 → +2000 (evita colisiones)
+- `nombre` almacena el display (`"Territorio 1"`) independientemente del ID offset
+- En `mapa.html` modo full: botones ciudad como filtro toggle con viewport dinámico (`maxBounds` + `minZoom` calculados desde polígonos reales de esa ciudad)
+- En info grid ("ver mi grupo"): headers de ciudad cuando hay territorios de múltiples ciudades
+- En picker de salidas: territorios de Congregación agrupados por ciudad
 
 ### Mapa (`mapa.html`)
 
 Modos via URL params:
-- `?modo=full` — mapa completo con filtros por grupo
+- `?modo=full` — mapa completo con filtros por grupo + botones de ciudad extra
 - `?modo=info` — coloreado por días desde último uso
 - `?modo=registrar&enprogreso=92,113,...` — solo territorios en progreso
 - `?modo=picker&grupo=3&salidaid=2` — selector; devuelve resultado al padre via `postMessage`
@@ -164,12 +177,13 @@ Sub-polígonos usan sufijos letra (92a, 92b) que mapean al mismo territorio base
 
 ```js
 {
-  id:       1,
-  nombre:   "Territorio 1",
-  tipo:     "normal" | "peligroso" | "no_predica",
-  grupoId:  "3",           // null si no asignado
-  punto:    { lat, lng },  // centro para label (puede ser null)
-  poligonos: [{ coords: [{ lat, lng }, ...] }]
+  id:        1,                        // número con offset para ciudades extra
+  nombre:    "Territorio 1",           // display siempre sin offset
+  tipo:      "normal" | "peligroso" | "no_predica",
+  grupoId:   "3",                      // null si no asignado; siempre "C" para ciudades extra
+  punto:     { lat, lng },
+  poligonos: [{ coords: [{ lat, lng }, ...] }],
+  ciudad:    null | "Ataliva Roca",    // null = ciudad principal
 }
 ```
 
@@ -182,12 +196,12 @@ Sub-polígonos usan sufijos letra (92a, 92b) que mapean al mismo territorio base
 `ACOMODADOR_AUDITORIO`, `ACOMODADOR_ENTRADA`, `PRESIDENTE`, `REVISTAS`, `PUBLICACIONES`
 
 ### Roles en lista de publicadores (Firestore)
-Los publicadores se guardan con roles sin número: `SONIDO`, `MICROFONISTAS` (sin `_1`/`_2`).
+Los publicadores se guardan con roles sin número: `SONIDO`, `MICROFONISTAS`.
 El `ROL_LISTA_MAP` los mapea al cargar:
 ```js
 const ROL_LISTA_MAP = {
   SONIDO:          'SONIDO_1',
-  SONIDO_2:        'SONIDO_1',   // ambos slots usan la misma lista
+  SONIDO_2:        'SONIDO_1',
   MICROFONISTAS:   'MICROFONISTAS_1',
   MICROFONISTAS_2: 'MICROFONISTAS_1',
 };
@@ -196,37 +210,49 @@ const ROL_LISTA_MAP = {
 ### Roles extra (solo en lista de publicadores)
 `CONDUCTOR_GRUPO_1..4`, `CONDUCTOR_CONGREGACION`
 
-### Gestionar hermanos
-- Lista ordenada alfabéticamente al cargar (`norm().localeCompare`)
-- Filtro por rol: `<select id="gestionar-rol">` vacío por defecto, combina con buscador por nombre
-
 ### Generar automático
-Todos los inputs y checkboxes son funcionales:
+- **`#auto-desde` / `#auto-hasta`**: rango. Pre-llenado: última fecha guardada + 1 semana → +3 meses.
+- **"Tener en cuenta historial previo"**: busca el último asignado por rol y arranca desde el siguiente.
+- **"Reemplazar semanas existentes"**: incluye fechas que ya tienen datos en el rango.
+- **Algoritmo**: round-robin por rol; `SONIDO_2`/`MICROFONISTAS_2` con offset +1; `PRESIDENTE` omitido en miércoles; `Set enEstaReunion` detecta conflictos.
+- **Semanas especiales**: **pendiente** — al generar, respetar `tipoEspecial` en la semana (`asamblea` → saltear, `conmemoracion` entre semana → saltear reunión VM, `superintendente` → ajustar).
 
-- **`#auto-desde` / `#auto-hasta`**: rango de generación. Se pre-llenan al entrar con la semana siguiente a la última fecha guardada en Firestore → +3 meses.
-- **Chips rápidos**: "Desde última guardada" y "Desde hoy" → dispatcha `change` event para actualizar el picker custom de `upgradeInputs`.
-- **"Tener en cuenta historial previo"** (`#auto-usar-historial`): cuando activo, busca el último asignado por rol en el historial y arranca la rotación desde el siguiente. Sin él, usa `filasOrd.length % lista.length`.
-- **"Reemplazar semanas existentes"** (`#auto-reemplazar`): cuando activo, incluye en la generación fechas que ya tienen datos en el rango (no las saltea).
+### Integración con Google Sheets (opcional)
+- Botón "Guardar también en planilla" si `scriptUrl` está en Firestore
+- Envía de a una reunión por fetch (`no-cors`, `keepalive: true`)
+- Respuesta opaca — no se puede confirmar éxito, se asume OK
+- Botón "Ver planilla" si `sheetsUrl` está en Firestore
 
-**Algoritmo de generación:**
-- Round-robin por rol con `indices[r]`
-- `SONIDO_2` y `MICROFONISTAS_2` se inicializan con offset +1 respecto a `_1` para no coincidir en la misma reunión
-- `PRESIDENTE` se omite en Miércoles (igual que en el editor manual)
-- Por reunión: `Set enEstaReunion` detecta conflictos — si una persona ya tiene un rol en esa reunión, se salta al siguiente disponible en la lista
+---
 
-### Integración con Google Sheets (opcional por congregación)
-Si `congregaciones/{congreId}.scriptUrl` está en Firestore:
-- Aparece botón **"Guardar también en planilla"** en el generador automático
-- Envía cada reunión de a una (fetch `no-cors`) para evitar el límite de URL de Apps Script (~2KB)
-- La respuesta es opaca (`no-cors`) — no se puede confirmar éxito, se asume OK
+## Módulo de Vida y Ministerio
 
-Si `congregaciones/{congreId}.sheetsUrl` está en Firestore:
-- Aparece botón **"Ver planilla"** en el panel del encargado → abre la URL en nueva pestaña
+> Plan detallado en **[VIDA-MINISTERIO.md](./VIDA-MINISTERIO.md)**.
 
-El Apps Script de referencia está en `tools/codigodeappscript` (SHEET_ID de Congregación Sur).
+Módulo para el **presidente de la reunión VM**: importar programa de WOL, asignar partes,
+gestionar publicadores por rol VM, sala auxiliar.
 
-### Datos relevantes
-- PIN encargado: viene de `congregaciones/{congreId}.pinEncargado`
+**Estado al 2026-03-27:** Fases 1, 2, sala auxiliar, historial Excel, semanas especiales (UI),
+PIN VM, navegación, vista mensual, editar títulos, duración visible y export/compartir — todos ✅.
+**Pendiente:** auto-asignación (Fase 4) y que el generador de Asignaciones respete semanas especiales.
+
+### Firestore (resumen)
+```
+vidaministerio/{semanaId}   ← "YYYY-MM-DD" (lunes)
+  fecha, canciones, presidente, oraciones,
+  tesoros{ discurso, joyas, lecturaBiblica },
+  ministerio[], vidaCristiana[],
+  tipoEspecial?: "conmemoracion"|"superintendente"|"asamblea"
+```
+
+### Roles VM en publicadores
+`VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`,
+`VM_MINISTERIO_CONVERSACION`, `VM_MINISTERIO_REVISITA`, `VM_MINISTERIO_ESCENIFICACION`,
+`VM_MINISTERIO_DISCURSO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`
+
+### Importación WOL (✅)
+Via Cloudflare Worker propio (`https://super-math-a40f.mnsmys12.workers.dev/`).
+Parser usa `h3/h4` numerados — **no usar IDs `#pN`** (varían cada semana).
 
 ---
 
@@ -242,7 +268,7 @@ El Apps Script de referencia está en `tools/codigodeappscript` (SHEET_ID de Con
 | `uiTerritorioPicker({ territoriosData, allData, grupo, configData, label, color })` | Selector de territorio |
 | `uiLoading.show(text)` / `uiLoading.hide()` | Overlay de carga |
 | `uiToast(msg, type, duration)` | Toast. `type`: `success`/`error` |
-| `upgradeInputs(container)` | Reemplaza inputs date/time/select por pickers custom. Se ejecuta en DOMContentLoaded y en MutationObserver. **Al setear `.value` programáticamente hay que disparar `dispatchEvent(new Event('change', { bubbles: true }))` para que el picker actualice su display.** |
+| `upgradeInputs(container)` | Reemplaza inputs date/time/select por pickers custom. **Al setear `.value` programáticamente hay que disparar `dispatchEvent(new Event('change', { bubbles: true }))`** |
 
 **Nunca usar `confirm()`, `alert()`, `prompt()` nativos.**
 
@@ -250,7 +276,7 @@ El Apps Script de referencia está en `tools/codigodeappscript` (SHEET_ID de Con
 
 ## Convenciones de fechas
 
-Siempre formatear con hora local — nunca `toISOString()` (bug UTC-3).
+Siempre hora local — **nunca `toISOString()`** (bug UTC-3).
 
 ```js
 function fmtDate(d) {
@@ -258,92 +284,29 @@ function fmtDate(d) {
 }
 ```
 
-Formato de almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
+Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 
 ---
 
 ## Estilos
 
-> El sistema visual completo está documentado en **[UI-STYLE.md](./UI-STYLE.md)**.
-> Leerlo antes de crear o editar cualquier interfaz.
+> El sistema visual completo está en **[UI-STYLE.md](./UI-STYLE.md)**. Leerlo antes de tocar UI.
 
-- Tema oscuro con gradiente sutil: `#1a1c1f` bg · `#e8e8e8` texto · `#232628` cards · `#252525` modales
+- Tema oscuro: `#1a1c1f` bg · `#e8e8e8` texto · `#232628` cards · `#252525` modales
 - Max-width: apps `480px`, covers `320–340px`
 - Fuente: `system-ui, sans-serif` — sin Google Fonts
 - Vistas con clase `.view` tienen `fadeIn` 0.2s
 - Versionado de assets: `styles.css?v=X.X` — incrementar al hacer cambios
-- El estilo flat shadcn/oklch fue explorado y **descartado** — no usar
-
----
-
-## Módulo de Vida y Ministerio
-
-> Plan detallado en **[VIDA-MINISTERIO.md](./VIDA-MINISTERIO.md)**.
-
-Módulo para el **presidente de la reunión Vida y Ministerio Cristiano**: asignación automática
-de partes semanales, importación del programa desde WOL (wol.jw.org), edición rápida y
-gestión de roles por publicador.
-
-**Estado:** Fases 1 (MVP) y 2 (import WOL) completas. Pendiente: Fase 3 (auto-asignación), import Excel histórico, `pinVidaMinisterio` en admin.
-
-### Firestore
-
-```
-congregaciones/{congreId}/
-  └── vidaministerio/{semanaId}   ← semanaId = "YYYY-MM-DD" (lunes)
-        fecha, cancionApertura, cancionIntermedia, cancionCierre,
-        presidente, oracionApertura, oracionCierre,
-        tesoros{discurso, joyas, lecturaBiblica},
-        ministerio[], vidaCristiana[], estudioBiblico{}
-```
-
-Campo nuevo en doc de congregación: `pinVidaMinisterio` (default `"1234"`). **Pendiente:** agregarlo al panel de admin.
-
-### Roles VM en publicadores
-
-`VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`,
-`VM_MINISTERIO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`, `VM_ESTUDIO_LECTOR`
-
-### Importación de WOL (✅ implementado)
-
-URL: `https://wol.jw.org/es/wol/dt/r4/lp-s/{año}/{mes}/{día}`
-Fetch via Cloudflare Worker propio (`https://super-math-a40f.mnsmys12.workers.dev/`) + fallbacks.
-
-**Parser real** (los IDs `#pN` varían semana a semana — NO usarlos):
-- Los títulos de cada parte están en `h3/h4` con texto `"N. Título..."`.
-- La canción `"Canción N"` (sin "y oración") marca la frontera Ministerio / Vida Cristiana.
-- Duración: primer elemento con `"(X mins.)"` después del h3 correspondiente.
-- Canciones: extraídas de h3 con "Canción N" por posición (apertura / intermedia / cierre).
-- Tesoros: siempre los primeros 3 h3 numerados. Última parte de Vida Cristiana = estudio bíblico.
-
-### Import de historial desde Excel (pendiente)
-
-Archivo: `tools/Copia de Reunión Vida y Ministerio Cristiano.xlsx` — un año de reuniones.
-Pendiente: script Python (similar a `sync_historial.py`) que lea el Excel y suba a `vidaministerio/`.
-
-### Auto-asignación (pendiente — Fase 3)
-
-Round-robin por rol (igual que Asignaciones). Restricciones:
-- Oración apertura ≠ cierre
-- Presidente ≠ oración
-- Conductor estudio ≠ lector
-
-### Acceso
-
-PIN propio `pinVidaMinisterio` — configurable desde `admin.html` (**pendiente de agregar**).
-
-### Ubicación
-
-`vida-ministerio/index.html`, `app.js`, `styles.css`
 
 ---
 
 ## Lo que NO hacer
 
-- No eliminar la integración con Apps Script del módulo de asignaciones — es opcional pero funcional
+- No eliminar la integración con Apps Script del módulo de asignaciones
 - No hardcodear polígonos de territorios en HTML/JS
 - No usar `toISOString()` para fechas (bug UTC-3)
 - No commitear `tools/serviceAccountKey.json` ni archivos `.xlsx`
 - No fetchear el KML de Google My Maps en runtime (CORS)
 - No usar `confirm()`, `alert()`, `prompt()` nativos
 - No setear `.value` en inputs upgradeados sin disparar el evento `change`
+- **No usar IDs de párrafo WOL (`#p6`, `#p7`, etc.)** — varían cada semana
