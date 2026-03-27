@@ -340,10 +340,12 @@ El PIN se agrega al doc de congregación y se configura desde `admin.html`.
 - Partes de ministerio tipo demo tienen `ayudanteAux`
 - En auto-asignación: el `ayudante` del salón principal es siguiente en la lista, `ayudanteAux` es el siguiente después de ese
 
-### Fase 5 — Polish
+### Fase 5 — Polish / UI
 12. Estado de completitud por semana (✓ / ⚠ / vacía) — ya parcialmente hecho en lista
-13. Compartir programa (imagen/PDF)
-14. `pinVidaMinisterio` configurable desde `admin.html`
+13. ~~`pinVidaMinisterio` configurable desde `admin.html`~~ ✅ hecho
+14. **Mejorar formato export a Sheets** — el layout actual es funcional pero feo; hacer más legible/imprimible
+15. **Reposicionar botón "Exportar a Sheets"** — actualmente queda al fondo de view-semanas y pasa desapercibido; moverlo al header o como acción destacada
+16. **UI general del módulo VM** — revisión visual completa: espaciados, tipografía, jerarquía de cards, colores de sección; hacerlo en sesión dedicada de diseño
 
 ---
 

@@ -74,8 +74,14 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .view-title { font-size: 18px; font-weight: 700; color: #eee; flex: 1; }
 .view-sub   { font-size: 12px; color: #888; margin-top: 1px; }
 
-/* ── Semanas list — grid ── */
-#semanas-list {
+/* ── Semanas list — agrupada por mes ── */
+#semanas-list { display: block; }
+.semanas-mes-hdr {
+  font-size: 12px; font-weight: 700; color: #666; letter-spacing: 0.06em;
+  text-transform: uppercase; margin: 18px 0 8px;
+}
+.semanas-mes-hdr:first-child { margin-top: 4px; }
+.semanas-mes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
   gap: 10px;

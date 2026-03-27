@@ -78,6 +78,14 @@ function fmtDisplaySemana(iso) {
   return `${dias[d.getDay()]} ${fmtDisplay(iso)}`;
 }
 
+// Muestra el día de la reunión (miércoles +2 días desde el lunes, martes +1 para superintendente)
+function fmtDisplayReunion(iso, esSuper) {
+  const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + (esSuper ? 1 : 2));
+  return `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
 function lunesDeDate(input) {
   const d = input instanceof Date ? new Date(input) : new Date(input + 'T12:00:00');
   const day = d.getDay(); // 0=dom, 1=lun, ..., 6=sáb
@@ -466,41 +474,57 @@ function vmBannerHtml(fecha) {
   </div>`;
 }
 
+function renderSemanaCard(s, lunes) {
+  const c        = calcCompletitud(s);
+  const esp      = vmEspeciales[s.fecha];
+  const esActual = s.fecha === lunes;
+  const esSuper  = esp?.tipo === 'superintendente';
+  const espColor = esp ? (VM_TIPO_COLORS[esp.tipo] || '#eee') : null;
+  const espBadge = esp
+    ? `<span class="badge-especial" style="background:${espColor}22;color:${espColor};">${VM_TIPO_LABELS[esp.tipo] || esp.tipo}</span>`
+    : '';
+  const actualBadge = esActual ? '<span class="badge-actual">esta semana</span>' : '';
+  const cStr = [s.cancionApertura, s.cancionIntermedia, s.cancionCierre].filter(Boolean).join(' · ');
+  const cRow = cStr ? `<div class="semana-mini-row has-data">♪ ${cStr}</div>` : `<div class="semana-mini-row">♪ —</div>`;
+  const pNombre = nombreDePub(s.presidente);
+  const pRow = pNombre
+    ? `<div class="semana-mini-row has-data">👤 ${esc(pNombre)}</div>`
+    : `<div class="semana-mini-row">👤 Sin presidente</div>`;
+
+  return `
+    <div class="semana-card${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
+      <div class="semana-card-top">
+        <div class="semana-fecha">${fmtDisplayReunion(s.fecha, esSuper)}</div>
+        <button class="btn-del-semana" onclick="event.stopPropagation(); eliminarSemana('${s.fecha}')" title="Eliminar semana">×</button>
+      </div>
+      <div class="semana-card-badges">${actualBadge}${espBadge}</div>
+      <div class="semana-card-meta">${cRow}${pRow}</div>
+      <div class="estado-${c.clase}">${c.texto}</div>
+    </div>`;
+}
+
 function renderSemanas(semanas) {
   const list = document.getElementById('semanas-list');
   if (!semanas.length) {
     list.innerHTML = '<div class="empty-state">No hay semanas todavía.<br>Tocá <strong>+ Nueva semana</strong> para empezar.</div>';
     return;
   }
-  const lunes = lunesDeHoy();
-  list.innerHTML = semanas.map(s => {
-    const c   = calcCompletitud(s);
-    const esp = vmEspeciales[s.fecha];
-    const esActual = s.fecha === lunes;
-    const espColor = esp ? (VM_TIPO_COLORS[esp.tipo] || '#eee') : null;
-    const espBadge = esp
-      ? `<span class="badge-especial" style="background:${espColor}22;color:${espColor};">${VM_TIPO_LABELS[esp.tipo] || esp.tipo}</span>`
-      : '';
-    const actualBadge = esActual ? '<span class="badge-actual">esta semana</span>' : '';
+  const hoy = lunesDeHoy();
 
-    // Mini info: canciones y presidente
-    const cStr = [s.cancionApertura, s.cancionIntermedia, s.cancionCierre].filter(Boolean).join(' · ');
-    const cRow = cStr ? `<div class="semana-mini-row has-data">♪ ${cStr}</div>` : `<div class="semana-mini-row">♪ —</div>`;
-    const pNombre = nombreDePub(s.presidente);
-    const pRow = pNombre
-      ? `<div class="semana-mini-row has-data">👤 ${esc(pNombre)}</div>`
-      : `<div class="semana-mini-row">👤 Sin presidente</div>`;
+  // Agrupar por mes (desc)
+  const grupos = {};
+  semanas.forEach(s => {
+    const key = s.fecha.substring(0, 7); // "YYYY-MM"
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(s);
+  });
+  const mesesDesc = Object.keys(grupos).sort().reverse();
 
-    return `
-      <div class="semana-card${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
-        <div class="semana-card-top">
-          <div class="semana-fecha">${fmtDisplaySemana(s.fecha)}</div>
-          <button class="btn-del-semana" onclick="event.stopPropagation(); eliminarSemana('${s.fecha}')" title="Eliminar semana">×</button>
-        </div>
-        <div class="semana-card-badges">${actualBadge}${espBadge}</div>
-        <div class="semana-card-meta">${cRow}${pRow}</div>
-        <div class="estado-${c.clase}">${c.texto}</div>
-      </div>`;
+  list.innerHTML = mesesDesc.map(key => {
+    const [y, m] = key.split('-');
+    const label  = `${MESES_ES[parseInt(m) - 1]} ${y}`;
+    const cards  = grupos[key].map(s => renderSemanaCard(s, hoy)).join('');
+    return `<div class="semanas-mes-hdr">${label}</div><div class="semanas-mes-grid">${cards}</div>`;
   }).join('');
 }
 
@@ -1180,9 +1204,10 @@ window.compartirSemanaFoto = function() {
   const el = document.getElementById('pub-contenido');
   if (!el) return;
   uiLoading.show('Generando imagen…');
-  // Forzar fondo para que html2canvas lo tome correctamente
-  const prevBg = el.style.background;
+  const prevBg  = el.style.background;
+  const prevPad = el.style.padding;
   el.style.background = '#1e1e1e';
+  el.style.padding    = '16px';
   html2canvas(el, {
     backgroundColor: '#1e1e1e',
     scale: 2,
@@ -1190,6 +1215,7 @@ window.compartirSemanaFoto = function() {
     logging: false,
   }).then(canvas => {
     el.style.background = prevBg;
+    el.style.padding    = prevPad;
     uiLoading.hide();
     const link = document.createElement('a');
     const semStr = (pubFecha || lunesDeHoy()).replace(/-/g, '');
@@ -1198,6 +1224,7 @@ window.compartirSemanaFoto = function() {
     link.click();
   }).catch(e => {
     el.style.background = prevBg;
+    el.style.padding    = prevPad;
     uiLoading.hide();
     uiToast('Error al generar imagen: ' + e.message, 'error');
   });
