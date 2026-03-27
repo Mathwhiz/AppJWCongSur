@@ -12,7 +12,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Asignaciones — Congregación Sur</title>
-<link rel="stylesheet" href="styles.css?v=2.0">
+<link rel="stylesheet" href="styles.css?v=2.1">
 </head>
 <body>
 
@@ -198,6 +198,30 @@
       <button id="btn-ver-planilla" class="btn-secondary" onclick="abrirPlanilla()" style="width:100%;max-width:320px;display:none;">
         📊 Ver planilla
       </button>
+      <!-- ── Semanas especiales ── -->
+      <div class="enc-especiales" style="max-width:320px;width:100%;">
+        <div class="enc-especiales-header">
+          <span>Semanas especiales</span>
+          <button class="btn-esp-add" onclick="toggleFormEspecial()">+</button>
+        </div>
+        <div id="especiales-lista"><div class="especiales-empty">Cargando…</div></div>
+        <div id="especiales-form" style="display:none;">
+          <select id="esp-tipo" onchange="actualizarLabelFechaEsp()" class="esp-select">
+            <option value="conmemoracion">Conmemoración</option>
+            <option value="superintendente">Visita superintendente</option>
+            <option value="asamblea">Asamblea</option>
+          </select>
+          <div class="esp-field">
+            <label id="esp-fecha-label" class="esp-label">Fecha exacta del evento</label>
+            <input type="date" id="esp-fecha" class="esp-date-input">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn-secondary" onclick="toggleFormEspecial()" style="flex:1;">Cancelar</button>
+            <button class="btn-guardar" onclick="guardarEspecial()" style="flex:2;">Guardar</button>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-secondary" onclick="cerrarSesionEncargado()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
     </div><!-- enc-menu -->
   </div><!-- centrado -->

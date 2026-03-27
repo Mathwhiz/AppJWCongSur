@@ -1,7 +1,7 @@
 import { db } from '../firebase.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy
+  setDoc, query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';
@@ -15,6 +15,7 @@ if (cardCongreEl) cardCongreEl.textContent = CONGRE_NOMBRE;
 function congreRef()  { return doc(db, 'congregaciones', CONGRE_ID); }
 function asigCol()    { return collection(db, 'congregaciones', CONGRE_ID, 'asignaciones'); }
 function pubCol()     { return collection(db, 'congregaciones', CONGRE_ID, 'publicadores'); }
+function especCol()   { return collection(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales'); }
 
 // ── Roles que aparecen en la tabla semanal ──
 const ROLES_LABELS = {
@@ -120,6 +121,18 @@ let semanaOffsetEdit = 0;
 let semanaOffsetVer   = 0;
 let semanaOffsetImagen = 0;
 let suggIndex     = -1;
+let semanasEspeciales = {}; // { 'YYYY-MM-DD' (lunes) → { tipo, fechaEvento } }
+
+const TIPO_LABELS = {
+  conmemoracion:   'Conmemoración',
+  superintendente: 'Visita superintendente',
+  asamblea:        'Asamblea',
+};
+const TIPO_COLORS = {
+  conmemoracion:   { color: '#E8C94A', bg: 'rgba(232,201,74,0.08)' },
+  superintendente: { color: '#7F77DD', bg: 'rgba(127,119,221,0.08)' },
+  asamblea:        { color: '#F09595', bg: 'rgba(240,149,149,0.08)' },
+};
 
 /* ─── Utilidades DOM ─── */
 function show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
@@ -182,6 +195,29 @@ function getLunesDeOffset(offset) {
   const monday = getLunesDeHoy();
   monday.setDate(monday.getDate() + offset * 7);
   return monday;
+}
+
+function lunesISO(date) {
+  const d = new Date(date);
+  const dow = d.getDay();
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+  return fmtDateLocal(d);
+}
+
+function meetingsCanceladas(especial) {
+  if (!especial) return [];
+  if (especial.tipo === 'asamblea') return ['Miércoles', 'Sábado'];
+  if (especial.tipo === 'superintendente') return [];
+  if (especial.tipo === 'conmemoracion') {
+    const dow = new Date(especial.fechaEvento + 'T12:00:00').getDay();
+    return (dow === 6 || dow === 0) ? ['Sábado'] : ['Miércoles'];
+  }
+  return [];
+}
+
+function getEspecialDeOffset(offset) {
+  const lunes = fmtDateLocal(getLunesDeOffset(offset));
+  return semanasEspeciales[lunes] || null;
 }
 
 // Convierte fecha DD/MM/YY a número para comparar
@@ -384,7 +420,7 @@ async function cerrarSesionEncargado() {
   esEncargado = false;
   goToCover();
 }
-function goToEncargado() { showView('view-encargado'); }
+function goToEncargado() { showView('view-encargado'); cargarEspeciales(); }
 
 async function goToVerSemana() {
   semanaOffsetVer = 0;
@@ -412,7 +448,7 @@ async function cargarVerSemana() {
     }
     const filas = getFilasDeSemana(todasLasFilas, semanaOffsetVer);
     hide('semana-loading');
-    renderSemana(filas, 'semana-reuniones');
+    renderSemana(filas, 'semana-reuniones', getEspecialDeOffset(semanaOffsetVer));
     show('semana-content');
   } catch(err) {
     hide('semana-loading');
@@ -526,28 +562,65 @@ async function cargarImagen() {
 }
 
 /* ─── Render semana ─── */
-function renderSemana(rows, containerId) {
+function renderSemana(rows, containerId, especial) {
   const c = document.getElementById(containerId);
   if (!c) return;
   c.innerHTML = '';
+
+  const canceladas = meetingsCanceladas(especial);
+  const esSuper    = especial?.tipo === 'superintendente';
+
+  if (especial) {
+    const { color, bg } = TIPO_COLORS[especial.tipo] || { color: '#eee', bg: '#1e1e1e' };
+    let msg = TIPO_LABELS[especial.tipo] || especial.tipo;
+    if (canceladas.length === 2)  msg += ' — no hay reuniones esta semana';
+    else if (canceladas[0])       msg += ` — sin reunión de ${canceladas[0].toLowerCase()}`;
+    if (esSuper)                  msg += ' — reunión de entre semana el MARTES · sábado sin lector';
+    const banner = document.createElement('div');
+    banner.className = 'especial-banner';
+    banner.style.cssText = `border-left-color:${color};background:${bg};`;
+    banner.innerHTML = `<span style="color:${color};">⚠ ${msg}</span>`;
+    c.appendChild(banner);
+  }
+
   if (!rows || rows.length === 0) {
-    c.innerHTML = '<div class="empty-state"><p>No hay programación cargada para esta semana.</p></div>';
+    if (canceladas.length < 2)
+      c.innerHTML += '<div class="empty-state"><p>No hay programación cargada para esta semana.</p></div>';
     return;
   }
+
   rows.forEach(row => {
-    const dia = row.dia || getNombreDia(row.fecha);
+    const dia      = row.dia || getNombreDia(row.fecha);
     const diaColor = DIA_COLORS[dia] || '#eee';
-    const diaBg    = DIA_BG[dia] || '#1e1e1e';
+    const diaBg    = DIA_BG[dia]    || '#1e1e1e';
+
+    if (canceladas.includes(dia)) {
+      const label = TIPO_LABELS[especial.tipo] || 'Evento especial';
+      const card = document.createElement('div');
+      card.className = 'reunion-card';
+      card.innerHTML = `
+        <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};">
+          <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
+          <span class="reunion-fecha">${row.fecha || ''}</span>
+        </div>
+        <div class="roles-list reunion-cancelada">${label}</div>`;
+      c.appendChild(card);
+      return;
+    }
+
+    const displayDia = (esSuper && dia === 'Miércoles') ? 'Martes' : dia;
     const rolesHTML = ROLES.map(r => {
+      if (esSuper && r === 'LECTOR' && dia === 'Sábado') return '';
       const val = row[r] || '';
       if (!val) return '';
       return `<div class="rol-row"><span class="rol-label">${ROLES_LABELS[r]}</span><span class="rol-valor">${val}</span></div>`;
     }).filter(Boolean).join('');
+
     const card = document.createElement('div');
     card.className = 'reunion-card';
     card.innerHTML = `
       <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};">
-        <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
+        <span class="reunion-dia" style="color:${diaColor};">${displayDia}</span>
         <span class="reunion-fecha">${row.fecha || ''}</span>
       </div>
       <div class="roles-list">${rolesHTML || '<div style="color:#666;font-size:13px;padding:8px 0;">Sin datos</div>'}</div>`;
@@ -727,6 +800,21 @@ function renderEditar(rows, lunesDate) {
   const c = document.getElementById('editar-content');
   if (!c) return;
   c.innerHTML = '';
+
+  const lunesStr   = fmtDateLocal(lunesDate);
+  const especial   = semanasEspeciales[lunesStr] || null;
+  const canceladas = meetingsCanceladas(especial);
+  const esSuper    = especial?.tipo === 'superintendente';
+
+  if (especial) {
+    const { color, bg } = TIPO_COLORS[especial.tipo] || { color: '#eee', bg: '#1e1e1e' };
+    let msg = TIPO_LABELS[especial.tipo] || especial.tipo;
+    if (esSuper)                  msg += ' — reunión de entre semana el MARTES · sábado sin lector';
+    else if (canceladas.length === 2) msg += ' — no hay reuniones';
+    else if (canceladas[0])       msg += ` — sin reunión de ${canceladas[0].toLowerCase()}`;
+    c.innerHTML = `<div class="especial-banner" style="border-left-color:${color};background:${bg};margin-bottom:12px;"><span style="color:${color};">⚠ ${msg}</span></div>`;
+  }
+
   const diasSemana = [
     { dia: 'Miércoles', offset: 2 },
     { dia: 'Sábado',    offset: 5 },
@@ -734,15 +822,40 @@ function renderEditar(rows, lunesDate) {
   diasSemana.forEach(({ dia, offset }) => {
     const d = new Date(lunesDate); d.setDate(lunesDate.getDate() + offset);
     const fecha = fmtFecha(d);
-    const existing = rows.find(r => r.fecha === fecha) || {};
     const diaColor = DIA_COLORS[dia] || '#eee';
     const diaBg    = DIA_BG[dia] || '#1e1e1e';
     const div = document.createElement('div');
     div.className = 'edit-card';
     div.dataset.fecha = fecha;
     div.dataset.dia = dia;
+
+    if (canceladas.includes(dia)) {
+      div.dataset.cancelada = '1';
+      const label = TIPO_LABELS[especial.tipo] || 'Evento especial';
+      div.innerHTML = `
+        <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};margin-bottom:12px;">
+          <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
+          <span class="reunion-fecha">${fecha}</span>
+        </div>
+        <div class="reunion-cancelada">${label} — sin reunión</div>`;
+      c.appendChild(div);
+      return;
+    }
+
+    const displayDia = (esSuper && dia === 'Miércoles') ? 'Martes' : dia;
+    // Para superintendente entre semana, la fecha real es martes (offset 1)
+    const fechaReal = (esSuper && dia === 'Miércoles')
+      ? fmtFecha(new Date(lunesDate).setDate(lunesDate.getDate() + 1), lunesDate)
+      : fecha;
+    div.dataset.fecha = (esSuper && dia === 'Miércoles')
+      ? fmtFecha((() => { const dd = new Date(lunesDate); dd.setDate(lunesDate.getDate() + 1); return dd; })())
+      : fecha;
+    div.dataset.dia = (esSuper && dia === 'Miércoles') ? 'Martes' : dia;
+
+    const existing = rows.find(r => r.fecha === div.dataset.fecha || r.fecha === fecha) || {};
     const rolesHTML = ROLES.map(r => {
       if (r === 'PRESIDENTE' && dia === 'Miércoles') return '';
+      if (esSuper && r === 'LECTOR' && dia === 'Sábado') return '';
       const listaKey = ROL_LISTA_MAP[r] || r;
       const lista = hermanos[listaKey] || [];
       const valActual = existing[r] || '';
@@ -755,8 +868,8 @@ function renderEditar(rows, lunesDate) {
     }).filter(Boolean).join('');
     div.innerHTML = `
       <div class="reunion-header" style="background:${diaBg};border-left:3px solid ${diaColor};margin-bottom:12px;">
-        <span class="reunion-dia" style="color:${diaColor};">${dia}</span>
-        <span class="reunion-fecha">${fecha}</span>
+        <span class="reunion-dia" style="color:${diaColor};">${displayDia}</span>
+        <span class="reunion-fecha">${div.dataset.fecha}</span>
       </div>${rolesHTML}`;
     c.appendChild(div);
   });
@@ -770,6 +883,7 @@ async function guardarEdicion() {
   const cards = document.querySelectorAll('#editar-content .edit-card');
   const data  = [];
   cards.forEach(card => {
+    if (card.dataset.cancelada) return; // semana especial — no guardar
     const entry = { fecha: card.dataset.fecha, dia: card.dataset.dia };
     card.querySelectorAll('select[data-rol]').forEach(sel => { entry[sel.dataset.rol] = sel.value; });
     data.push(entry);
@@ -802,11 +916,26 @@ function generarAutomatico() {
   const fechasAGenerar = [];
   const cursor = new Date(fechaDesde);
   while (cursor <= finRango) {
-    const dow = cursor.getDay();
-    if (dow === 3 || dow === 6) {
+    const dow       = cursor.getDay();
+    const curLunes  = lunesISO(cursor);
+    const especial  = semanasEspeciales[curLunes] || null;
+    const canceladas = meetingsCanceladas(especial);
+    const esSuper   = especial?.tipo === 'superintendente';
+
+    let diaLabel = null;
+    if (dow === 3 && !canceladas.includes('Miércoles') && !esSuper) {
+      diaLabel = 'Miércoles';
+    } else if (dow === 2 && esSuper) {
+      // Superintendente: entre semana el martes
+      diaLabel = 'Martes';
+    } else if (dow === 6 && !canceladas.includes('Sábado')) {
+      diaLabel = 'Sábado';
+    }
+
+    if (diaLabel) {
       const f = fmtFecha(cursor);
       if (reemplazar || !fechasExistentes.has(f))
-        fechasAGenerar.push({ fecha: f, dia: dow === 3 ? 'Miércoles' : 'Sábado' });
+        fechasAGenerar.push({ fecha: f, dia: diaLabel, esSuper });
     }
     cursor.setDate(cursor.getDate() + 1);
   }
@@ -848,11 +977,13 @@ function generarAutomatico() {
   if ((hermanos['MICROFONISTAS_1']||[]).length > 1)
     indices['MICROFONISTAS_2'] = (indices['MICROFONISTAS_1'] + 1) % hermanos['MICROFONISTAS_1'].length;
 
-  autoResult = fechasAGenerar.map(({ fecha, dia }) => {
+  autoResult = fechasAGenerar.map(({ fecha, dia, esSuper }) => {
     const entry = { fecha, dia };
     const enEstaReunion = new Set(); // evitar duplicados dentro de la misma reunión
+    const diaOrig = dia === 'Martes' ? 'Miércoles' : dia; // para reglas de roles
     ROLES.forEach(r => {
-      if (r === 'PRESIDENTE' && dia === 'Miércoles') { entry[r] = ''; return; }
+      if (r === 'PRESIDENTE' && diaOrig === 'Miércoles') { entry[r] = ''; return; }
+      if (esSuper && r === 'LECTOR' && dia === 'Sábado') { entry[r] = ''; return; }
       const listaKey = ROL_LISTA_MAP[r] || r;
       const lista = hermanos[listaKey] || [];
       if (lista.length === 0) { entry[r] = ''; return; }
@@ -1103,6 +1234,94 @@ async function confirmarEliminar(docId, nombre) {
     await uiAlert('Error al eliminar: ' + err.message, 'Error');
   }
 }
+
+// ─────────────────────────────────────────
+//   SEMANAS ESPECIALES
+// ─────────────────────────────────────────
+
+async function cargarEspeciales() {
+  try {
+    const snap = await getDocs(especCol());
+    semanasEspeciales = {};
+    snap.forEach(d => { semanasEspeciales[d.id] = d.data(); });
+    renderEspecialesList();
+  } catch(e) {
+    console.error('Error cargando especiales:', e);
+  }
+}
+
+function renderEspecialesList() {
+  const el = document.getElementById('especiales-lista');
+  if (!el) return;
+  const entries = Object.entries(semanasEspeciales).sort(([a],[b]) => a.localeCompare(b));
+  if (!entries.length) {
+    el.innerHTML = '<div class="especiales-empty">Sin semanas especiales configuradas.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([lunes, e]) => {
+    const { color } = TIPO_COLORS[e.tipo] || { color: '#eee' };
+    const lunesDate   = isoToDate(lunes);
+    const domingoDate = new Date(lunesDate); domingoDate.setDate(lunesDate.getDate() + 6);
+    const rango = `${fmtFecha(lunesDate)} – ${fmtFecha(domingoDate)}`;
+    const label = TIPO_LABELS[e.tipo] || e.tipo;
+    const extra = (e.tipo === 'conmemoracion' && e.fechaEvento !== lunes)
+      ? `  ·  evento: ${fmtFecha(isoToDate(e.fechaEvento))}` : '';
+    return `<div class="especial-item">
+      <div class="especial-dot" style="background:${color};"></div>
+      <div class="especial-info">
+        <div class="especial-label">${label}</div>
+        <div class="especial-fecha">${rango}${extra}</div>
+      </div>
+      <button class="especial-del-btn" onclick="eliminarEspecial('${lunes}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+window.toggleFormEspecial = function() {
+  const f = document.getElementById('especiales-form');
+  if (!f) return;
+  const visible = f.style.display !== 'none';
+  f.style.display = visible ? 'none' : '';
+  if (!visible) {
+    document.getElementById('esp-tipo').value = 'conmemoracion';
+    document.getElementById('esp-fecha').value = '';
+    window.actualizarLabelFechaEsp();
+  }
+};
+
+window.actualizarLabelFechaEsp = function() {
+  const tipo = document.getElementById('esp-tipo')?.value;
+  const lbl  = document.getElementById('esp-fecha-label');
+  if (lbl) lbl.textContent = tipo === 'conmemoracion'
+    ? 'Fecha exacta del evento'
+    : 'Fecha de la semana (cualquier día)';
+};
+
+window.guardarEspecial = async function() {
+  const tipo  = document.getElementById('esp-tipo')?.value;
+  const fecha = document.getElementById('esp-fecha')?.value;
+  if (!tipo || !fecha) { await uiAlert('Completá todos los campos.'); return; }
+  const lunes = lunesISO(new Date(fecha + 'T12:00:00'));
+  const data  = { tipo, fechaEvento: fecha };
+  try {
+    await setDoc(doc(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales', lunes), data);
+    semanasEspeciales[lunes] = data;
+    renderEspecialesList();
+    window.toggleFormEspecial();
+    uiToast(`${TIPO_LABELS[tipo]} guardada`, 'success');
+  } catch(e) { await uiAlert('Error al guardar: ' + e.message); }
+};
+
+window.eliminarEspecial = async function(lunes) {
+  const ok = await uiConfirm({ title: 'Eliminar semana especial', msg: '¿Seguro que querés eliminarla?', confirmText: 'Eliminar', type: 'danger' });
+  if (!ok) return;
+  try {
+    await deleteDoc(doc(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales', lunes));
+    delete semanasEspeciales[lunes];
+    renderEspecialesList();
+    uiToast('Eliminada', 'success');
+  } catch(e) { await uiAlert('Error: ' + e.message); }
+};
 
 window.guardarImagen = guardarImagen;
 window.openPin = openPin;

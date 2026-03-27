@@ -282,6 +282,18 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .btn-nav-sem:hover { color: #eee; background: #333; }
 .btn-nav-sem:disabled { opacity: 0.22; cursor: default; }
 
+/* ── Semanas especiales — banner y badge ── */
+.vm-especial-banner {
+  border-left: 3px solid; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 14px;
+  font-size: 13px;
+}
+.badge-especial {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 6px; border-radius: 6px;
+  vertical-align: middle; margin-left: 6px;
+}
+
 /* ── Botón configuración en header de semanas ── */
 .btn-config-vm {
   background: transparent; border: none; color: #666; cursor: pointer;

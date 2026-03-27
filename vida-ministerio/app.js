@@ -44,8 +44,20 @@ let publicadores = [];
 let semanaData  = null;  // programa de la semana actualmente cargada/editada
 let modoEncargado = false;
 let tieneAuxiliar = false;
-let semanasLista = [];   // cache para navegación encargado (orden desc)
-let pubFecha    = null;  // fecha activa en vista pública
+let semanasLista      = [];  // cache para navegación encargado (orden desc)
+let pubFecha          = null; // fecha activa en vista pública
+let vmEspeciales      = {};   // { 'YYYY-MM-DD' (lunes) → { tipo, fechaEvento } }
+
+const VM_TIPO_LABELS = {
+  conmemoracion:   'Conmemoración',
+  superintendente: 'Visita superintendente',
+  asamblea:        'Asamblea',
+};
+const VM_TIPO_COLORS = {
+  conmemoracion:   '#E8C94A',
+  superintendente: '#7F77DD',
+  asamblea:        '#F09595',
+};
 
 // ─────────────────────────────────────────
 //   UTILS
@@ -383,11 +395,12 @@ async function cargarProgramaPublico() {
   el.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
   try {
     const snap = await getDoc(doc(db, 'congregaciones', congreId, 'vidaministerio', fecha));
+    const banner = vmBannerHtml(fecha);
     if (!snap.exists()) {
-      el.innerHTML = '<div class="empty-state">No hay programa cargado para esta semana.<br><span style="color:#3a3a3a;">El encargado todavía no lo subió.</span></div>';
+      el.innerHTML = banner + '<div class="empty-state">No hay programa cargado para esta semana.<br><span style="color:#3a3a3a;">El encargado todavía no lo subió.</span></div>';
       return;
     }
-    el.innerHTML = renderSemanaPublico(snap.data());
+    el.innerHTML = banner + renderSemanaPublico(snap.data());
   } catch(e) {
     el.innerHTML = `<div class="error-wrap">Error: ${e.message}</div>`;
   }
@@ -416,6 +429,33 @@ function calcCompletitud(s) {
   return { clase: 'parcial', texto: `${filled}/${total} asignados` };
 }
 
+async function cargarVmEspeciales() {
+  try {
+    const snap = await getDocs(collection(db, 'congregaciones', congreId, 'semanasEspeciales'));
+    vmEspeciales = {};
+    snap.forEach(d => { vmEspeciales[d.id] = d.data(); });
+  } catch(e) {
+    console.error('Error cargando especiales VM:', e);
+  }
+}
+
+function vmBannerHtml(fecha) {
+  const esp = vmEspeciales[fecha];
+  if (!esp) return '';
+  const color = VM_TIPO_COLORS[esp.tipo] || '#eee';
+  const label = VM_TIPO_LABELS[esp.tipo] || esp.tipo;
+  let msg = label;
+  if (esp.tipo === 'asamblea')         msg += ' — no hay reuniones esta semana';
+  if (esp.tipo === 'superintendente')  msg += ' — reunión el martes · sábado sin lector';
+  if (esp.tipo === 'conmemoracion') {
+    const dow = new Date(esp.fechaEvento + 'T12:00:00').getDay();
+    msg += (dow === 6 || dow === 0) ? ' — sin reunión de fin de semana' : ' — sin reunión de entre semana';
+  }
+  return `<div class="vm-especial-banner" style="border-left-color:${color};background:${color}18;">
+    <span style="color:${color};font-weight:700;">⚠ ${msg}</span>
+  </div>`;
+}
+
 function renderSemanas(semanas) {
   const list = document.getElementById('semanas-list');
   if (!semanas.length) {
@@ -424,14 +464,20 @@ function renderSemanas(semanas) {
   }
   const lunes = lunesDeHoy();
   list.innerHTML = semanas.map(s => {
-    const c = calcCompletitud(s);
+    const c   = calcCompletitud(s);
+    const esp = vmEspeciales[s.fecha];
     const esActual = s.fecha === lunes;
+    const espColor = esp ? (VM_TIPO_COLORS[esp.tipo] || '#eee') : null;
+    const espBadge = esp
+      ? `<span class="badge-especial" style="background:${espColor}22;color:${espColor};">${VM_TIPO_LABELS[esp.tipo] || esp.tipo}</span>`
+      : '';
     return `
       <div class="semana-card${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
         <div class="semana-card-info">
           <div class="semana-fecha">
             ${fmtDisplaySemana(s.fecha)}
             ${esActual ? '<span class="badge-actual">esta semana</span>' : ''}
+            ${espBadge}
           </div>
           <div class="estado-${c.clase}">${c.texto}</div>
         </div>
@@ -623,7 +669,7 @@ function renderParteItemConAyudante(key, label, parte, opts = {}) {
 function renderSemanaEdit() {
   if (!semanaData) return;
   const s = semanaData;
-  let html = '';
+  let html = vmBannerHtml(s.fecha);
 
   // ── Canciones y Presidencia
   html += `<div class="seccion-bloque">
@@ -1112,6 +1158,7 @@ window.crearSemana = async function() {
     pinVM = data.pinVidaMinisterio || '1234';
     tieneAuxiliar = data.tieneAuxiliar === true;
     await cargarPublicadores();
+    await cargarVmEspeciales();
   } catch(e) {
     console.error('Error al inicializar:', e);
   }
