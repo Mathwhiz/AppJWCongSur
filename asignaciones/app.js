@@ -4,6 +4,7 @@ import {
   setDoc, query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
+if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';
 const CONGRE_NOMBRE = sessionStorage.getItem('congreNombre') || CONGRE_ID;
 
@@ -154,9 +155,7 @@ function showView(id) {
 /* ─── Utilidades fecha ─── */
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-function fmtDateLocal(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+// fmtDateLocal disponible como global desde ui-utils.js
 
 function parseFecha(str) {
   if (!str) return null;
@@ -843,10 +842,6 @@ function renderEditar(rows, lunesDate) {
     }
 
     const displayDia = (esSuper && dia === 'Miércoles') ? 'Martes' : dia;
-    // Para superintendente entre semana, la fecha real es martes (offset 1)
-    const fechaReal = (esSuper && dia === 'Miércoles')
-      ? fmtFecha(new Date(lunesDate).setDate(lunesDate.getDate() + 1), lunesDate)
-      : fecha;
     div.dataset.fecha = (esSuper && dia === 'Miércoles')
       ? fmtFecha((() => { const dd = new Date(lunesDate); dd.setDate(lunesDate.getDate() + 1); return dd; })())
       : fecha;

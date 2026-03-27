@@ -5,6 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // ── congreId viene de sessionStorage (seteado en index.html al elegir congregación) ──
+if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';
 const CONGRE_NOMBRE = sessionStorage.getItem('congreNombre') || CONGRE_ID;
 
@@ -78,9 +79,7 @@ async function cargarConductores() {
 // ─────────────────────────────────────────
 //  HELPERS FECHA
 // ─────────────────────────────────────────
-function fmtDateLocal(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+// fmtDateLocal disponible como global desde ui-utils.js
 
 const SPECIAL_TERR = { '11': true, '131': true };
 const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];

@@ -63,9 +63,8 @@ const VM_TIPO_COLORS = {
 // ─────────────────────────────────────────
 //   UTILS
 // ─────────────────────────────────────────
-function fmtDate(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+// fmtDateLocal disponible como global desde ui-utils.js
+const fmtDate = fmtDateLocal;
 
 function fmtDisplay(iso) {
   const [y, m, d] = iso.split('-');
@@ -1195,6 +1194,13 @@ window.crearSemana = async function() {
   document.getElementById('semana-titulo-display').textContent = 'Semana del ' + fmtDisplay(fecha);
   renderSemanaEdit();
   showView('view-semana');
+
+  // Agregar a semanasLista si no estaba (semana recién creada) y actualizar nav buttons
+  if (!semanasLista.find(s => s.fecha === semanaData.fecha)) {
+    semanasLista.push(semanaData);
+    semanasLista.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }
+  updateNavBtnsSemana();
 };
 
 // ─────────────────────────────────────────

@@ -19,7 +19,7 @@ congregaciones/{congreId}/
   │         ciudadPrincipal?, ciudadesExtras?)
   ├── grupos/{grupoId}         → id, label, color, pin
   ├── territorios/{terrId}     → id, nombre, tipo, grupoId, punto, poligonos, ciudad?, notas?
-  ├── historial/{entryId}      → conductor, fechaInicio, fechaFin, territorioId
+  │   └── historial/{entryId} → conductor, fechaInicio, fechaFin
   ├── salidas/{salidaId}       → grupoId, fechaReg, salidas[]
   ├── publicadores/{pubId}     → nombre, roles, activo
   ├── asignaciones/{docId}     → fecha, diaSemana, roles
@@ -218,7 +218,7 @@ const ROL_LISTA_MAP = {
 - **"Tener en cuenta historial previo"**: busca el último asignado por rol y arranca desde el siguiente.
 - **"Reemplazar semanas existentes"**: incluye fechas que ya tienen datos en el rango.
 - **Algoritmo**: round-robin por rol; `SONIDO_2`/`MICROFONISTAS_2` con offset +1; `PRESIDENTE` omitido en miércoles; `Set enEstaReunion` detecta conflictos.
-- **Semanas especiales**: **pendiente** — al generar, respetar `tipoEspecial` en la semana (`asamblea` → saltear, `conmemoracion` entre semana → saltear reunión VM, `superintendente` → ajustar).
+- **Semanas especiales**: ✅ implementado — respeta `tipoEspecial` en la semana (`asamblea` → saltear ambas reuniones, `conmemoracion` entre semana → saltear miércoles, `superintendente` → generar martes en lugar de miércoles, sábado sin lector).
 
 ### Integración con Google Sheets (opcional)
 - Botón "Guardar también en planilla" si `scriptUrl` está en Firestore
@@ -230,26 +230,47 @@ const ROL_LISTA_MAP = {
 
 ## Módulo de Vida y Ministerio
 
-> Plan detallado en **[VIDA-MINISTERIO.md](./VIDA-MINISTERIO.md)**.
-
 Módulo para el **presidente de la reunión VM**: importar programa de WOL, asignar partes,
 gestionar publicadores por rol VM, sala auxiliar.
 
-**Estado al 2026-03-27:** Fases 1, 2, sala auxiliar, historial Excel, semanas especiales (UI),
-PIN VM, navegación, vista mensual, editar títulos, duración visible, export/compartir y visor público (`programa.html`) — todos ✅.
-**Pendiente:** auto-asignación (Fase 4) y que el generador de Asignaciones respete semanas especiales.
+**Estado al 2026-03-27:** Fases 1, 2, sala auxiliar, historial Excel, semanas especiales (UI+generador),
+PIN VM, navegación, vista mensual, editar títulos, duración visible, export/compartir y visor público — todos ✅.
+**Pendiente:** auto-asignación (Fase 4).
 
 ### Visor público (`programa.html`)
 Página standalone sin PIN. URL: `vida-ministerio/programa.html?congre=sur&semana=2026-04-07`.
 Sin `semana` muestra la semana actual. Navegación ← →, botón compartir copia URL al portapapeles.
 
-### Firestore (resumen)
-```
-vidaministerio/{semanaId}   ← "YYYY-MM-DD" (lunes)
-  fecha, canciones, presidente, oraciones,
-  tesoros{ discurso, joyas, lecturaBiblica },
-  ministerio[], vidaCristiana[],
-  tipoEspecial?: "conmemoracion"|"superintendente"|"asamblea"
+### Firestore — doc semana
+
+```js
+// vidaministerio/{semanaId}   semanaId = "YYYY-MM-DD" (lunes)
+{
+  fecha: "2026-03-23",
+  cancionApertura: 123, cancionIntermedia: 456, cancionCierre: 789,
+  presidente: "pubId", oracionApertura: "pubId", oracionCierre: "pubId",
+
+  tesoros: {
+    discurso:       { titulo: "...", duracion: 10, pubId: null },
+    joyas:          { titulo: "Joyas Espirituales", duracion: 10, pubId: null },
+    lecturaBiblica: { titulo: "Lea Hechos 7:1-16 (N min.)", duracion: 4, pubId: null, ayudante: null,
+                      salaAux: { pubId: null, ayudante: null } }  // si tieneAuxiliar
+  },
+
+  ministerio: [
+    { titulo: "...", tipo: "video"|"discurso"|"demostracion", duracion: N,
+      pubId: null, ayudante: null,
+      salaAux: { pubId: null, ayudante: null } },  // si tieneAuxiliar y tipo != discurso
+  ],
+
+  vidaCristiana: [
+    { titulo: "...", tipo: "parte"|"estudio_biblico", duracion: N, pubId: null, ayudante: null },
+  ],
+
+  tipoEspecial: null | "conmemoracion" | "superintendente" | "asamblea",
+  importadoDeWOL: true,
+  creadoEn: timestamp
+}
 ```
 
 ### Roles VM en publicadores
@@ -257,9 +278,57 @@ vidaministerio/{semanaId}   ← "YYYY-MM-DD" (lunes)
 `VM_MINISTERIO_CONVERSACION`, `VM_MINISTERIO_REVISITA`, `VM_MINISTERIO_ESCENIFICACION`,
 `VM_MINISTERIO_DISCURSO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`
 
+Solo hermanos: `VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`.
+Hermanos y hermanas: `VM_MINISTERIO_*`.
+
 ### Importación WOL (✅)
-Via Cloudflare Worker propio (`https://super-math-a40f.mnsmys12.workers.dev/`).
+URL: `https://wol.jw.org/es/wol/dt/r4/lp-s/{año}/{mes}/{día}` via Cloudflare Worker propio.
 Parser usa `h3/h4` numerados — **no usar IDs `#pN`** (varían cada semana).
+- Títulos en `h3/h4` con texto `"N. Título..."`. Tesoros: siempre los primeros 3 `h3` numerados.
+- Frontera Ministerio/VC: `h3` con texto exactamente `"Canción N"`.
+- Duración: primer `"(X mins.)"` después del `h3` correspondiente.
+
+### Detección de tipo de parte ministerio
+
+```js
+function tipoMinisterioDesdeWOL(titulo) {
+  const t = titulo.toLowerCase();
+  if (t.includes('conversación'))  return 'conversacion';
+  if (t.includes('revisita'))      return 'revisita';
+  if (t.includes('escenificación') || t.includes('escenificacion')) return 'escenificacion';
+  if (t.includes('discurso'))      return 'discurso'; // varón, sin ayudante
+  return 'conversacion';
+}
+// tipo === 'discurso' → sin ayudante. Los demás → tienen ayudante.
+```
+
+### Semanas especiales (`tipoEspecial`)
+
+| Valor | Efecto |
+|-------|--------|
+| `"conmemoracion"` | Entre semana: no hay reunión VM. No generar roles VM/entre semana. |
+| `"superintendente"` | Reunión pasa de miércoles a martes. Estudio reemplazado por discurso del sup. Finde sin lector. |
+| `"asamblea"` | No hay ninguna reunión esa semana. No generar nada. |
+
+### Fase 4 — Auto-asignación VM (pendiente)
+
+Round-robin por rol con índice persistente, igual que Asignaciones:
+
+```js
+// Por semana:
+const enEstaSemana = new Set();
+for (const slot of slotsOrdenados) {
+  const lista = publicadoresConRol(slot.rolRequerido);
+  let i = indices[slot.rolRequerido];
+  while (enEstaSemana.has(lista[i % lista.length]?.id)) i++;
+  slot.pubId = lista[i % lista.length]?.id;
+  enEstaSemana.add(slot.pubId);
+  indices[slot.rolRequerido] = (i + 1) % lista.length;
+}
+```
+
+Reglas especiales: `VM_ORACION` apertura ≠ cierre · Presidente ≠ oración · Conductor ≠ lector ·
+`tipo === 'discurso'` en Ministerio sin ayudante · Sala auxiliar: asignar pares para ambas salas.
 
 ---
 
@@ -281,14 +350,35 @@ Parser usa `h3/h4` numerados — **no usar IDs `#pN`** (varían cada semana).
 
 ---
 
+## Manzanas por territorio (pendiente — no implementado)
+
+Sub-polígonos numerados dentro de cada territorio.
+
+```
+congregaciones/{congreId}/territorios/{terrId}/manzanas/{manzanaId}
+  ├── numero: 1
+  └── coords: [{lat, lng}, ...]
+```
+
+**Plan de implementación:**
+1. **Importar de OSM** (Overpass API + `turf.polygonize()`) en `admin.html` — query por polígono del territorio, revisión visual antes de guardar.
+2. **Editor manual** con Leaflet.Draw para corregir/dibujar desde cero.
+3. **Visualización** en `mapa.html` al zoom ≥ 15, label con número, color diferenciado.
+
+`territorios/app.js` y la estructura del doc de territorio no necesitan cambios — subcolección independiente.
+
+---
+
 ## Convenciones de fechas
 
 Siempre hora local — **nunca `toISOString()`** (bug UTC-3).
 
 ```js
-function fmtDate(d) {
+// Global en ui-utils.js:
+window.fmtDateLocal = function(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+};
+// En módulos: usar fmtDateLocal() directamente (global) o: const fmtDate = fmtDateLocal;
 ```
 
 Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.

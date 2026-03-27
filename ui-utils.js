@@ -638,6 +638,14 @@ window.uiAlert = function(msg, title = 'Atención') {
 };
 
 /* ─────────────────────────────────────────
+   FECHA UTILS
+───────────────────────────────────────── */
+// Formatea un Date a 'YYYY-MM-DD' en hora local (evita bug UTC)
+window.fmtDateLocal = function(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+
+/* ─────────────────────────────────────────
    DATE PICKER
 ───────────────────────────────────────── */
 window.uiDatePicker = function({ value = '', min = null, label = 'Elegir fecha' } = {}) {
