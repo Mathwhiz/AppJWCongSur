@@ -66,11 +66,20 @@ const VM_TIPO_COLORS = {
 // fmtDateLocal disponible como global desde ui-utils.js
 const fmtDate = fmtDateLocal;
 
+// Normaliza cualquier formato de fecha a YYYY-MM-DD
+function parseFechaIso(f) {
+  if (!f) return lunesDeHoy();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return f;
+  // Formato DD/MM/YYYY (legacy)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(f)) {
+    const [dd, mm, yyyy] = f.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return lunesDeHoy();
+}
+
 function fmtDisplay(iso) {
-  // Si ya está en formato DD/MM/YYYY (legacy), devolverlo tal cual
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(iso)) return iso;
-  // Si no es YYYY-MM-DD válido, usar el lunes de hoy
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) iso = lunesDeHoy();
+  iso = parseFechaIso(iso);
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
@@ -254,7 +263,8 @@ window.goToVerPrograma = async function() {
 };
 
 window.navSemanaPublico = async function(dir) {
-  const base = (pubFecha && /^\d{4}-\d{2}-\d{2}$/.test(pubFecha)) ? pubFecha : lunesDeHoy();
+  const base = parseFechaIso(pubFecha);
+  pubFecha = base; // normalizar antes de navegar
   const d = new Date(base + 'T12:00:00');
   d.setDate(d.getDate() + dir * 7);
   pubFecha = isNaN(d.getTime()) ? lunesDeHoy() : fmtDate(d);
@@ -593,9 +603,8 @@ async function cargarSemanas() {
 }
 
 async function cargarProgramaPublico() {
-  let fecha = pubFecha || lunesDeHoy();
-  // Asegurar formato válido YYYY-MM-DD (puede corromperse con code viejo cacheado)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) { fecha = lunesDeHoy(); pubFecha = fecha; }
+  let fecha = parseFechaIso(pubFecha);
+  pubFecha = fecha; // siempre normalizar
   const el = document.getElementById('pub-contenido');
   document.getElementById('pub-semana-titulo').textContent = 'Semana del ' + fmtDisplay(fecha);
   el.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
