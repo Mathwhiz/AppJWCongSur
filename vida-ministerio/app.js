@@ -360,6 +360,10 @@ function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0
 
 window.goToHermanos = async function() {
   showView('view-hermanos');
+  const searchEl = document.getElementById('vm-hermanos-search');
+  const rolEl    = document.getElementById('vm-hermanos-rol');
+  if (searchEl) searchEl.value = '';
+  if (rolEl)    rolEl.value = '';
   const listEl = document.getElementById('vm-hermanos-list');
   listEl.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
   try {
@@ -401,8 +405,13 @@ function renderHermanosVM(lista) {
 }
 
 window.filtrarHermanosVM = function() {
-  const q = norm(document.getElementById('vm-hermanos-search')?.value || '');
-  renderHermanosVM(hermanosVMLista.filter(h => norm(h.nombre).includes(q)));
+  const q   = norm(document.getElementById('vm-hermanos-search')?.value || '');
+  const rol = document.getElementById('vm-hermanos-rol')?.value || '';
+  renderHermanosVM(hermanosVMLista.filter(h => {
+    if (q && !norm(h.nombre).includes(q)) return false;
+    if (rol && !(h.roles || []).includes(rol)) return false;
+    return true;
+  }));
 };
 
 window.abrirNuevoHermanoVM = function() {
