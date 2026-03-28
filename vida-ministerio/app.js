@@ -1,6 +1,6 @@
 import { db } from '../firebase.js';
 import {
-  collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy
+  collection, doc, getDoc, getDocs, setDoc, deleteDoc, addDoc, updateDoc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // ─────────────────────────────────────────
@@ -250,9 +250,10 @@ window.goToVerPrograma = async function() {
 };
 
 window.navSemanaPublico = async function(dir) {
-  const d = new Date((pubFecha || lunesDeHoy()) + 'T12:00:00');
+  const base = (pubFecha && /^\d{4}-\d{2}-\d{2}$/.test(pubFecha)) ? pubFecha : lunesDeHoy();
+  const d = new Date(base + 'T12:00:00');
   d.setDate(d.getDate() + dir * 7);
-  pubFecha = fmtDate(d);
+  pubFecha = isNaN(d.getTime()) ? lunesDeHoy() : fmtDate(d);
   await cargarProgramaPublico();
 };
 
@@ -274,6 +275,12 @@ function updateNavBtnsSemana() {
   if (btnPrev) btnPrev.disabled = idx === -1 || idx >= semanasLista.length - 1;
   if (btnNext) btnNext.disabled = idx === -1 || idx <= 0;
 }
+
+window.goToMenuEnc = function() {
+  const sub = document.getElementById('menu-enc-congre-sub');
+  if (sub) sub.textContent = congreNombre || '—';
+  showView('view-menu-enc');
+};
 
 window.goToSemanas = async function() {
   document.getElementById('semanas-congre-sub').textContent = congreNombre || '—';
@@ -343,6 +350,149 @@ window.switchVmTab = function(tabName) {
   document.querySelectorAll('.vm-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === tabName));
 };
 
+// ─────────────────────────────────────────
+//   HERMANOS VM
+// ─────────────────────────────────────────
+let hermanosVMLista = [];  // cache para la vista
+let hermanoVMEditando = null;
+
+function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+window.goToHermanos = async function() {
+  showView('view-hermanos');
+  const listEl = document.getElementById('vm-hermanos-list');
+  listEl.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
+  try {
+    // Recargar publicadores frescos
+    await cargarPublicadores();
+    hermanosVMLista = [...publicadores].sort((a, b) =>
+      (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' })
+    );
+    renderHermanosVM(hermanosVMLista);
+  } catch(e) {
+    listEl.innerHTML = `<div class="error-wrap">Error al cargar: ${e.message}</div>`;
+  }
+};
+
+function renderHermanosVM(lista) {
+  const el = document.getElementById('vm-hermanos-list');
+  if (!el) return;
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-state">No hay hermanos cargados.</div>';
+    return;
+  }
+  el.innerHTML = lista.map(h => {
+    const chips = (h.roles || [])
+      .filter(r => r.startsWith('VM_'))
+      .map(r => {
+        const found = ROLES_VM.find(x => x.id === r);
+        return `<span class="vm-rol-chip">${found ? found.label : r}</span>`;
+      }).join('');
+    return `<div class="vm-hermano-row" onclick="abrirEditarHermanoVM('${h.id}')">
+      <div class="vm-hermano-info">
+        <div class="vm-hermano-nombre">${esc(h.nombre)}</div>
+        <div class="vm-hermano-roles">${chips || '<span style="font-size:11px;color:#555;">Sin roles VM</span>'}</div>
+      </div>
+      <div class="vm-hermano-actions">
+        <button class="btn-del-hermano-vm" onclick="event.stopPropagation();confirmarEliminarHermanoVM('${h.id}','${(h.nombre||'').replace(/'/g,"\\'")}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filtrarHermanosVM = function() {
+  const q = norm(document.getElementById('vm-hermanos-search')?.value || '');
+  renderHermanosVM(hermanosVMLista.filter(h => norm(h.nombre).includes(q)));
+};
+
+window.abrirNuevoHermanoVM = function() {
+  hermanoVMEditando = null;
+  document.getElementById('modal-hvm-titulo').textContent = 'Nuevo hermano';
+  document.getElementById('modal-hvm-nombre').value = '';
+  document.getElementById('modal-hvm-status').textContent = '';
+  renderRolesVMModal([]);
+  document.getElementById('modal-hermano-vm').style.display = 'flex';
+};
+
+window.abrirEditarHermanoVM = function(pubId) {
+  const h = publicadores.find(p => p.id === pubId);
+  if (!h) return;
+  hermanoVMEditando = pubId;
+  document.getElementById('modal-hvm-titulo').textContent = h.nombre;
+  document.getElementById('modal-hvm-nombre').value = h.nombre;
+  document.getElementById('modal-hvm-status').textContent = '';
+  renderRolesVMModal(h.roles || []);
+  document.getElementById('modal-hermano-vm').style.display = 'flex';
+};
+
+function renderRolesVMModal(rolesActivos) {
+  const el = document.getElementById('modal-hvm-roles');
+  if (!el) return;
+  el.innerHTML = ROLES_VM.map(r => `
+    <label class="rol-checkbox">
+      <input type="checkbox" id="vmcb-${r.id}" ${rolesActivos.includes(r.id) ? 'checked' : ''}>
+      <span>${r.label}</span>
+    </label>`).join('');
+}
+
+window.cerrarModalHermanoVM = function() {
+  document.getElementById('modal-hermano-vm').style.display = 'none';
+  hermanoVMEditando = null;
+};
+
+window.guardarHermanoVM = async function() {
+  const nombre = document.getElementById('modal-hvm-nombre').value.trim();
+  if (!nombre) { uiToast('Ingresá un nombre', 'error'); return; }
+  const rolesVM = ROLES_VM.map(r => r.id).filter(id => document.getElementById('vmcb-' + id)?.checked);
+
+  const status = document.getElementById('modal-hvm-status');
+  status.style.color = '#888'; status.textContent = 'Guardando…';
+
+  try {
+    const pubColRef = collection(db, 'congregaciones', congreId, 'publicadores');
+
+    if (hermanoVMEditando) {
+      // Editar: mantener roles no-VM existentes, reemplazar roles VM
+      const h = publicadores.find(p => p.id === hermanoVMEditando);
+      const rolesNoVM = (h?.roles || []).filter(r => !r.startsWith('VM_'));
+      const rolesFinales = [...rolesNoVM, ...rolesVM];
+      await updateDoc(doc(pubColRef, hermanoVMEditando), { nombre, roles: rolesFinales });
+      const idx = publicadores.findIndex(p => p.id === hermanoVMEditando);
+      if (idx !== -1) publicadores[idx] = { ...publicadores[idx], nombre, roles: rolesFinales };
+    } else {
+      // Nuevo
+      const ref = await addDoc(pubColRef, { nombre, roles: rolesVM, activo: true });
+      publicadores.push({ id: ref.id, nombre, roles: rolesVM, activo: true });
+      publicadores.sort((a, b) => (a.nombre||'').localeCompare(b.nombre||'', 'es', { sensitivity: 'base' }));
+    }
+
+    hermanosVMLista = [...publicadores].sort((a,b) => (a.nombre||'').localeCompare(b.nombre||'','es',{sensitivity:'base'}));
+    renderHermanosVM(hermanosVMLista);
+    cerrarModalHermanoVM();
+    uiToast('Guardado', 'success');
+  } catch(e) {
+    status.style.color = '#F09595'; status.textContent = 'Error: ' + e.message;
+  }
+};
+
+window.confirmarEliminarHermanoVM = async function(pubId, nombre) {
+  const ok = await uiConfirm({
+    title: 'Eliminar hermano',
+    msg: `¿Eliminar a ${nombre}? Esta acción no se puede deshacer.`,
+    confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger',
+  });
+  if (!ok) return;
+  try {
+    await deleteDoc(doc(collection(db, 'congregaciones', congreId, 'publicadores'), pubId));
+    publicadores = publicadores.filter(p => p.id !== pubId);
+    hermanosVMLista = hermanosVMLista.filter(p => p.id !== pubId);
+    renderHermanosVM(hermanosVMLista);
+    uiToast('Eliminado', 'success');
+  } catch(e) {
+    uiToast('Error: ' + e.message, 'error');
+  }
+};
+
 window.goToNueva = function() {
   const lunes = lunesDeHoy();
   const fechaEl = document.getElementById('nueva-fecha');
@@ -381,7 +531,7 @@ function checkPin() {
     pinBuffer = '';
     updatePinDots();
     document.getElementById('pin-modal-vm').style.display = 'none';
-    goToSemanas();
+    goToMenuEnc();
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto';
     pinBuffer = '';
@@ -430,7 +580,9 @@ async function cargarSemanas() {
 }
 
 async function cargarProgramaPublico() {
-  const fecha = pubFecha || lunesDeHoy();
+  let fecha = pubFecha || lunesDeHoy();
+  // Asegurar formato válido YYYY-MM-DD (puede corromperse con code viejo cacheado)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) { fecha = lunesDeHoy(); pubFecha = fecha; }
   const el = document.getElementById('pub-contenido');
   document.getElementById('pub-semana-titulo').textContent = 'Semana del ' + fmtDisplay(fecha);
   el.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>';
