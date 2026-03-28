@@ -324,6 +324,25 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
   vertical-align: middle; margin-left: 6px;
 }
 
+/* ── Tabs Encargado ── */
+.vm-tabs {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  background: #252525; border-radius: 12px; padding: 4px;
+}
+.vm-tab-btn {
+  flex: 1; padding: 8px 6px; font-size: 12px; font-weight: 600;
+  background: transparent; border: none; border-radius: 8px;
+  color: #666; cursor: pointer; transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.vm-tab-btn.active {
+  background: #2a2d30; color: #eee;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.vm-tab-btn:not(.active):hover { color: #aaa; }
+.vm-tab-panel { display: none; }
+.vm-tab-panel.active { display: block; }
+
 /* ── Botón configuración en header de semanas ── */
 .btn-config-vm {
   background: transparent; border: none; color: #666; cursor: pointer;

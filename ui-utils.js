@@ -1367,7 +1367,7 @@ window.fmtDateLocal = function(val) {
   border-color: var(--card-hover-border, #3a3a3a);
   background: var(--card-hover-bg, #272a2d);
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  box-shadow: var(--card-hover-shadow, 0 6px 24px rgba(0,0,0,0.35));
 }
 .cs-module-card:active { transform: scale(0.98); box-shadow: none; }
 .cs-module-card-icon {

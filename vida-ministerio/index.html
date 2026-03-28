@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ziv">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=1.5">
+  <link rel="stylesheet" href="styles.css?v=1.6">
 </head>
 <body>
 
@@ -39,7 +39,7 @@
       <div class="cs-module-sub" id="cover-congre" style="color:#EF9F27;">—</div>
       <div class="cs-module-label">¿Qué querés hacer?</div>
 
-      <button class="cs-module-card" style="--card-hover-border:rgba(239,159,39,0.5);--card-hover-bg:rgba(239,159,39,0.06);" onclick="goToVerPrograma()">
+      <button class="cs-module-card" style="--card-hover-border:rgba(239,159,39,0.55);--card-hover-bg:#272010;--card-hover-shadow:0 6px 24px rgba(0,0,0,0.35),0 0 0 1px rgba(239,159,39,0.55),0 4px 20px rgba(239,159,39,0.12);" onclick="goToVerPrograma()">
         <div class="cs-module-card-icon" style="background:rgba(239,159,39,0.15);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="4" width="18" height="18" rx="2" stroke="#EF9F27" stroke-width="1.8"/>
@@ -53,7 +53,7 @@
         </div>
       </button>
 
-      <button class="cs-module-card" style="--card-hover-border:rgba(127,119,221,0.5);--card-hover-bg:rgba(127,119,221,0.07);" onclick="goToPin()">
+      <button class="cs-module-card" style="--card-hover-border:rgba(127,119,221,0.55);--card-hover-bg:#1a1820;--card-hover-shadow:0 6px 24px rgba(0,0,0,0.35),0 0 0 1px rgba(127,119,221,0.55),0 4px 20px rgba(127,119,221,0.12);" onclick="goToPin()">
         <div class="cs-module-card-icon" style="background:rgba(127,119,221,0.15);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="11" width="18" height="11" rx="2" stroke="#7F77DD" stroke-width="1.8"/>
@@ -66,7 +66,6 @@
         </div>
       </button>
 
-      <div class="cs-footer">Ziv · Sistema interno</div>
       <a href="../index.html" class="cs-back-btn">← Volver al módulo</a>
     </div>
   </div>
@@ -105,7 +104,6 @@
   <div id="view-programa-pub" class="view">
     <div style="padding-top:4px;">
       <div class="view-header">
-        <button class="btn-back" onclick="goToCover()">‹</button>
         <div style="flex:1">
           <div class="view-title" id="pub-semana-titulo">Programa</div>
           <div class="view-sub">Vida y Ministerio</div>
@@ -121,6 +119,9 @@
       <div id="pub-contenido">
         <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
       </div>
+      <div style="height:14px;"></div>
+      <button class="cs-back-btn" style="background:transparent;cursor:pointer;font-family:inherit;display:block;margin:0 auto;" onclick="goToCover()">← Volver</button>
+      <div style="height:2rem;"></div>
     </div>
   </div>
 
@@ -128,9 +129,8 @@
   <div id="view-semanas" class="view">
     <div style="padding-top:4px;">
       <div class="view-header">
-        <button class="btn-back" onclick="goToCover()">‹</button>
         <div style="flex:1">
-          <div class="view-title">Semanas</div>
+          <div class="view-title">Encargado</div>
           <div class="view-sub" id="semanas-congre-sub">—</div>
         </div>
         <button class="btn-config-vm" id="btn-config-vm" onclick="goToConfig()" title="Configuración" style="display:none;">
@@ -140,22 +140,46 @@
           </svg>
         </button>
       </div>
-      <div id="semanas-list">
-        <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
+
+      <!-- Tabs -->
+      <div class="vm-tabs">
+        <button class="vm-tab-btn active" data-tab="semanas" onclick="switchVmTab('semanas')">Semanas</button>
+        <button class="vm-tab-btn" data-tab="generar" onclick="switchVmTab('generar')">Generar Semanas</button>
+        <button class="vm-tab-btn" data-tab="hermanos" onclick="switchVmTab('hermanos')">Hermanos</button>
       </div>
-      <div style="height:14px;"></div>
-      <button class="btn-primary" onclick="goToNueva()">+ Nueva semana</button>
-      <div id="vm-export-section" style="display:none; margin-top:10px;">
-        <div class="vm-export-row">
-          <span style="font-size:13px;color:#aaa;white-space:nowrap;">Mes:</span>
-          <input type="month" id="vm-export-mes" class="vm-export-mes-input">
-          <button class="btn-sheets-vm" onclick="exportarMesASheets()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;vertical-align:middle;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Exportar a Sheets
-          </button>
+
+      <!-- Tab: Semanas -->
+      <div class="vm-tab-panel active" data-tab="semanas">
+        <div id="semanas-list">
+          <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
         </div>
-        <div id="vm-export-status"></div>
+        <div style="height:14px;"></div>
+        <button class="btn-primary" onclick="goToNueva()">+ Nueva semana</button>
+        <div id="vm-export-section" style="display:none; margin-top:10px;">
+          <div class="vm-export-row">
+            <span style="font-size:13px;color:#aaa;white-space:nowrap;">Mes:</span>
+            <input type="month" id="vm-export-mes" class="vm-export-mes-input">
+            <button class="btn-sheets-vm" onclick="exportarMesASheets()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;vertical-align:middle;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Exportar a Sheets
+            </button>
+          </div>
+          <div id="vm-export-status"></div>
+        </div>
       </div>
+
+      <!-- Tab: Generar Semanas -->
+      <div class="vm-tab-panel" data-tab="generar">
+        <div class="empty-state" style="padding:3rem 1rem;">Próximamente: generación automática de asignaciones.</div>
+      </div>
+
+      <!-- Tab: Hermanos -->
+      <div class="vm-tab-panel" data-tab="hermanos">
+        <div class="empty-state" style="padding:3rem 1rem;">Próximamente: gestión de hermanos y roles VM.</div>
+      </div>
+
+      <div style="height:14px;"></div>
+      <button class="cs-back-btn" style="background:transparent;cursor:pointer;font-family:inherit;display:block;margin:0 auto;" onclick="goToCover()">← Volver</button>
       <div style="height:2rem;"></div>
     </div>
   </div>

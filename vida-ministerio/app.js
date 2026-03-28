@@ -320,6 +320,10 @@ window.goToSemana = async function(fecha) {
       const snap = await getDoc(doc(db, 'congregaciones', congreId, 'vidaministerio', fecha));
       if (snap.exists()) {
         semanaData = snap.data();
+      } else if (!semanaData) {
+        uiLoading.hide();
+        uiToast('No se encontró el programa para esta semana', 'error');
+        return;
       }
       uiLoading.hide();
     } catch(e) {
@@ -332,6 +336,11 @@ window.goToSemana = async function(fecha) {
   renderSemanaEdit();
   showView('view-semana');
   updateNavBtnsSemana();
+};
+
+window.switchVmTab = function(tabName) {
+  document.querySelectorAll('.vm-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  document.querySelectorAll('.vm-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === tabName));
 };
 
 window.goToNueva = function() {
@@ -406,7 +415,13 @@ async function cargarSemanas() {
     );
     const snap = await getDocs(q);
     const semanas = [];
-    snap.forEach(d => semanas.push(d.data()));
+    snap.forEach(d => {
+      const data = d.data();
+      // Filtrar docs con fecha inválida (formato esperado: YYYY-MM-DD)
+      if (data.fecha && /^\d{4}-\d{2}-\d{2}$/.test(data.fecha)) {
+        semanas.push(data);
+      }
+    });
     semanasLista = semanas;
     renderSemanas(semanas);
   } catch(e) {
