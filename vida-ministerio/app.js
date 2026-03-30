@@ -702,6 +702,13 @@ function renderSemanaCard(s, lunes) {
     ? `<div class="semana-mini-row has-data">👤 ${esc(pNombre)}</div>`
     : `<div class="semana-mini-row">👤 Sin presidente</div>`;
 
+  const partesMin = (s.ministerio || []).slice(0, 3).map(p => {
+    const color = TIPO_MIN_COLORS[p.tipo] || '#888';
+    const text  = esc((p.instruccion || p.titulo || '').substring(0, 45));
+    return `<div class="semana-card-parte-row"><span style="color:${color};font-size:8px;">●</span> ${text}</div>`;
+  }).join('');
+  const partesDiv = partesMin ? `<div class="semana-card-partes">${partesMin}</div>` : '';
+
   return `
     <div class="semana-card${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
       <div class="semana-card-top">
@@ -710,6 +717,7 @@ function renderSemanaCard(s, lunes) {
       </div>
       <div class="semana-card-badges">${actualBadge}${espBadge}</div>
       <div class="semana-card-meta">${cRow}${pRow}</div>
+      ${partesDiv}
       <div class="estado-${c.clase}">${c.texto}</div>
     </div>`;
 }
@@ -887,6 +895,7 @@ function renderParteItem(key, label, parte, opts = {}) {
     <div class="parte-meta-row">
       <span class="parte-label-text">${label}</span>${dur}${quitar}
     </div>
+    ${renderTipoInstruccionHtml(key, parte)}
     <input class="parte-titulo-input" type="text"
            placeholder="Título de la parte…"
            value="${esc(parte?.titulo || '')}"
@@ -925,6 +934,7 @@ function renderParteItemConAyudante(key, label, parte, opts = {}) {
     <div class="parte-meta-row">
       <span class="parte-label-text">${label}</span>${dur}${quitar}
     </div>
+    ${renderTipoInstruccionHtml(key, parte)}
     <input class="parte-titulo-input" type="text"
            placeholder="Título de la parte…"
            value="${esc(parte?.titulo || '')}"
@@ -1037,9 +1047,6 @@ function renderSemanaEdit() {
     ${vcPartes}${btnAddVC}${estudioHtml}
   </div>`;
 
-  html += `<button class="btn-wol" onclick="reimportarDeWOL()">↓ Reimportar títulos de WOL</button>`;
-  html += `<button class="btn-primary guardar-btn" onclick="guardarSemana()">Guardar programa</button>`;
-  html += `<button class="btn-danger-outline" onclick="eliminarSemana('${s.fecha}')">Eliminar esta semana</button>`;
   html += `<div style="height:2rem;"></div>`;
 
   document.getElementById('semana-content').innerHTML = html;
@@ -1144,6 +1151,22 @@ function wolUrl(fecha) {
 }
 
 
+const TIPO_MIN_LABELS = { conversacion: 'De casa en casa', revisita: 'Revisita', escenificacion: 'Escenificación', discurso: 'Discurso' };
+const TIPO_MIN_COLORS = { conversacion: '#5BA3D9', revisita: '#EF9F27', escenificacion: '#97C459', discurso: '#7F77DD' };
+
+function renderTipoInstruccionHtml(key, parte) {
+  if (!key.startsWith('ministerio.')) return '';
+  const tipo  = parte?.tipo;
+  const color = TIPO_MIN_COLORS[tipo] || '#888';
+  const chip  = tipo
+    ? `<span class="tipo-chip" style="background:${color}22;color:${color};border:1px solid ${color}44;">${TIPO_MIN_LABELS[tipo] || tipo}</span>`
+    : '';
+  const inst = parte?.instruccion
+    ? `<div class="parte-instruccion">${esc(parte.instruccion)}</div>`
+    : '';
+  return (chip || inst) ? `<div class="parte-tipo-row">${chip}${inst}</div>` : '';
+}
+
 function parseDur(text) {
   const m = text?.match(/\((\d+)\s*min/);
   return m ? parseInt(m[1]) : null;
@@ -1190,7 +1213,14 @@ function parseWOL(html) {
     const endIdx   = numbered[i + 1] ? allFlat.indexOf(numbered[i + 1].el) : allFlat.length;
     for (let j = startIdx; j < endIdx; j++) {
       const d = parseDur(allFlat[j].textContent);
-      if (d) { part.duracion = d; break; }
+      if (d) {
+        part.duracion = d;
+        // Capturar instruccion: texto del mismo elemento, sin el prefijo "(X mins.) "
+        const raw = allFlat[j].textContent.trim();
+        const stripped = raw.replace(/^\(\d+\s*mins?\.\)\s*/i, '').trim();
+        part.instruccion = stripped || null;
+        break;
+      }
     }
   });
 
@@ -1226,14 +1256,13 @@ function parseWOL(html) {
   const ministerio = ministrioParts.length
     ? ministrioParts.map(p => {
         const tipo = tipoMinisterioDesdeWOL(p.titulo);
-        return tipo === 'discurso'
-          ? { titulo: p.titulo, tipo, duracion: p.duracion, pubId: null }
-          : { titulo: p.titulo, tipo, duracion: p.duracion, pubId: null, ayudante: null };
+        const base = { titulo: p.titulo, tipo, duracion: p.duracion, instruccion: p.instruccion ?? null, pubId: null };
+        return tipo === 'discurso' ? base : { ...base, ayudante: null };
       })
     : [
-        { titulo: '', tipo: 'conversacion', duracion: null, pubId: null, ayudante: null },
-        { titulo: '', tipo: 'conversacion', duracion: null, pubId: null, ayudante: null },
-        { titulo: '', tipo: 'conversacion', duracion: null, pubId: null, ayudante: null },
+        { titulo: '', tipo: 'conversacion', duracion: null, instruccion: null, pubId: null, ayudante: null },
+        { titulo: '', tipo: 'conversacion', duracion: null, instruccion: null, pubId: null, ayudante: null },
+        { titulo: '', tipo: 'conversacion', duracion: null, instruccion: null, pubId: null, ayudante: null },
       ];
 
   const vidaCristiana = vidaSinEstudio.length
@@ -1302,6 +1331,7 @@ function aplicarWOLaSemana(importado) {
   const minOld = semanaData.ministerio || [];
   semanaData.ministerio = importado.ministerio.map((p, i) => ({
     ...p,
+    instruccion: p.instruccion ?? null,
     pubId:    minOld[i]?.pubId    ?? null,
     ayudante: minOld[i]?.ayudante ?? null,
     ...(tieneAuxiliar ? { salaAux: minOld[i]?.salaAux ?? { pubId: null, ayudante: null } } : {}),
@@ -1320,6 +1350,10 @@ function aplicarWOLaSemana(importado) {
     semanaData.estudioBiblico.titulo = importado.estudioBiblico.titulo;
   }
 }
+
+window.autocompletarHermanos = function() {
+  uiToast('Próximamente: auto-asignación', 'success');
+};
 
 window.reimportarDeWOL = async function() {
   if (!semanaData) return;
