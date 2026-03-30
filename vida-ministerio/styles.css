@@ -60,7 +60,7 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 }
 .semana-card:hover { border-color: rgba(239,159,39,0.4); background: #2e2a22; }
 .semana-card:active { transform: scale(0.99); }
-.semana-card.semana-actual { border-color: rgba(239,159,39,0.35); }
+.semana-card.semana-actual { border: 2px solid #EF9F27; background: #2d2a20; }
 .semana-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; }
 .semana-fecha { font-size: 14px; font-weight: 700; color: #eee; line-height: 1.2; }
 .semana-card-badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 0; }
@@ -83,6 +83,18 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .estado-vacia    { font-size: 12px; color: #555; }
 .estado-parcial  { font-size: 12px; color: #EF9F27; }
 .estado-completa { font-size: 12px; color: #5DB85D; }
+.estado-asignado {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(93,184,93,0.15); color: #5DB85D;
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+  border: 1px solid rgba(93,184,93,0.3);
+}
+.semana-card-conmem { background: #1f2226; border-color: #8877cc44; }
+.semana-conmem-label {
+  font-size: 15px; font-weight: 700; color: #8877cc;
+  text-align: center; padding: 8px 0 4px;
+  letter-spacing: 0.02em;
+}
 
 .btn-primary {
   background: #7F77DD; color: #fff; border: none; border-radius: 10px;
@@ -115,18 +127,18 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 /* ── Programa semana (secciones) ── */
 .seccion-bloque {
-  background: #252525; border: 1px solid #2e2e2e; border-radius: 14px;
-  margin-bottom: 14px; overflow: hidden;
+  background: #252525; border: 1px solid #2e2e2e; border-radius: 12px;
+  margin-bottom: 10px; overflow: hidden;
 }
 .seccion-hdr {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; font-size: 11px; font-weight: 700;
   letter-spacing: 0.04em; text-transform: uppercase;
 }
 .seccion-hdr-num {
-  width: 20px; height: 20px; border-radius: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; flex-shrink: 0;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
 }
 
 .hdr-general  { background: rgba(127,119,221,0.12); color: #9b93ee; }
@@ -140,13 +152,13 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 /* ── Partes del programa ── */
 .parte-item {
-  padding: 12px 14px;
+  padding: 8px 12px;
   border-top: 1px solid #2e2e2e;
 }
 .parte-item:first-of-type { border-top: none; }
 
 .parte-meta-row {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
 }
 .parte-label-text { font-size: 13px; font-weight: 600; color: #ccc; flex: 1; }
 .parte-dur-badge {
@@ -161,14 +173,14 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 
 .parte-titulo-input {
   width: 100%; background: #1e1e1e; border: 1px solid #383838; border-radius: 8px;
-  padding: 8px 10px; color: #ddd; font-size: 13px; margin-bottom: 8px;
+  padding: 6px 10px; color: #ddd; font-size: 13px; margin-bottom: 6px;
 }
 .parte-titulo-input:focus { outline: none; border-color: #EF9F27; }
 .parte-titulo-input::placeholder { color: #484848; }
 
 /* ── Asignar buttons ── */
 .asig-row {
-  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; padding: 7px 12px;
   border-top: 1px solid #2a2a2a;
 }
 .asig-label { font-size: 12px; color: #888; min-width: 120px; flex-shrink: 0; }
@@ -189,7 +201,7 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 .asig-double-row .asignar-btn { flex: 1; }
 
 .canciones-row {
-  display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid #2a2a2a;
+  display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid #2a2a2a;
 }
 .cancion-item { flex: 1; }
 .cancion-item label { display: block; font-size: 10px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
@@ -229,11 +241,12 @@ body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; min
 /* ── Sticky action bar (view-semana) ── */
 .vm-action-bar {
   display: flex; gap: 8px;
-  padding: 8px 0 10px;
+  padding: 8px 10px 10px;
   position: sticky; top: 0;
   background: #1a1c1f; z-index: 10;
   border-bottom: 1px solid #2e3033;
-  margin-bottom: 8px;
+  border-radius: 0 0 14px 14px;
+  margin: 0 -4px 10px;
 }
 .vm-action-bar button { flex: 1; margin: 0; }
 .btn-autocomplete {

@@ -690,24 +690,32 @@ function renderSemanaCard(s, lunes) {
   const esp      = vmEspeciales[s.fecha];
   const esActual = s.fecha === lunes;
   const esSuper  = esp?.tipo === 'superintendente';
+
+  // Conmemoración: card simplificada
+  if (esp?.tipo === 'conmemoracion') {
+    return `
+    <div class="semana-card semana-card-conmem${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
+      <div class="semana-card-top">
+        <div class="semana-fecha">${fmtDisplayReunion(s.fecha, false)}</div>
+        <button class="btn-del-semana" onclick="event.stopPropagation(); eliminarSemana('${s.fecha}')" title="Eliminar semana">×</button>
+      </div>
+      <div class="semana-conmem-label">Conmemoración</div>
+    </div>`;
+  }
+
   const espColor = esp ? (VM_TIPO_COLORS[esp.tipo] || '#eee') : null;
   const espBadge = esp
     ? `<span class="badge-especial" style="background:${espColor}22;color:${espColor};">${VM_TIPO_LABELS[esp.tipo] || esp.tipo}</span>`
     : '';
   const actualBadge = esActual ? '<span class="badge-actual">esta semana</span>' : '';
-  const cStr = [s.cancionApertura, s.cancionIntermedia, s.cancionCierre].filter(Boolean).join(' · ');
-  const cRow = cStr ? `<div class="semana-mini-row has-data">♪ ${cStr}</div>` : `<div class="semana-mini-row">♪ —</div>`;
   const pNombre = nombreDePub(s.presidente);
   const pRow = pNombre
     ? `<div class="semana-mini-row has-data">👤 ${esc(pNombre)}</div>`
     : `<div class="semana-mini-row">👤 Sin presidente</div>`;
 
-  const partesMin = (s.ministerio || []).slice(0, 3).map(p => {
-    const color = TIPO_MIN_COLORS[p.tipo] || '#888';
-    const text  = esc((p.instruccion || p.titulo || '').substring(0, 45));
-    return `<div class="semana-card-parte-row"><span style="color:${color};font-size:8px;">●</span> ${text}</div>`;
-  }).join('');
-  const partesDiv = partesMin ? `<div class="semana-card-partes">${partesMin}</div>` : '';
+  const estadoHtml = c.clase === 'completa'
+    ? `<span class="estado-asignado">✓ Asignado</span>`
+    : `<div class="estado-${c.clase}">${c.texto}</div>`;
 
   return `
     <div class="semana-card${esActual ? ' semana-actual' : ''}" onclick="goToSemana('${s.fecha}')">
@@ -716,9 +724,8 @@ function renderSemanaCard(s, lunes) {
         <button class="btn-del-semana" onclick="event.stopPropagation(); eliminarSemana('${s.fecha}')" title="Eliminar semana">×</button>
       </div>
       <div class="semana-card-badges">${actualBadge}${espBadge}</div>
-      <div class="semana-card-meta">${cRow}${pRow}</div>
-      ${partesDiv}
-      <div class="estado-${c.clase}">${c.texto}</div>
+      <div class="semana-card-meta">${pRow}</div>
+      ${estadoHtml}
     </div>`;
 }
 
@@ -1474,14 +1481,19 @@ window.crearSemana = async function() {
     return;
   }
 
-  // Navegar a la primera semana generada
-  semanaData = semanasLista.find(s => s.fecha === primeraFecha);
-  document.getElementById('semana-titulo-display').textContent = 'Semana del ' + fmtDisplay(primeraFecha);
-  renderSemanaEdit();
-  showView('view-semana');
-  updateNavBtnsSemana();
-
   uiToast(nSemanas === 1 ? 'Semana creada' : `${nSemanas} semanas generadas`, 'success');
+
+  if (nSemanas > 1) {
+    renderSemanas(semanasLista);
+    switchVmTab('semanas');
+    showView('view-semanas');
+  } else {
+    semanaData = semanasLista.find(s => s.fecha === primeraFecha);
+    document.getElementById('semana-titulo-display').textContent = 'Semana del ' + fmtDisplay(primeraFecha);
+    renderSemanaEdit();
+    showView('view-semana');
+    updateNavBtnsSemana();
+  }
 };
 
 // ─────────────────────────────────────────
