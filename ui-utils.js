@@ -37,30 +37,30 @@
   --toggle-knob:   #e8e8e8;
 }
 
-/* ── MODO CLARO ── */
+/* ── MODO CLARO — respeta estructura visual, colores claros ── */
 body.light-mode {
-  --bg-primary:    #f5f0e8;
-  --bg-secondary:  #ffffff;
-  --bg-card:       #ffffff;
-  --bg-hover:      #f0ebe2;
-  --bg-input:      #f8f5ef;
-  --bg-modal:      #ffffff;
+  --bg-primary:    #f7f3ed;
+  --bg-secondary:  #fefcf9;
+  --bg-card:       #fefcf9;
+  --bg-hover:      #fff;
+  --bg-input:      #fefcf9;
+  --bg-modal:      #fefcf9;
   --bg-header:     #f0ebe2;
   --bg-badge:      rgba(0,0,0,0.04);
 
-  --text-primary:  #2c2c2c;
-  --text-secondary:#5a5a5a;
+  --text-primary:  #2a2a2a;
+  --text-secondary:#6a6a6a;
   --text-muted:    #8a8a8a;
-  --text-dim:      #aaa;
+  --text-dim:      #b0b0b0;
 
-  --border-primary:#e0d8cc;
-  --border-light:  #d8d0c4;
-  --border-input:  #c8c0b4;
+  --border-primary:#e8e0d4;
+  --border-light:  #ddd6ca;
+  --border-input:  #ccc4b8;
 
-  --shadow-card:   0 2px 12px rgba(0,0,0,0.08);
-  --shadow-hover:  0 6px 28px rgba(0,0,0,0.12);
+  --shadow-card:   0 2px 12px rgba(0,0,0,0.06);
+  --shadow-hover:  0 6px 24px rgba(0,0,0,0.10);
 
-  --toggle-bg:     #ccc;
+  --toggle-bg:     #e8e0d4;
   --toggle-knob:   #fff;
 }
 
@@ -77,7 +77,10 @@ body:not(.light-mode) {
     radial-gradient(ellipse at 60% 10%, rgba(29,158,117,0.07) 0%, transparent 40%);
 }
 body.light-mode {
-  background-image: none;
+  background-image:
+    radial-gradient(ellipse at 60% 20%, rgba(46,134,193,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(79,195,195,0.04) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
 /* ── Botón toggle tema ── */
