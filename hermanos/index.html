@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hermanos — Ziv</title>
+  <title>Administrador — Ziv</title>
   <link rel="icon" type="image/png" href="/icon-192.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1a1c1f">
@@ -38,19 +38,20 @@
         </div>
       </div>
 
-      <div class="cs-module-title">Hermanos</div>
+      <div class="cs-module-title">Administrador</div>
       <div class="cs-module-sub js-congre" style="color:#D85A30;">—</div>
       <div class="cs-module-label">¿Qué querés hacer?</div>
 
       <button class="cs-module-card" style="--card-hover-border:rgba(216,90,48,0.55);--card-hover-bg:#2a1711;--card-hover-shadow:0 6px 24px rgba(0,0,0,0.35),0 0 0 1px rgba(216,90,48,0.55),0 4px 20px rgba(216,90,48,0.12);" onclick="goToPin()">
         <div class="cs-module-card-icon" style="background:rgba(216,90,48,0.15);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="11" width="18" height="11" rx="2" stroke="#D85A30" stroke-width="1.8"/>
-            <path d="M7 11V7a5 5 0 0110 0v4" stroke="#D85A30" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#D85A30" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="4" stroke="#D85A30" stroke-width="1.8"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#D85A30" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
-          <div class="cs-module-card-title">Encargado</div>
+          <div class="cs-module-card-title">Lista de Hermanos</div>
           <div class="cs-module-card-sub">Gestionar publicadores y roles</div>
         </div>
       </button>
@@ -109,6 +110,7 @@
 
     <select id="h-rol" class="rol-filter" onchange="filtrarLista()">
       <option value="">— Todos los roles —</option>
+      <option value="__sin_roles__">Sin asignación</option>
       <optgroup label="Asignaciones">
         <option value="LECTOR">Lector</option>
         <option value="SONIDO">Sonido</option>
@@ -124,6 +126,7 @@
         <option value="CONDUCTOR_GRUPO_3">Conductor Grupo 3</option>
         <option value="CONDUCTOR_GRUPO_4">Conductor Grupo 4</option>
         <option value="CONDUCTOR_CONGREGACION">Conductor Congregación</option>
+        <option value="SUPERINTENDENTE_CIRCUITO">Sup. de Circuito</option>
       </optgroup>
       <optgroup label="Vida y Ministerio">
         <option value="VM_PRESIDENTE">Presidente VM</option>
@@ -143,6 +146,34 @@
     <div id="hermanos-list">
       <div class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando…</div></div>
     </div>
+
+    <!-- ── Semanas especiales ── -->
+    <div class="enc-especiales" style="margin-top:24px;">
+      <div class="enc-especiales-header">
+        <span>Semanas especiales</span>
+        <button class="btn-esp-add" onclick="toggleFormEspecial()">+</button>
+      </div>
+      <div id="especiales-lista"><div class="especiales-empty">Cargando…</div></div>
+      <div id="especiales-form" style="display:none;">
+        <select id="esp-tipo" onchange="actualizarLabelFechaEsp()" class="esp-select">
+          <option value="conmemoracion">Conmemoración</option>
+          <option value="superintendente">Visita superintendente</option>
+          <option value="asamblea">Asamblea</option>
+        </select>
+        <div class="esp-field">
+          <label id="esp-fecha-label" class="esp-label">Fecha exacta del evento</label>
+          <input type="date" id="esp-fecha" class="esp-date-input">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn-secondary" onclick="toggleFormEspecial()" style="flex:1;">Cancelar</button>
+          <button class="btn-save" onclick="guardarEspecial()" style="flex:2;">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="btn-ver-planilla" class="btn-secondary" onclick="abrirPlanilla()" style="width:100%;margin-top:16px;display:none;">
+      📊 Ver planilla
+    </button>
 
     <div style="height:2rem;"></div>
   </div>
@@ -175,6 +206,7 @@
         <label class="rol-checkbox"><input type="checkbox" id="hcb-CONDUCTOR_GRUPO_3"><span>Conductor Grupo 3</span></label>
         <label class="rol-checkbox"><input type="checkbox" id="hcb-CONDUCTOR_GRUPO_4"><span>Conductor Grupo 4</span></label>
         <label class="rol-checkbox" style="grid-column:span 2"><input type="checkbox" id="hcb-CONDUCTOR_CONGREGACION"><span>Conductor Congregación</span></label>
+        <label class="rol-checkbox" style="grid-column:span 2"><input type="checkbox" id="hcb-SUPERINTENDENTE_CIRCUITO"><span>Sup. de Circuito</span></label>
       </div>
 
       <!-- Roles VM -->

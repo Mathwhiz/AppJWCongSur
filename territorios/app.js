@@ -161,7 +161,7 @@ function show(id) {
   const homeBtn = document.getElementById('btn-home');
   const mapaBtn = document.getElementById('btn-mapa-float');
   if (homeBtn) {
-    const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial','view-chat-notas'].includes(id);
+    const showHome = ['view-config','view-preview','view-registrar','view-info','view-historial'].includes(id);
     if (showHome) homeBtn.classList.add('visible');
     homeBtn.classList.remove('hidden-in-plan');
   }
@@ -327,7 +327,8 @@ function selectGrupo(el, n) {
 function goToCover() {
   selected = [];
   hide('view-config'); hide('view-preview');
-  hide('view-modo');   hide('view-registrar'); hide('view-info'); hide('view-chat-notas');
+  hide('view-modo');   hide('view-registrar'); hide('view-info');
+  hideChatFab();
   show('view-cover');
   document.getElementById('step-bar').style.display = 'none';
 }
@@ -337,7 +338,8 @@ function goToModo() {
   document.getElementById('btn-home').classList.remove('visible');
   document.getElementById('btn-mapa-float')?.classList.remove('visible');
   hide('view-cover'); hide('view-config'); hide('view-preview');
-  hide('view-registrar'); hide('view-info'); hide('view-historial'); hide('view-chat-notas');
+  hide('view-registrar'); hide('view-info'); hide('view-historial');
+  showChatFab();
   const label = document.getElementById('modo-grupo-label');
   const grupoObj = GRUPOS.find(g => String(g.id) === String(selectedGrupo));
   label.textContent = grupoObj ? grupoObj.label : selectedGrupo;
@@ -384,7 +386,7 @@ async function cerrarSesion() {
   _conductoresResolvers = [];
   document.querySelectorAll('.grupo-btn').forEach(b => {
     b.classList.remove('selected');
-    b.style.background = '#2a2a2a';
+    b.style.background = '';
   });
   document.getElementById('btn-start').classList.remove('enabled');
   document.getElementById('btn-home').classList.remove('visible');
@@ -750,54 +752,55 @@ function renderSalidaCard(s) {
   const diaColor  = DIA_COLORS[nombreDia] || '#eee';
   div.innerHTML = `
     <div class="salida-card-top">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="sal-dia-label-${s.id}" style="font-size:22px;font-weight:500;color:${diaColor};">${nombreDia}</span>
-        <span class="salida-card-label" style="font-size:13px;color:#888;">${esTel ? 'Telefónica' : 'Campo'}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="sal-dia-label-${s.id}" style="font-size:14px;font-weight:600;color:${diaColor};">${nombreDia}</span>
+        <span style="font-size:12px;color:#666;">·</span>
+        <span style="font-size:12px;color:#888;font-weight:500;">${esTel ? 'Telefónica' : 'Campo'}</span>
       </div>
       <button class="salida-remove-btn" onclick="removeSalida(${s.id})">✕</button>
     </div>
-    <div class="form-row">
-      <div><label>Día</label><input type="date" id="sal-fecha-${s.id}" value="${s.fecha}" onchange="updateDiaLabel(${s.id})"></div>
-      <div><label>Hora</label><input type="time" id="sal-hora-${s.id}" value="${s.hora}"></div>
+    <div class="form-row" style="margin-bottom:6px;">
+      <div><label style="font-size:11px;">Día</label><input type="date" id="sal-fecha-${s.id}" value="${s.fecha}" onchange="updateDiaLabel(${s.id})"></div>
+      <div><label style="font-size:11px;">Hora</label><input type="time" id="sal-hora-${s.id}" value="${s.hora}"></div>
     </div>
-    <div class="form-row">
+    <div class="form-row" style="margin-bottom:6px;">
       <div>
-        <label>Conductor</label>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:11px;">Conductor</label>
+        <div style="display:flex;align-items:center;gap:5px;">
           <select id="sal-cond-${s.id}" style="flex:1;">${getConductorOptions(selectedGrupo, s.conductor)}</select>
           <button type="button" onclick="openConductorPicker('sal-cond-${s.id}', selectedGrupo, this)"
-            style="padding:6px 10px;background:#1a1a2e;color:#7F77DD;border:0.5px solid #4A44A5;border-radius:8px;cursor:pointer;font-size:13px;flex-shrink:0;font-weight:500;">
+            style="padding:5px 9px;background:#1a1a2e;color:#7F77DD;border:0.5px solid #4A44A5;border-radius:8px;cursor:pointer;font-size:13px;flex-shrink:0;">
             👤
           </button>
         </div>
       </div>
       ${esTel ? '' : `
       <div>
-        <div style="display:flex;align-items:flex-end;gap:6px;">
-          <div style="flex:1;">
-            <label>Territorio</label>
+        <label style="font-size:11px;">Territorio</label>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="flex:1;min-width:0;">
             <input type="hidden" id="sal-terr-${s.id}" value="">
             <button type="button" id="sal-terr-btn-${s.id}" class="ui-fake-input empty"
               onclick="openTerritorioPicker(${s.id}, 'sal-terr-${s.id}', 'sal-terr-btn-${s.id}')">
-              <span class="ui-fake-input-icon">🗺</span><span>Elegir territorio</span>
+              <span class="ui-fake-input-icon">🗺</span><span>Elegir</span>
             </button>
           </div>
           <button type="button" onclick="openMapaPicker(${s.id})" title="Elegir del mapa"
-            style="margin-bottom:1px;padding:6px 10px;background:#1a1a2e;color:#7F77DD;border:0.5px solid #4A44A5;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;font-weight:500;">
+            style="padding:5px 9px;background:#1a1a2e;color:#7F77DD;border:0.5px solid #4A44A5;border-radius:8px;cursor:pointer;font-size:13px;flex-shrink:0;">
             🗺
           </button>
           <button type="button" onclick="addExtraTerritory(${s.id})"
-            style="margin-bottom:1px;padding:6px 9px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">+</button>
+            style="padding:5px 8px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;">+</button>
         </div>
         <div id="extra-terrs-${s.id}"></div>
       </div>`}
     </div>
     <div>
-      <label>Encuentro / Familia</label>
-      <div style="display:flex;align-items:center;gap:6px;">
+      <label style="font-size:11px;">Encuentro / Familia</label>
+      <div style="display:flex;align-items:center;gap:5px;">
         <input type="text" id="sal-enc-${s.id}" value="${s.encuentro}" placeholder="Ej: Flia. García / esq. X y Y" style="flex:1;">
         <button type="button" onclick="openEncuentroPicker(${s.id})" title="Elegir en el mapa"
-          style="padding:6px 10px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">
+          style="padding:5px 9px;background:#1a2e0a;color:#97C459;border:0.5px solid #3B6D11;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">
           📍
         </button>
       </div>
@@ -1587,28 +1590,68 @@ function notasColByScope(scope) {
   return collection(db, 'congregaciones', CONGRE_ID, 'chatNotas', channelId, 'mensajes');
 }
 
+// ─────────────────────────────────────────
+//   CHAT / NOTAS — PANEL FLOTANTE
+// ─────────────────────────────────────────
+let _chatEditDocId = null;
+
 function getScopeLabel(scope) {
   if (scope === 'congregacion') return 'Congregación';
   const g = GRUPOS.find(x => String(x.id) === String(selectedGrupo));
   return g?.label || `Grupo ${selectedGrupo}`;
 }
 
-async function goToChatNotas() {
-  hide('view-modo'); show('view-chat-notas');
-  chatScope = 'grupo';
-  const titulo = document.getElementById('chat-notas-titulo');
-  titulo.textContent = 'Chat / Notas';
-  titulo.style.color = GCOLORS[selectedGrupo] || '#97C459';
-  document.getElementById('chat-autor').value = sessionStorage.getItem('chatAutor') || '';
-  switchChatScope('grupo');
+function getAutorLabel() {
+  return getScopeLabel(chatScope);
 }
+
+function getMisIds() {
+  try { return JSON.parse(sessionStorage.getItem('chatMisIds') || '[]'); }
+  catch { return []; }
+}
+function addMiId(id) {
+  const arr = getMisIds();
+  arr.push(id);
+  sessionStorage.setItem('chatMisIds', JSON.stringify(arr));
+}
+
+function showChatFab() {
+  const fab = document.getElementById('chat-fab');
+  if (fab) fab.style.display = 'flex';
+}
+function hideChatFab() {
+  const fab = document.getElementById('chat-fab');
+  if (fab) fab.style.display = 'none';
+}
+
+window.openChatPanel = function() {
+  const overlay = document.getElementById('chat-overlay');
+  if (overlay) overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  switchChatScope(chatScope || 'grupo');
+};
+
+window.closeChatPanel = function() {
+  const overlay = document.getElementById('chat-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+};
 
 function switchChatScope(scope) {
   chatScope = scope === 'congregacion' ? 'congregacion' : 'grupo';
-  document.getElementById('chat-tab-grupo').classList.toggle('active', chatScope === 'grupo');
-  document.getElementById('chat-tab-congregacion').classList.toggle('active', chatScope === 'congregacion');
-  document.getElementById('chat-canal').value = getScopeLabel(chatScope);
+  const cvtGrupo = document.getElementById('cvt-grupo');
+  const cvtCong  = document.getElementById('cvt-congregacion');
+  if (cvtGrupo) cvtGrupo.classList.toggle('active', chatScope === 'grupo');
+  if (cvtCong)  cvtCong.classList.toggle('active', chatScope === 'congregacion');
+  const titulo = document.getElementById('chat-panel-titulo');
+  if (titulo) titulo.textContent = 'Notas — ' + getScopeLabel(chatScope);
   refreshChatNotas();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
 async function refreshChatNotas() {
@@ -1616,67 +1659,99 @@ async function refreshChatNotas() {
   try {
     const snap = await getDocs(query(notasColByScope(chatScope), orderBy('createdAt', 'desc'), limit(80)));
     hide('chat-loading');
-    const docs = snap.docs.map(d => d.data());
+    const misIds = getMisIds();
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const list = document.getElementById('chat-list');
-    if (!docs.length) {
-      show('chat-empty');
-      list.innerHTML = '';
-      return;
-    }
-    list.innerHTML = docs.map(n => `
-      <div class="chat-item">
+    if (!items.length) { show('chat-empty'); list.innerHTML = ''; return; }
+    list.innerHTML = items.map(n => {
+      const esMio = misIds.includes(n.id);
+      const fecha = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
+      const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
+      const acciones = esMio ? `
+        <div class="chat-item-actions">
+          <button class="chat-btn-edit" onclick="abrirEditNota('${n.id}', ${JSON.stringify(n.texto || '').replace(/</g,'\\u003c')})">Editar</button>
+          <button class="chat-btn-del"  onclick="eliminarNota('${n.id}')">Eliminar</button>
+        </div>` : '';
+      return `<div class="chat-item">
         <div class="chat-item-head">
-          <span class="chat-item-author">${n.autor || 'Anónimo'}</span>
-          <span class="chat-item-date">${fmtDateLocal(n.createdAt)}</span>
+          <span class="chat-item-author">${escapeHtml(n.autor || getScopeLabel(n.canal === 'congregacion' ? 'congregacion' : 'grupo'))}</span>
+          <span class="chat-item-date">${fechaStr}</span>
         </div>
         <div class="chat-item-text">${escapeHtml(n.texto || '')}</div>
-      </div>
-    `).join('');
+        ${acciones}
+      </div>`;
+    }).join('');
     show('chat-list');
   } catch(err) {
     hide('chat-loading');
-    const el = document.getElementById('chat-error');
-    el.innerHTML = `<div class="error-wrap">No se pudieron cargar las notas: ${err.message}</div>`;
+    document.getElementById('chat-error').innerHTML =
+      `<div class="error-wrap" style="margin:8px 12px;font-size:12px;">Error: ${err.message}</div>`;
     show('chat-error');
   }
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
 async function sendChatNota(btnEl) {
-  const autor = document.getElementById('chat-autor').value.trim();
   const texto = document.getElementById('chat-mensaje').value.trim();
-  if (!texto) {
-    await uiAlert('Escribí una nota antes de publicar.', 'Mensaje vacío');
-    return;
-  }
-  const boton = btnEl || null;
-  if (boton) boton.disabled = true;
+  if (!texto) { await uiAlert('Escribí una nota antes de publicar.', 'Mensaje vacío'); return; }
+  if (btnEl) btnEl.disabled = true;
   try {
-    await addDoc(notasColByScope(chatScope), {
-      autor: autor || null,
+    const ref = await addDoc(notasColByScope(chatScope), {
+      autor: getScopeLabel(chatScope),
       texto,
       createdAt: Timestamp.now(),
       canal: chatScope,
       grupo: chatScope === 'grupo' ? String(selectedGrupo) : 'C',
     });
-    sessionStorage.setItem('chatAutor', autor);
+    addMiId(ref.id);
     document.getElementById('chat-mensaje').value = '';
     await refreshChatNotas();
     uiToast('Nota publicada', 'success');
-  } catch (err) {
-    await uiAlert(`No se pudo publicar la nota: ${err.message}`, 'Error');
+  } catch(err) {
+    await uiAlert(`No se pudo publicar: ${err.message}`, 'Error');
   } finally {
-    if (boton) boton.disabled = false;
+    if (btnEl) btnEl.disabled = false;
   }
 }
+
+window.abrirEditNota = function(docId, textoActual) {
+  _chatEditDocId = docId;
+  const ta = document.getElementById('chat-edit-texto');
+  if (ta) ta.value = textoActual;
+  document.getElementById('chat-edit-modal').style.display = 'flex';
+};
+
+window.closeChatEdit = function() {
+  document.getElementById('chat-edit-modal').style.display = 'none';
+  _chatEditDocId = null;
+};
+
+window.confirmarEditNota = async function() {
+  const texto = document.getElementById('chat-edit-texto').value.trim();
+  if (!texto || !_chatEditDocId) return;
+  try {
+    await updateDoc(doc(db, notasColByScope(chatScope).path, _chatEditDocId), { texto });
+    closeChatEdit();
+    await refreshChatNotas();
+    uiToast('Nota actualizada', 'success');
+  } catch(err) {
+    await uiAlert('Error al editar: ' + err.message);
+  }
+};
+
+window.eliminarNota = async function(docId) {
+  const ok = await uiConfirm({ title: 'Eliminar nota', msg: '¿Eliminar este mensaje?', confirmText: 'Eliminar', type: 'danger' });
+  if (!ok) return;
+  try {
+    const colRef = notasColByScope(chatScope);
+    await deleteDoc(doc(db, colRef.path, docId));
+    const misIds = getMisIds().filter(id => id !== docId);
+    sessionStorage.setItem('chatMisIds', JSON.stringify(misIds));
+    await refreshChatNotas();
+    uiToast('Nota eliminada', 'success');
+  } catch(err) {
+    await uiAlert('Error: ' + err.message);
+  }
+};
 
 // ─────────────────────────────────────────
 //   MAPA POPUP
@@ -1714,7 +1789,6 @@ window.goToStep1 = goToStep1;
 window.goToRegistrar = goToRegistrar;
 window.goToInfoGrupo = goToInfoGrupo;
 window.goToHistorial = goToHistorial;
-window.goToChatNotas = goToChatNotas;
 window.goToMapa = goToMapa;
 window.cerrarSesion = cerrarSesion;
 window.guardarRegistros = guardarRegistros;

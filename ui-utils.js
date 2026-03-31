@@ -78,11 +78,11 @@ body:not(.light-mode) {
 }
 body.light-mode {
   background-image:
-    radial-gradient(ellipse at 60% 20%, rgba(46,134,193,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(79,195,195,0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 82% 18%, rgba(127,119,221,0.09) 0%, transparent 56%),
-    radial-gradient(ellipse at 8% 24%, rgba(155,143,255,0.06) 0%, transparent 48%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    radial-gradient(ellipse at 60% 15%, rgba(55,138,221,0.13) 0%, transparent 55%),
+    radial-gradient(ellipse at 18% 80%, rgba(29,158,117,0.09) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 20%, rgba(127,119,221,0.16) 0%, transparent 52%),
+    radial-gradient(ellipse at 40% 90%, rgba(155,143,255,0.08) 0%, transparent 46%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
 
 /* ── Botón toggle tema ── */

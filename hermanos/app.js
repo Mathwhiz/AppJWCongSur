@@ -1,6 +1,6 @@
 import { db } from '../firebase.js';
 import {
-  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc
+  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 window.addEventListener('pageshow', e => { if (e.persisted) window.location.reload(); });
@@ -28,7 +28,8 @@ const ROLES_ASIGN = [
   { id: 'CONDUCTOR_GRUPO_2',     label: 'Conductor Grupo 2' },
   { id: 'CONDUCTOR_GRUPO_3',     label: 'Conductor Grupo 3' },
   { id: 'CONDUCTOR_GRUPO_4',     label: 'Conductor Grupo 4' },
-  { id: 'CONDUCTOR_CONGREGACION',label: 'Conductor Cong.' },
+  { id: 'CONDUCTOR_CONGREGACION',    label: 'Conductor Cong.' },
+  { id: 'SUPERINTENDENTE_CIRCUITO',  label: 'Sup. de Circuito' },
 ];
 
 const ROLES_VM = [
@@ -54,10 +55,12 @@ function rolLabel(id) {
 // ─────────────────────────────────────────
 //   ESTADO
 // ─────────────────────────────────────────
-let publicadores  = [];
-let pinEncargado  = null;
-let pinBuffer     = '';
-let editandoId    = null;
+let publicadores    = [];
+let pinEncargado    = null;
+let pinBuffer       = '';
+let editandoId      = null;
+let sheetsUrl       = null;
+let semanasEspeciales = {};
 
 // ─────────────────────────────────────────
 //   UTILIDADES
@@ -86,7 +89,15 @@ function pubCol() {
 (async function init() {
   try {
     const snap = await getDoc(doc(db, 'congregaciones', CONGRE_ID));
-    if (snap.exists()) pinEncargado = String(snap.data().pinEncargado || '1234');
+    if (snap.exists()) {
+      const d = snap.data();
+      pinEncargado = String(d.pinEncargado || '1234');
+      if (d.sheetsUrl) {
+        sheetsUrl = d.sheetsUrl;
+        const btn = document.getElementById('btn-ver-planilla');
+        if (btn) btn.style.display = '';
+      }
+    }
   } catch(e) {
     console.error('Error cargando config:', e);
   }
@@ -167,6 +178,7 @@ async function cargarYMostrar() {
     document.getElementById('hermanos-list').innerHTML =
       `<div class="error-wrap">Error al cargar: ${e.message}</div>`;
   }
+  cargarEspeciales();
 }
 
 // ─────────────────────────────────────────
@@ -202,7 +214,9 @@ window.filtrarLista = function() {
   const rol = document.getElementById('h-rol')?.value || '';
   renderLista(publicadores.filter(h =>
     (!q   || norm(h.nombre).includes(q)) &&
-    (!rol || (h.roles || []).includes(rol))
+    (!rol || (rol === '__sin_roles__'
+      ? (h.roles || []).length === 0
+      : (h.roles || []).includes(rol)))
   ));
 };
 
@@ -290,4 +304,121 @@ window.confirmarEliminar = async function(id, nombre) {
   } catch(e) {
     uiToast('Error: ' + e.message, 'error');
   }
+};
+
+window.abrirPlanilla = function() {
+  if (sheetsUrl) window.open(sheetsUrl, '_blank');
+};
+
+// ─────────────────────────────────────────
+//   SEMANAS ESPECIALES
+// ─────────────────────────────────────────
+function especCol() {
+  return collection(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales');
+}
+
+const TIPO_LABELS = {
+  conmemoracion:   'Conmemoración',
+  superintendente: 'Visita superintendente',
+  asamblea:        'Asamblea',
+};
+const TIPO_COLORS = {
+  conmemoracion:   { color: '#E8C94A', bg: 'rgba(232,201,74,0.08)' },
+  superintendente: { color: '#7F77DD', bg: 'rgba(127,119,221,0.08)' },
+  asamblea:        { color: '#F09595', bg: 'rgba(240,149,149,0.08)' },
+};
+
+function fmtFechaCorta(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${String(y).slice(-2)}`;
+}
+function lunesISO(date) {
+  const d = new Date(date);
+  const dow = d.getDay();
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isoToDate(iso) { return iso ? new Date(iso + 'T00:00:00') : null; }
+
+async function cargarEspeciales() {
+  try {
+    const snap = await getDocs(query(especCol(), orderBy('__name__')));
+    semanasEspeciales = {};
+    snap.forEach(d => { semanasEspeciales[d.id] = d.data(); });
+    renderEspecialesList();
+  } catch(e) { console.error('Error cargando especiales:', e); }
+}
+
+function renderEspecialesList() {
+  const el = document.getElementById('especiales-lista');
+  if (!el) return;
+  const entries = Object.entries(semanasEspeciales).sort(([a],[b]) => a.localeCompare(b));
+  if (!entries.length) {
+    el.innerHTML = '<div class="especiales-empty">Sin semanas especiales configuradas.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([lunes, e]) => {
+    const { color } = TIPO_COLORS[e.tipo] || { color: '#eee' };
+    const lunesDate   = isoToDate(lunes);
+    const domingoDate = new Date(lunesDate); domingoDate.setDate(lunesDate.getDate() + 6);
+    const rango = `${fmtFechaCorta(lunes)} – ${fmtFechaCorta(fmtDateLocal(domingoDate))}`;
+    const label = TIPO_LABELS[e.tipo] || e.tipo;
+    const extra = (e.tipo === 'conmemoracion' && e.fechaEvento !== lunes)
+      ? `  ·  evento: ${fmtFechaCorta(e.fechaEvento)}` : '';
+    return `<div class="especial-item">
+      <div class="especial-dot" style="background:${color};"></div>
+      <div class="especial-info">
+        <div class="especial-label">${label}</div>
+        <div class="especial-fecha">${rango}${extra}</div>
+      </div>
+      <button class="especial-del-btn" onclick="eliminarEspecial('${lunes}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+window.toggleFormEspecial = function() {
+  const f = document.getElementById('especiales-form');
+  if (!f) return;
+  const visible = f.style.display !== 'none';
+  f.style.display = visible ? 'none' : '';
+  if (!visible) {
+    document.getElementById('esp-tipo').value = 'conmemoracion';
+    document.getElementById('esp-fecha').value = '';
+    window.actualizarLabelFechaEsp();
+  }
+};
+
+window.actualizarLabelFechaEsp = function() {
+  const tipo = document.getElementById('esp-tipo')?.value;
+  const lbl  = document.getElementById('esp-fecha-label');
+  if (lbl) lbl.textContent = tipo === 'conmemoracion'
+    ? 'Fecha exacta del evento'
+    : 'Fecha de la semana (cualquier día)';
+};
+
+window.guardarEspecial = async function() {
+  const tipo  = document.getElementById('esp-tipo')?.value;
+  const fecha = document.getElementById('esp-fecha')?.value;
+  if (!tipo || !fecha) { await uiAlert('Completá todos los campos.'); return; }
+  const lunes = lunesISO(new Date(fecha + 'T12:00:00'));
+  const data  = { tipo, fechaEvento: fecha };
+  try {
+    await setDoc(doc(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales', lunes), data);
+    semanasEspeciales[lunes] = data;
+    renderEspecialesList();
+    window.toggleFormEspecial();
+    uiToast(`${TIPO_LABELS[tipo]} guardada`, 'success');
+  } catch(e) { await uiAlert('Error al guardar: ' + e.message); }
+};
+
+window.eliminarEspecial = async function(lunes) {
+  const ok = await uiConfirm({ title: 'Eliminar semana especial', msg: '¿Seguro que querés eliminarla?', confirmText: 'Eliminar', type: 'danger' });
+  if (!ok) return;
+  try {
+    await deleteDoc(doc(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales', lunes));
+    delete semanasEspeciales[lunes];
+    renderEspecialesList();
+    uiToast('Eliminada', 'success');
+  } catch(e) { await uiAlert('Error: ' + e.message); }
 };

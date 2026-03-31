@@ -23,6 +23,9 @@ congregaciones/{congreId}/
   ├── salidas/{salidaId}       → grupoId, fechaReg, salidas[]
   ├── publicadores/{pubId}     → nombre, roles, activo
   ├── asignaciones/{docId}     → fecha, diaSemana, roles
+  ├── semanasEspeciales/{lunesISO} → tipo, fechaEvento
+  ├── chatNotas/grupo_{grupoId}/mensajes → autor, texto, createdAt, canal, grupo
+  ├── chatNotas/congregacion/mensajes   → autor, texto, createdAt, canal, grupo
   └── vidaministerio/{semanaId} → fecha, canciones, presidente, oraciones, tesoros, ministerio[], vidaCristiana[], tipoEspecial?
 
 config/superadmin              → pin  ← PIN del panel de admin
@@ -34,7 +37,7 @@ config/superadmin              → pin  ← PIN del panel de admin
 |-------|-------------|
 | `color` | Hex del color de la card en index.html. Si no existe, se deriva por hash del ID. |
 | `scriptUrl` | URL del Apps Script de asignaciones. Activa "Guardar también en planilla". |
-| `sheetsUrl` | URL del Google Sheets. Activa "Ver planilla" en el panel del encargado. |
+| `sheetsUrl` | URL del Google Sheets. Activa "Ver planilla" en Administrador. |
 | `pinVidaMinisterio` | PIN del módulo VM (default `"1234"`). |
 | `tieneAuxiliar` | `bool` — activa la sala auxiliar en el módulo VM. |
 | `ciudadPrincipal` | Nombre de la ciudad principal (ej: `"Santa Rosa"`). |
@@ -44,7 +47,7 @@ config/superadmin              → pin  ← PIN del panel de admin
 
 1. `index.html` — elige congregación **y** módulo (dos vistas en la misma página)
    - Si hay `congreId` en `sessionStorage`, salta directo a la vista 2
-2. `territorios/index.html`, `asignaciones/index.html` o `vida-ministerio/index.html`
+2. `territorios/index.html`, `asignaciones/index.html`, `vida-ministerio/index.html` o `hermanos/index.html`
 3. Al volver ("← Volver al módulo") → `../index.html` → muestra vista 2 automáticamente
 
 El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al crear.
@@ -76,6 +79,10 @@ El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al c
 │   ├── app.js              # Lógica principal
 │   ├── programa.html       # Visor público solo lectura (sin PIN)
 │   ├── programa.js         # Lógica del visor público
+│   └── styles.css
+├── hermanos/
+│   ├── index.html          # Módulo Administrador (publicadores + semanas especiales)
+│   ├── app.js
 │   └── styles.css
 └── tools/                  # Scripts de migración y sync (conservar como referencia)
     ├── kml_to_json.py
@@ -142,19 +149,26 @@ import { db } from '../firebase.js';
 
 ### Chat / Notas compartidas (✅ implementado)
 
-Se agregó un canal interno de comunicación dentro de **Territorios**:
-- Acceso desde un nuevo botón **"Chat / Notas"** en la selección de modo
-- Dos canales compartidos:
-  - **Grupo** (notas visibles por todos los del grupo logueado)
-  - **Congregación** (notas visibles por todos los grupos)
-- Permite dejar recordatorios, observaciones de territorios y notas breves
-- El nombre del autor es opcional y se recuerda localmente en el navegador
+Canal interno de comunicación dentro de **Territorios**, implementado como **FAB flotante** (botón abajo-derecha, visible en todas las vistas post-login):
 
-**Estructura Firestore**
+- **No es una vista separada** — es un overlay panel que se abre sobre cualquier vista
+- Dos canales con tabs verticales a la izquierda del panel:
+  - **Grupo** (notas del grupo logueado)
+  - **Congregación** (notas visibles por todos)
+- El autor del mensaje es automáticamente el nombre del grupo (`"Grupo 1"`, `"Congregación"`) — no se pide nombre
+- Mensajes **eliminables** (con popup de confirmación `uiConfirm`)
+- Mensajes **editables solo por el autor** — autoría rastreada por `sessionStorage chatMisIds` (array de IDs de docs creados en la sesión)
+- `showChatFab()` se llama desde `goToModo()` (post-login); `hideChatFab()` desde `goToCover()` / `cerrarSesion()`
+
+**HTML:** `#chat-fab` (fixed bottom-right) + `#chat-overlay` con `#chat-panel` (`.chat-vtabs` + `.chat-panel-body`) + `#chat-edit-modal`
+
+**Funciones globales:** `openChatPanel`, `closeChatPanel`, `switchChatScope`, `refreshChatNotas`, `sendChatNota`, `abrirEditNota`, `closeChatEdit`, `confirmarEditNota`, `eliminarNota`
+
+**Estructura Firestore:**
 - `congregaciones/{congreId}/chatNotas/grupo_{grupoId}/mensajes`
 - `congregaciones/{congreId}/chatNotas/congregacion/mensajes`
 
-Cada mensaje guarda: `autor`, `texto`, `createdAt`, `canal`, `grupo`.
+Cada mensaje guarda: `autor` (nombre del grupo), `texto`, `createdAt`, `canal`, `grupo`.
 
 ### Grupos (vienen de Firestore en runtime)
 
@@ -194,10 +208,18 @@ Sub-polígonos usan sufijos letra (92a, 92b) que mapean al mismo territorio base
 ### Tema claro / oscuro (estado actual)
 
 - **Modo oscuro** sigue siendo el default.
-- Se mejoró el **modo claro** con un fondo más orgánico (incluye acento violeta suave + textura de ruido).
+- **Modo claro**: fondo orgánico con gradientes radiales + textura de ruido (en `ui-utils.js`).
+- `.grupo-btn` en modo claro: regla CSS `body.light-mode .grupo-btn` con fondo violeta suave. **No usar `style.background` para el estado deseleccionado** — limpiar inline style (`b.style.background = ''`) y dejar que CSS lo maneje. El estado seleccionado sí usa inline style con el color del grupo (`GBGS` value).
 - Se unificó el hover de cards de módulos para que respete el estilo de la selección de congregación.
-- Botones flotantes de **Instalar** y **Admin** ahora tienen variante de modo claro.
-- En **Territorios**, se mejoró contraste visual en modo claro para cards de modo, botón Home y botón Mapa.
+- Botones flotantes de **Instalar** y **Admin** tienen variante de modo claro.
+
+### Planificar salidas — cards compactas
+
+Las cards de salida (`renderSalidaCard`) usan diseño compacto:
+- Padding: `10px 14px` (antes `1rem 1.25rem`)
+- Nombre del día: `14px font-weight:600` inline junto al tipo (`· Campo`), **no** el 22px anterior
+- Labels de campo: `font-size:11px` (override local)
+- `form-row` con `margin-bottom:6px`
 
 ### Formato de territorio en Firestore
 
@@ -242,13 +264,44 @@ const ROL_LISTA_MAP = {
 - **"Tener en cuenta historial previo"**: busca el último asignado por rol y arranca desde el siguiente.
 - **"Reemplazar semanas existentes"**: incluye fechas que ya tienen datos en el rango.
 - **Algoritmo**: round-robin por rol; `SONIDO_2`/`MICROFONISTAS_2` con offset +1; `PRESIDENTE` omitido en miércoles; `Set enEstaReunion` detecta conflictos.
-- **Semanas especiales**: ✅ implementado — respeta `tipoEspecial` en la semana (`asamblea` → saltear ambas reuniones, `conmemoracion` entre semana → saltear miércoles, `superintendente` → generar martes en lugar de miércoles, sábado sin lector).
+- **Semanas especiales**: ✅ implementado — respeta `tipoEspecial` al generar (`asamblea` → saltear ambas reuniones, `conmemoracion` entre semana → saltear miércoles, `superintendente` → generar martes en lugar de miércoles, sábado sin lector).
+
+### Back buttons en vistas de encargado
+Las vistas `view-editar`, `view-automatico`, `view-imagen` usan `onclick="goToEncargado()"` — **no** `showView('view-encargado')` directamente. `goToEncargado()` también llama `cargarEspeciales()`.
 
 ### Integración con Google Sheets (opcional)
 - Botón "Guardar también en planilla" si `scriptUrl` está en Firestore
 - Envía de a una reunión por fetch (`no-cors`, `keepalive: true`)
 - Respuesta opaca — no se puede confirmar éxito, se asume OK
-- Botón "Ver planilla" si `sheetsUrl` está en Firestore
+- **Pendiente mejorar:** agregar confirmación de éxito o mecanismo de retry
+
+---
+
+## Módulo Administrador (`hermanos/`)
+
+Antes llamado "Hermanos". Renombrado a **"Administrador"** en UI, `index.html` raíz, y título de página.
+El botón "Encargado" dentro fue renombrado a **"Lista de Hermanos"** (funcionalidad igual).
+
+### Funcionalidades
+
+1. **Lista de publicadores** — filtro por rol + búsqueda por nombre
+   - Filtro especial `__sin_roles__` → muestra publicadores sin ningún rol asignado
+   - Rol `SUPERINTENDENTE_CIRCUITO` agregado (bajo optgroup Asignaciones)
+2. **Semanas especiales** (✅ movido desde Asignaciones)
+   - CRUD de semanas especiales (`congregaciones/{id}/semanasEspeciales/{lunesISO}`)
+   - Tipos: `conmemoracion`, `superintendente`, `asamblea`
+   - El módulo de Asignaciones consume este dato al generar automático
+3. **Ver planilla** — botón que abre `sheetsUrl` si está configurado en la congregación
+
+### Roles en publicadores
+
+**Roles de asignaciones:** `LECTOR`, `SONIDO`, `SONIDO_2`, `MICROFONISTAS`, `MICROFONISTAS_2`,
+`PLATAFORMA`, `ACOMODADOR_AUDITORIO`, `ACOMODADOR_ENTRADA`, `PRESIDENTE`, `REVISTAS`, `PUBLICACIONES`,
+`CONDUCTOR_GRUPO_1..4`, `CONDUCTOR_CONGREGACION`, **`SUPERINTENDENTE_CIRCUITO`**
+
+**Roles VM:** `VM_PRESIDENTE`, `VM_ORACION`, `VM_TESOROS`, `VM_JOYAS`, `VM_LECTURA`,
+`VM_MINISTERIO_CONVERSACION`, `VM_MINISTERIO_REVISITA`, `VM_MINISTERIO_ESCENIFICACION`,
+`VM_MINISTERIO_DISCURSO`, `VM_VIDA_CRISTIANA`, `VM_ESTUDIO_CONDUCTOR`
 
 ---
 
@@ -257,7 +310,7 @@ const ROL_LISTA_MAP = {
 Módulo para el **presidente de la reunión VM**: importar programa de WOL, asignar partes,
 gestionar publicadores por rol VM, sala auxiliar.
 
-**Estado al 2026-03-28:** Fases 1, 2, sala auxiliar, historial Excel, semanas especiales (UI+generador),
+**Estado al 2026-03-31:** Fases 1, 2, sala auxiliar, historial Excel, semanas especiales (UI+generador),
 PIN VM, navegación, vista mensual, editar títulos, duración visible, export/compartir, visor público,
 menú Encargado centrado, filtros en vista Hermanos — todos ✅.
 **Pendiente:** auto-asignación (Fase 4).
@@ -265,6 +318,9 @@ menú Encargado centrado, filtros en vista Hermanos — todos ✅.
 ### Visor público (`programa.html`)
 Página standalone sin PIN. URL: `vida-ministerio/programa.html?congre=sur&semana=2026-04-07`.
 Sin `semana` muestra la semana actual. Navegación ← →, botón compartir copia URL al portapapeles.
+
+Estilo: card con `border: 0.5px solid #2e2e2e; border-radius: 16px; background: #1e2023`.
+Secciones dentro de la card separadas por `border-bottom: 0.5px solid #2a2a2a` con radios en primera/última.
 
 `pubFecha` se normaliza siempre a `YYYY-MM-DD` via `parseFechaIso()` antes de cualquier operación
 de fecha — evita el bug donde fechas en formato legacy `DD/MM/YYYY` rompían la navegación.
@@ -467,13 +523,6 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 
 ## Ideas pendientes (futuro)
 
-### Módulo de Chat/Notas compartidas
-- Canal de comunicación entre todos los grupos de la congregación
-- Notas del encargado de territorios al grupo
-- Observaciones sobre territorios (ej: "Familia interesada en Terr. 45")
-- Recordatorios compartidos
-- Cada publicador futuro podría registrarse con email (Gmail) y tener su menú personal
-
 ### Dashboard de estadísticas (más adelante)
 - Territorios trabajados por mes/gráfico
 - Publicadores más activos
@@ -501,9 +550,9 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 - Roles de usuario: Admin, Encargado, Publicador (con permisos diferenciados)
 - Auditoría: log de cambios importantes (quién modificó qué y cuándo)
 
-### Renombrar módulo "Hermanos" a "Administrador"
-- Mover gestión de semanas especiales de Asignaciones → Administrador
-- Centralizar configuración de la congregación
+### Mejorar integración Google Sheets (Asignaciones)
+- Fetch actual usa `no-cors` + `keepalive:true` → respuesta opaca, no se puede confirmar éxito
+- Pendiente: agregar confirmación real o mecanismo de retry/estado
 
 ---
 
@@ -517,3 +566,5 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 - No usar `confirm()`, `alert()`, `prompt()` nativos
 - No setear `.value` en inputs upgradeados sin disparar el evento `change`
 - **No usar IDs de párrafo WOL (`#p6`, `#p7`, etc.)** — varían cada semana
+- No usar `style.background` para el estado **deseleccionado** de `.grupo-btn` — limpiar el inline style para que CSS del tema lo maneje
+- No llamar `showView('view-encargado')` directamente en asignaciones — usar `goToEncargado()` (también recarga especiales)

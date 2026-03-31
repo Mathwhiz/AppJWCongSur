@@ -21,7 +21,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Territory App</title>
-<link rel="stylesheet" href="styles.css?v=2.0">
+<link rel="stylesheet" href="styles.css?v=2.1">
 </head>
 <body>
 
@@ -103,15 +103,6 @@
           <div class="modo-card-sub">Territorios y configuración</div>
         </div>
       </button>
-      <button class="modo-card" onclick="goToChatNotas()">
-        <div class="modo-icon" style="background:rgba(93,202,165,0.15);">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10h8M8 14h5M6 19l-2 2V5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6z" stroke="#5DCAA5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div>
-          <div class="modo-card-title" style="color:#ccc;">Chat / Notas</div>
-          <div class="modo-card-sub">Mensajes compartidos del grupo y congregación</div>
-        </div>
-      </button>
       <button class="modo-card" onclick="goToHistorial()" style="max-width:320px;width:100%;">
         <div class="modo-icon" style="background:rgba(250,199,117,0.15);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#FAC775" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -134,43 +125,64 @@
     </div>
   </div>
 
-  <!-- ── CHAT / NOTAS COMPARTIDAS ── -->
-  <div id="view-chat-notas" class="view" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <p class="section-title" id="chat-notas-titulo" style="font-size:34px;margin-bottom:0;">Chat / Notas</p>
-      <button class="btn-secondary" style="font-size:12px;padding:6px 10px;" onclick="refreshChatNotas()">Actualizar</button>
-    </div>
-    <p class="section-sub" style="margin-bottom:12px;">Dejá recordatorios y novedades para que todos los del canal lo vean.</p>
+  <!-- ── CHAT FLOTANTE: botón ── -->
+  <button id="chat-fab" class="chat-fab" onclick="openChatPanel()" title="Chat / Notas" style="display:none;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M8 10h8M8 14h5M6 19l-2 2V5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6z"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span id="chat-fab-badge" class="chat-fab-badge" style="display:none;"></span>
+  </button>
 
-    <div class="chat-tabs">
-      <button id="chat-tab-grupo" class="chat-tab active" onclick="switchChatScope('grupo')">Grupo</button>
-      <button id="chat-tab-congregacion" class="chat-tab" onclick="switchChatScope('congregacion')">Congregación</button>
-    </div>
-
-    <div id="chat-loading" class="loading-wrap"><div class="spinner"></div><div class="loading-txt">Cargando notas...</div></div>
-    <div id="chat-error" style="display:none;"></div>
-    <div id="chat-empty" class="reg-empty" style="display:none;">Todavía no hay notas en este canal.</div>
-    <div id="chat-list" class="chat-list" style="display:none;"></div>
-
-    <div class="chat-composer">
-      <div class="form-row" style="margin-bottom:8px;">
-        <div>
-          <label for="chat-autor">Tu nombre (opcional)</label>
-          <input id="chat-autor" type="text" maxlength="60" placeholder="Ej: Juan Pérez">
+  <!-- ── CHAT PANEL OVERLAY ── -->
+  <div id="chat-overlay" class="chat-overlay" style="display:none;" onclick="if(event.target===this)closeChatPanel()">
+    <div class="chat-panel">
+      <!-- Tabs verticales izquierda -->
+      <div class="chat-vtabs">
+        <button id="cvt-grupo" class="chat-vtab active" onclick="switchChatScope('grupo')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span>Grupo</span>
+        </button>
+        <button id="cvt-congregacion" class="chat-vtab" onclick="switchChatScope('congregacion')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>Cong.</span>
+        </button>
+      </div>
+      <!-- Contenido principal -->
+      <div class="chat-panel-body">
+        <div class="chat-panel-head">
+          <span class="chat-panel-titulo" id="chat-panel-titulo">Notas del Grupo</span>
+          <button class="chat-panel-refresh" onclick="refreshChatNotas()" title="Actualizar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="chat-panel-close" onclick="closeChatPanel()">✕</button>
         </div>
-        <div>
-          <label id="chat-canal-label">Canal</label>
-          <input id="chat-canal" type="text" disabled>
+
+        <div id="chat-loading" class="loading-wrap" style="padding:1.5rem 0;">
+          <div class="spinner"></div><div class="loading-txt">Cargando notas...</div>
+        </div>
+        <div id="chat-error" style="display:none;"></div>
+        <div id="chat-empty" class="reg-empty" style="display:none;padding:1.5rem 0;font-size:13px;">Todavía no hay notas en este canal.</div>
+        <div id="chat-list" class="chat-list" style="display:none;flex:1;overflow-y:auto;"></div>
+
+        <div class="chat-composer">
+          <textarea id="chat-mensaje" rows="2" placeholder="Escribí una nota…" style="resize:none;"></textarea>
+          <button class="btn-primary" style="margin-top:8px;width:100%;font-size:14px;padding:10px;" onclick="sendChatNota(this)">Publicar</button>
         </div>
       </div>
-      <div>
-        <label for="chat-mensaje">Nota / mensaje</label>
-        <textarea id="chat-mensaje" rows="3" placeholder="Ej: Familia interesada en Terr. 45. Volver jueves 19:00."></textarea>
-      </div>
-      <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="sendChatNota(this)">Publicar nota</button>
     </div>
+  </div>
 
-    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="goToModo()">← Volver</button>
+  <!-- Modal editar nota -->
+  <div id="chat-edit-modal" class="chat-edit-modal" style="display:none;" onclick="if(event.target===this)closeChatEdit()">
+    <div class="chat-edit-card">
+      <div style="font-size:14px;font-weight:600;color:#eee;margin-bottom:10px;">Editar nota</div>
+      <textarea id="chat-edit-texto" rows="4" style="width:100%;resize:vertical;background:#1a1c1f;border:0.5px solid #444;border-radius:8px;padding:8px 10px;color:#eee;font-size:13px;font-family:inherit;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn-secondary" onclick="closeChatEdit()" style="flex:1;">Cancelar</button>
+        <button class="btn-save" onclick="confirmarEditNota()" style="flex:2;">Guardar</button>
+      </div>
+    </div>
   </div>
 
   <!-- ── REGISTRAR TERRITORIOS ── -->

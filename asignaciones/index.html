@@ -201,29 +201,6 @@
       <button id="btn-ver-planilla" class="btn-secondary" onclick="abrirPlanilla()" style="width:100%;max-width:320px;display:none;">
         📊 Ver planilla
       </button>
-      <!-- ── Semanas especiales ── -->
-      <div class="enc-especiales" style="max-width:320px;width:100%;">
-        <div class="enc-especiales-header">
-          <span>Semanas especiales</span>
-          <button class="btn-esp-add" onclick="toggleFormEspecial()">+</button>
-        </div>
-        <div id="especiales-lista"><div class="especiales-empty">Cargando…</div></div>
-        <div id="especiales-form" style="display:none;">
-          <select id="esp-tipo" onchange="actualizarLabelFechaEsp()" class="esp-select">
-            <option value="conmemoracion">Conmemoración</option>
-            <option value="superintendente">Visita superintendente</option>
-            <option value="asamblea">Asamblea</option>
-          </select>
-          <div class="esp-field">
-            <label id="esp-fecha-label" class="esp-label">Fecha exacta del evento</label>
-            <input type="date" id="esp-fecha" class="esp-date-input">
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="btn-secondary" onclick="toggleFormEspecial()" style="flex:1;">Cancelar</button>
-            <button class="btn-guardar" onclick="guardarEspecial()" style="flex:2;">Guardar</button>
-          </div>
-        </div>
-      </div>
 
       <button class="btn-secondary" onclick="cerrarSesionEncargado()" style="width:100%;max-width:320px;border-color:#A32D2D;color:#F09595;">Cerrar sesión</button>
     </div><!-- enc-menu -->
@@ -241,7 +218,7 @@
     <div id="editar-loading" class="loading-wrap" style="display:none;"><div class="spinner"></div><div class="loading-txt">Cargando...</div></div>
     <div id="editar-content"></div>
     <div style="display:flex;gap:8px;margin-top:12px;">
-      <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+      <button class="btn-secondary" onclick="goToEncargado()" style="flex:1;">← Volver</button>
       <button class="btn-guardar" id="btn-guardar-edicion" onclick="guardarEdicion()" style="flex:2;">Guardar cambios</button>
     </div>
     <div class="save-status" id="editar-status"></div>
@@ -286,7 +263,7 @@
     <div id="auto-loading" class="loading-wrap" style="display:none;"><div class="spinner"></div><div class="loading-txt">Generando...</div></div>
     <div id="auto-preview" style="display:none;"></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+      <button class="btn-secondary" onclick="goToEncargado()" style="flex:1;">← Volver</button>
       <button class="btn-primary" onclick="generarAutomatico()" style="flex:2;">⚡ Generar</button>
     </div>
     <div id="auto-guardar-wrap" style="display:none;margin-top:8px;flex-direction:column;gap:8px;">
@@ -314,7 +291,7 @@
         <div id="tabla-reuniones"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;">
-        <button class="btn-secondary" onclick="showView('view-encargado')" style="flex:1;">← Volver</button>
+        <button class="btn-secondary" onclick="goToEncargado()" style="flex:1;">← Volver</button>
         <button class="btn-save" onclick="guardarImagen()" style="flex:1;">💾 Guardar imagen</button>
       </div>
     </div>
