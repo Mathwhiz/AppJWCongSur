@@ -266,6 +266,38 @@ table.preview tr.tel-row td:first-child { border-left: 3px solid #1D9E75; }
 .btn-mapa-float.visible { display: flex; }
 .btn-home.hidden-in-plan { display: none !important; }
 
+body.light-mode .modo-card {
+  background: var(--bg-card);
+  border-color: var(--border-primary);
+}
+body.light-mode .modo-card:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #faf6ff 100%);
+  border-color: #cfc0ef;
+  box-shadow: 0 10px 24px rgba(122,110,190,0.18), 0 0 0 1px rgba(127,119,221,0.28);
+}
+body.light-mode .modo-card-title { color: #2d2d2d !important; }
+body.light-mode .modo-card-sub   { color: #67626f; }
+
+body.light-mode .btn-home {
+  background: #faf8ff;
+  border-color: rgba(127,119,221,0.3);
+  color: #665ac9;
+}
+body.light-mode .btn-home:hover {
+  background: #f1edff;
+  border-color: rgba(127,119,221,0.55);
+  color: #4f45a8;
+}
+body.light-mode .btn-mapa-float {
+  background: #f5f2ff;
+  border-color: rgba(127,119,221,0.38);
+  color: #6a60cc;
+}
+body.light-mode .btn-mapa-float:hover {
+  background: #ece7ff;
+  color: #4e44af;
+}
+
 /* ── Encabezado tabla final por grupo ── */
 .preview-header-wrap { margin-bottom: 16px; }
 .preview-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
