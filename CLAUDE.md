@@ -441,6 +441,48 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 
 ---
 
+## Ideas pendientes (futuro)
+
+### Módulo de Chat/Notas compartidas
+- Canal de comunicación entre todos los grupos de la congregación
+- Notas del encargado de territorios al grupo
+- Observaciones sobre territorios (ej: "Familia interesada en Terr. 45")
+- Recordatorios compartidos
+- Cada publicador futuro podría registrarse con email (Gmail) y tener su menú personal
+
+### Dashboard de estadísticas (más adelante)
+- Territorios trabajados por mes/gráfico
+- Publicadores más activos
+- Tiempo promedio entre usos de territorio
+- Asistencias y participaciones en reuniones
+
+### Reportes PDF (más adelante)
+- Informe mensual de territorios
+- Historial completo de un territorio
+- Resumen de asignaciones del mes
+
+### Exportar historial a Excel/CSV (más adelante)
+- Exportar todo el historial a Excel/CSV
+- Backup completo de la congregación
+
+### Widgets en pantalla principal (ANOTAR)
+- Mostrar resumen rápido (próximas salidas, esta semana en reunión)
+- Requiere que cada publicador pueda elegir ver su congregación
+
+### Responsive mejorado (ANOTAR)
+- Optimizar para tablets (actualmente mobile-first)
+
+### Seguridad (pronto, pero no ahora)
+- Firebase Auth: reemplazar PINs por auth real con email/Google
+- Roles de usuario: Admin, Encargado, Publicador (con permisos diferenciados)
+- Auditoría: log de cambios importantes (quién modificó qué y cuándo)
+
+### Renombrar módulo "Hermanos" a "Administrador"
+- Mover gestión de semanas especiales de Asignaciones → Administrador
+- Centralizar configuración de la congregación
+
+---
+
 ## Lo que NO hacer
 
 - No eliminar la integración con Apps Script del módulo de asignaciones
