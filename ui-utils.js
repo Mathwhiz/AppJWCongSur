@@ -1553,6 +1553,11 @@ body.light-mode .cs-module-icon-anim {
   transform: translateY(-1px);
   box-shadow: var(--card-hover-shadow, var(--shadow-hover));
 }
+body.light-mode .cs-module-card:hover {
+  border-color: var(--card-hover-border-light, var(--card-hover-border, #cfc0ef));
+  background: var(--card-hover-bg-light, linear-gradient(180deg, #ffffff 0%, #faf6ff 100%));
+  box-shadow: var(--card-hover-shadow-light, 0 10px 24px rgba(122,110,190,0.16), 0 0 0 1px rgba(127,119,221,0.24));
+}
 .cs-module-card:active { transform: scale(0.98); box-shadow: none; }
 .cs-module-card-icon {
   width: 44px; height: 44px; border-radius: 13px;

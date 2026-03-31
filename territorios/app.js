@@ -316,7 +316,7 @@ const WEEK = getWeekDates();
 function selectGrupo(el, n) {
   document.querySelectorAll('.grupo-btn').forEach(b => {
     b.classList.remove('selected');
-    b.style.background = '#2a2a2a';
+    b.style.background = '';
   });
   el.classList.add('selected');
   el.style.background = GBGS[n] || 'rgba(100,100,100,0.18)';
@@ -353,8 +353,8 @@ function goToModo() {
   document.querySelectorAll('.modo-card').forEach((card, i) => {
     const cc = cardColors[i] ?? cardColors[cardColors.length - 1];
     card.style.borderColor = cc.border;
-    card.onmouseenter = function() { this.style.background = cc.bg; this.style.transform = 'scale(1.02)'; };
-    card.onmouseleave = function() { this.style.background = '#2a2a2a'; this.style.transform = ''; };
+    card.style.setProperty('--modo-hover-bg', cc.bg);
+    card.style.setProperty('--modo-hover-border', cc.border);
   });
   document.querySelectorAll('.modo-icon').forEach((icon, i) => {
     const cc = cardColors[i] ?? cardColors[cardColors.length - 1];
@@ -494,8 +494,7 @@ function _applyGrupoColorToBtn(btn, id) {
   const bg = GBGS[id]     || 'rgba(100,100,100,0.18)';
   btn.style.borderColor = c;
   btn.style.color = c;
-  btn.onmouseenter = () => { if (!btn.classList.contains('selected')) btn.style.background = bg; };
-  btn.onmouseleave = () => { if (!btn.classList.contains('selected')) btn.style.background = '#2a2a2a'; };
+  btn.style.setProperty('--grupo-hover-bg', bg);
 }
 
 cargarPins();

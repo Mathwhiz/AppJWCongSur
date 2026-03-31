@@ -69,8 +69,8 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .grupo-color-3 { color: #97C459; }
 .grupo-color-4 { color: #D85A30; }
 .grupo-color-C { color: #7F77DD; }
-.modo-card { width: 100%; max-width: 320px; background: #2a2a2a; border: 1.5px solid #444; border-radius: 14px; padding: 1.25rem 1.5rem; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
-.modo-card:hover { transform: scale(1.02); }
+.modo-card { width: 100%; max-width: 320px; background: #2a2a2a; border: 1.5px solid #444; border-radius: 14px; padding: 1.25rem 1.5rem; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.18s; }
+.modo-card:hover { transform: scale(1.02); background: var(--modo-hover-bg, #31363a); border-color: var(--modo-hover-border, #777); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
 .modo-card:active { transform: scale(0.98); }
 .modo-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .modo-icon-plan { background: rgba(55,138,221,0.15); }
@@ -156,7 +156,7 @@ label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
 .grupo-label { font-size: 20px; font-weight: 500; color: #ccc; margin-bottom: 16px; }
 .grupo-grid { display: flex; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; justify-content: center; width: 100%; }
 .grupo-btn { width: 64px; height: 64px; border-radius: 14px; border: 1.5px solid #444; background: #2a2a2a; font-size: 22px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s; }
-.grupo-btn:hover { transform: scale(1.08); }
+.grupo-btn:hover { transform: scale(1.08); background: var(--grupo-hover-bg, #2f2f2f); }
 .grupo-btn:active { transform: scale(0.96); }
 .grupo-btn.selected { border-width: 2px; }
 .btn-start { padding: 14px 48px; font-size: 16px; font-weight: 500; background: #3B6D11; color: #fff; border: none; border-radius: 12px; cursor: pointer; opacity: 0.3; pointer-events: none; letter-spacing: 0.02em; }
@@ -328,9 +328,3 @@ body.light-mode .btn-mapa-float:hover {
 
 
 
-
-
-<<<<<<< ours
-
-=======
->>>>>>> theirs
