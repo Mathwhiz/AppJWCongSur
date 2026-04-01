@@ -65,7 +65,7 @@ let semanasEspeciales = {};
 // ─────────────────────────────────────────
 //   UTILIDADES
 // ─────────────────────────────────────────
-function showView(id) {
+window.showView = function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
@@ -160,7 +160,11 @@ function checkPin() {
 }
 
 window.goToCover = function() {
-  showPinModal();
+  window.location.href = '../index.html';
+};
+
+window.goToMenu = function() {
+  showView('view-menu');
 };
 
 window.goToHermanos = function() {
