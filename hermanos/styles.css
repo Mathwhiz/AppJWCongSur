@@ -223,6 +223,26 @@ body { font-family: system-ui, sans-serif; background: #1a1c1f; color: #eee; min
 .rol-checkbox input[type=checkbox] { width: 15px; height: 15px; accent-color: #D85A30; cursor: pointer; flex-shrink: 0; }
 .rol-checkbox.span2 { grid-column: span 2; }
 
+/* ── Navegación prev/next en modal ── */
+.modal-nav-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; gap: 8px;
+}
+.modal-nav-btn {
+  background: #2a2c2f; border: 1px solid #383a3e; color: #aaa;
+  border-radius: 8px; width: 36px; height: 36px;
+  font-size: 20px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+}
+.modal-nav-btn:hover:not(:disabled) { background: #333; color: #eee; }
+.modal-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.modal-nav-counter {
+  font-size: 12px; color: #666; flex: 1; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Género selector (modal) ── */
 .sexo-row { display: flex; gap: 8px; margin-bottom: 14px; }
 .btn-sexo {

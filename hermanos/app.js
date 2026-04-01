@@ -62,6 +62,7 @@ let editandoId      = null;
 let sheetsUrl       = null;
 let semanasEspeciales = {};
 let _modalSexo      = null; // 'H' | 'M' | null
+let listaVisible    = [];   // hermanos actualmente visibles en la lista (respetando filtros)
 
 // ─────────────────────────────────────────
 //   UTILIDADES
@@ -199,6 +200,7 @@ window.goToEspeciales = function() {
 //   RENDER LISTA
 // ─────────────────────────────────────────
 function renderLista(lista) {
+  listaVisible = lista;
   const el = document.getElementById('hermanos-list');
   if (!lista.length) {
     el.innerHTML = '<div class="empty-state">No hay hermanos cargados.</div>';
@@ -245,6 +247,28 @@ window.filtrarLista = function() {
 // ─────────────────────────────────────────
 //   MODAL — ADD / EDIT
 // ─────────────────────────────────────────
+function _actualizarNavModal(id) {
+  const idx   = listaVisible.findIndex(p => p.id === id);
+  const total = listaVisible.length;
+  const navRow = document.getElementById('modal-nav-row');
+  const counter = document.getElementById('modal-nav-counter');
+  const btnPrev = document.getElementById('modal-nav-prev');
+  const btnNext = document.getElementById('modal-nav-next');
+  const visible = idx !== -1 && total > 1;
+  if (navRow)   navRow.style.display  = visible ? 'flex' : 'none';
+  if (counter)  counter.textContent   = visible ? `${idx + 1} de ${total}` : '';
+  if (btnPrev)  btnPrev.disabled      = idx <= 0;
+  if (btnNext)  btnNext.disabled      = idx >= total - 1;
+}
+
+window.navHermano = function(dir) {
+  const idx = listaVisible.findIndex(p => p.id === editandoId);
+  if (idx === -1) return;
+  const next = listaVisible[idx + dir];
+  if (!next) return;
+  abrirEditar(next.id);
+};
+
 window.abrirNuevo = function() {
   editandoId = null;
   _modalSexo = null;
@@ -256,6 +280,8 @@ window.abrirNuevo = function() {
     if (cb) cb.checked = false;
   });
   renderSexoBtns();
+  const navRow = document.getElementById('modal-nav-row');
+  if (navRow) navRow.style.display = 'none';
   document.getElementById('modal-hermano').style.display = 'flex';
   document.getElementById('modal-nombre').focus();
 };
@@ -273,6 +299,7 @@ window.abrirEditar = function(id) {
     if (cb) cb.checked = (h.roles || []).includes(r.id);
   });
   renderSexoBtns();
+  _actualizarNavModal(id);
   document.getElementById('modal-hermano').style.display = 'flex';
 };
 

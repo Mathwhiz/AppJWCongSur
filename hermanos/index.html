@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ziv">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=1.5">
+  <link rel="stylesheet" href="styles.css?v=1.6">
 </head>
 <body>
 
@@ -197,6 +197,11 @@
   <!-- ── MODAL HERMANO ── -->
   <div id="modal-hermano" class="modal-overlay" style="display:none;" onclick="if(event.target===this)cerrarModal()">
     <div class="modal-card">
+      <div id="modal-nav-row" class="modal-nav-row" style="display:none;">
+        <button class="modal-nav-btn" id="modal-nav-prev" onclick="navHermano(-1)">‹</button>
+        <span class="modal-nav-counter" id="modal-nav-counter"></span>
+        <button class="modal-nav-btn" id="modal-nav-next" onclick="navHermano(1)">›</button>
+      </div>
       <div class="modal-titulo" id="modal-titulo">Hermano</div>
 
       <label class="modal-campo-label">Nombre</label>
@@ -329,6 +334,6 @@
 
 <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');</script>
 <script src="../ui-utils.js?v=1.4"></script>
-<script type="module" src="app.js?v=1.4"></script>
+<script type="module" src="app.js?v=1.5"></script>
 </body>
 </html>
