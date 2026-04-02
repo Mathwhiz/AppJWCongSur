@@ -39,53 +39,20 @@
     }
 
     /* ── Avatar ── */
-    .avatar-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
+    .avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: #2a2d30;
-      border: 2px solid #3a3a3a;
-      object-fit: cover;
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #2a2d30; border: 2px solid #3a3a3a; object-fit: cover;
     }
     .avatar-fallback {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: rgba(127,119,221,0.18);
-      border: 2px solid rgba(127,119,221,0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 700;
-      color: #7F77DD;
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(127,119,221,0.18); border: 2px solid rgba(127,119,221,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 700; color: #7F77DD;
     }
-    .avatar-label {
-      font-size: 12px;
-      color: #555;
-    }
+    .avatar-label { font-size: 12px; color: #555; }
 
-    /* ── Títulos ── */
-    .titulo {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
-      text-align: center;
-    }
-    .subtitulo {
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      margin-top: -12px;
-    }
-
-    /* ── Card del formulario ── */
+    /* ── Card ── */
     .card {
       width: 100%;
       background: #232628;
@@ -98,20 +65,53 @@
     }
 
     /* ── Campos ── */
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
     .field label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 11px; font-weight: 600; color: #888;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
     .field input,
     .field select {
+      background: #1e1e1e; border: 1px solid #444; border-radius: 8px;
+      padding: 10px 12px; color: #eee; font-size: 15px;
+      font-family: inherit; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    .field input:focus, .field select:focus { border-color: #7F77DD; }
+    .field select option { background: #232628; }
+
+    /* ── Botón principal ── */
+    .btn-primary {
+      width: 100%; background: #7F77DD; color: #fff;
+      border: none; border-radius: 10px; padding: 13px 20px;
+      font-size: 15px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-primary:hover   { opacity: 0.88; }
+    .btn-primary:active  { opacity: 0.75; }
+    .btn-primary:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── Match badge ── */
+    .match-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: 10px; font-size: 13px;
+    }
+    .match-badge.ok        { background: rgba(29,158,117,0.12);  color: #1D9E75; border: 1px solid rgba(29,158,117,0.2); }
+    .match-badge.pendiente { background: rgba(239,159,39,0.10);  color: #EF9F27; border: 1px solid rgba(239,159,39,0.2); }
+    .match-badge.sin_match { background: rgba(163,45,45,0.10);   color: #F09595; border: 1px solid rgba(163,45,45,0.2); }
+
+    /* ── Footer ── */
+    .footer { font-size: 12px; color: #3a3a3a; text-align: center; }
+
+    #loading-state { color: #555; font-size: 14px; padding: 40px 0; text-align: center; }
+    #form-state    { display: none; width: 100%; }
+
+    /* ──────────────────────────────────────────────────────────────
+       DOB PICKER
+    ────────────────────────────────────────────────────────────── */
+    .dob-picker { position: relative; width: 100%; }
+
+    .dob-trigger {
+      width: 100%;
       background: #1e1e1e;
       border: 1px solid #444;
       border-radius: 8px;
@@ -119,56 +119,79 @@
       color: #eee;
       font-size: 15px;
       font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-      width: 100%;
-    }
-    .field input:focus,
-    .field select:focus { border-color: #7F77DD; }
-    .field select option { background: #232628; }
-
-    /* ── Botón ── */
-    .btn-primary {
-      width: 100%;
-      background: #7F77DD;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 13px 20px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
       cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .btn-primary:hover   { opacity: 0.88; }
-    .btn-primary:active  { opacity: 0.75; }
-    .btn-primary:disabled { opacity: 0.4; cursor: default; }
-
-    /* ── Match info ── */
-    .match-badge {
+      text-align: left;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 13px;
+      transition: border-color 0.15s;
     }
-    .match-badge.ok       { background: rgba(29,158,117,0.12); color: #1D9E75; border: 1px solid rgba(29,158,117,0.2); }
-    .match-badge.pendiente { background: rgba(239,159,39,0.10); color: #EF9F27; border: 1px solid rgba(239,159,39,0.2); }
-    .match-badge.sin_match { background: rgba(163,45,45,0.10);  color: #F09595; border: 1px solid rgba(163,45,45,0.2); }
+    .dob-trigger:focus         { border-color: #7F77DD; outline: none; }
+    .dob-trigger.is-placeholder { color: #555; }
+    .dob-trigger svg            { flex-shrink: 0; opacity: 0.4; }
 
-    /* ── Footer ── */
-    .footer { font-size: 12px; color: #3a3a3a; text-align: center; }
-
-    /* ── Loading ── */
-    #loading-state {
-      color: #555;
-      font-size: 14px;
-      padding: 40px 0;
-      text-align: center;
+    .dob-popover {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #252525;
+      border: 1px solid #3a3a3a;
+      border-radius: 14px;
+      padding: 12px;
+      z-index: 200;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
     }
-    #form-state { display: none; width: 100%; }
+
+    /* header: nav + dropdowns */
+    .dob-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .dob-nav-btn {
+      background: #2a2d30; border: 1px solid #3a3a3a; border-radius: 7px;
+      width: 30px; height: 30px; color: #aaa; font-size: 17px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.12s, color 0.12s; line-height: 1;
+    }
+    .dob-nav-btn:hover { background: #333; color: #eee; }
+
+    .dob-selects { display: flex; gap: 6px; flex: 1; min-width: 0; }
+    .dob-sel {
+      flex: 1; min-width: 0;
+      background: #2a2d30; border: 1px solid #3a3a3a; border-radius: 7px;
+      padding: 5px 6px; color: #e8e8e8; font-size: 13px; font-family: inherit;
+      cursor: pointer; outline: none; transition: border-color 0.12s;
+    }
+    .dob-sel:focus { border-color: #7F77DD; }
+    .dob-sel option { background: #252525; }
+
+    /* weekday labels */
+    .dob-wdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 4px;
+    }
+    .dob-wdays span {
+      text-align: center; font-size: 11px; color: #555;
+      font-weight: 600; padding: 3px 0;
+    }
+
+    /* day grid */
+    .dob-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+    }
+    .dob-day {
+      aspect-ratio: 1; background: none; border: none;
+      border-radius: 7px; color: #c0c0c0; font-size: 13px;
+      font-family: inherit; cursor: pointer; transition: background 0.1s, color 0.1s;
+    }
+    .dob-day:hover:not(:disabled):not(.dob-empty) { background: #333639; color: #fff; }
+    .dob-day:disabled  { color: #2e2e2e; cursor: default; }
+    .dob-day.dob-today { color: #7F77DD; font-weight: 700; }
+    .dob-day.dob-selected { background: #7F77DD; color: #fff; font-weight: 700; }
+    .dob-day.dob-selected:hover { background: #6e66cc; }
   </style>
 </head>
 <body>
@@ -183,8 +206,10 @@
         <div class="avatar-label">Cuenta de Google</div>
       </div>
 
-      <div class="titulo" style="margin:12px 0 4px">Completá tu perfil</div>
-      <div class="subtitulo" id="congre-sub">—</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.4px;text-align:center;margin:12px 0 4px">
+        Completá tu perfil
+      </div>
+      <div style="font-size:14px;color:#666;text-align:center" id="congre-sub">—</div>
 
       <div class="card" style="margin-top:16px">
 
@@ -206,7 +231,37 @@
 
         <div class="field">
           <label>Fecha de nacimiento</label>
-          <input id="input-fecha" type="date" max="">
+
+          <!-- Custom DOB picker -->
+          <div class="dob-picker" id="dob-picker">
+            <button type="button" class="dob-trigger is-placeholder" id="dob-trigger" onclick="dobToggle()">
+              <span id="dob-display">Seleccionar fecha</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+
+            <div class="dob-popover" id="dob-popover" style="display:none">
+              <div class="dob-head">
+                <button type="button" class="dob-nav-btn" onclick="dobNav(-1)">‹</button>
+                <div class="dob-selects">
+                  <select class="dob-sel" id="dob-sel-month" onchange="dobSetMonth(this.value)"></select>
+                  <select class="dob-sel" id="dob-sel-year"  onchange="dobSetYear(this.value)"></select>
+                </div>
+                <button type="button" class="dob-nav-btn" onclick="dobNav(1)">›</button>
+              </div>
+
+              <div class="dob-wdays">
+                <span>Lu</span><span>Ma</span><span>Mi</span>
+                <span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
+              </div>
+
+              <div class="dob-grid" id="dob-grid"></div>
+            </div>
+          </div>
+          <!-- /DOB picker -->
+
         </div>
 
         <button class="btn-primary" id="btn-guardar" onclick="guardarPerfil()">Guardar y continuar</button>
@@ -216,33 +271,172 @@
     </div>
   </div>
 
+  <!-- DOB Picker logic (no module needed) -->
+  <script>
+    const DOB_MONTHS = [
+      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+    ];
+    const DOB_MONTHS_SHORT = [
+      'ene','feb','mar','abr','may','jun',
+      'jul','ago','sep','oct','nov','dic'
+    ];
+    const DOB_TODAY = new Date();
+    DOB_TODAY.setHours(0, 0, 0, 0);
+
+    const dob = {
+      month:    new Date().getMonth(),
+      year:     new Date().getFullYear() - 30,  // vista inicial: ~30 años atrás
+      selected: null,   // 'YYYY-MM-DD'
+    };
+
+    function dobInit() {
+      // Populate month select
+      const mSel = document.getElementById('dob-sel-month');
+      DOB_MONTHS.forEach((name, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = name;
+        mSel.appendChild(o);
+      });
+
+      // Populate year select: current year → 1900 (desc, more recent at top)
+      const ySel = document.getElementById('dob-sel-year');
+      for (let y = DOB_TODAY.getFullYear(); y >= 1900; y--) {
+        const o = document.createElement('option');
+        o.value = y; o.textContent = y;
+        ySel.appendChild(o);
+      }
+
+      dobRender();
+    }
+
+    function dobRender() {
+      const { month, year, selected } = dob;
+
+      document.getElementById('dob-sel-month').value = month;
+      document.getElementById('dob-sel-year').value  = year;
+
+      const grid     = document.getElementById('dob-grid');
+      grid.innerHTML = '';
+
+      // Offset: Mon=0 grid. JS getDay() → 0=Sun,1=Mon…6=Sat
+      const firstDay    = new Date(year, month, 1).getDay();
+      const offset      = firstDay === 0 ? 6 : firstDay - 1;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Empty cells
+      for (let i = 0; i < offset; i++) {
+        const div = document.createElement('div');
+        div.className = 'dob-day dob-empty';
+        grid.appendChild(div);
+      }
+
+      // Day buttons
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date    = new Date(year, month, d);
+        const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const btn     = document.createElement('button');
+        btn.type      = 'button';
+        btn.className = 'dob-day';
+        btn.textContent = d;
+
+        if (date > DOB_TODAY) {
+          btn.disabled = true;
+        } else if (dateStr === selected) {
+          btn.classList.add('dob-selected');
+        } else if (date.getTime() === DOB_TODAY.getTime()) {
+          btn.classList.add('dob-today');
+        }
+
+        if (!btn.disabled) btn.onclick = () => dobSelect(dateStr);
+        grid.appendChild(btn);
+      }
+    }
+
+    function dobSelect(dateStr) {
+      dob.selected = dateStr;
+
+      // Update trigger display
+      const [y, m, d] = dateStr.split('-');
+      const display   = `${parseInt(d)} ${DOB_MONTHS_SHORT[parseInt(m) - 1]} ${y}`;
+      const trigger   = document.getElementById('dob-trigger');
+      document.getElementById('dob-display').textContent = display;
+      trigger.classList.remove('is-placeholder');
+
+      dobClose();
+      dobRender(); // update selected highlight
+    }
+
+    function dobToggle() {
+      const pop = document.getElementById('dob-popover');
+      pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function dobClose() {
+      document.getElementById('dob-popover').style.display = 'none';
+    }
+
+    function dobNav(dir) {
+      dob.month += dir;
+      if (dob.month > 11) { dob.month = 0;  dob.year++; }
+      if (dob.month < 0)  { dob.month = 11; dob.year--; }
+      dob.year = Math.max(1900, Math.min(DOB_TODAY.getFullYear(), dob.year));
+      dobRender();
+    }
+
+    function dobSetMonth(v) { dob.month = parseInt(v); dobRender(); }
+    function dobSetYear(v)  { dob.year  = parseInt(v); dobRender(); }
+
+    /** Establece un valor programáticamente (pre-fill). */
+    function dobSetValue(iso) {
+      if (!iso) return;
+      const [y, m, d] = iso.split('-');
+      dob.selected = iso;
+      dob.year     = parseInt(y);
+      dob.month    = parseInt(m) - 1;
+
+      const display = `${parseInt(d)} ${DOB_MONTHS_SHORT[parseInt(m) - 1]} ${y}`;
+      document.getElementById('dob-display').textContent = display;
+      document.getElementById('dob-trigger').classList.remove('is-placeholder');
+      dobRender();
+    }
+
+    /** Retorna el valor seleccionado como 'YYYY-MM-DD', o null. */
+    function dobGetValue() { return dob.selected; }
+
+    // Cerrar al hacer click fuera
+    document.addEventListener('click', function(e) {
+      const picker = document.getElementById('dob-picker');
+      if (picker && !picker.contains(e.target)) dobClose();
+    });
+
+    // Init al cargar
+    document.addEventListener('DOMContentLoaded', dobInit);
+  </script>
+
   <script src="/ui-utils.js?v=1.3"></script>
   <script type="module">
     import './auth.js';
 
-    const elLoading    = document.getElementById('loading-state');
-    const elForm       = document.getElementById('form-state');
-    const elAvatar     = document.getElementById('avatar-img');
-    const elFallback   = document.getElementById('avatar-fallback');
-    const elNombre     = document.getElementById('input-nombre');
-    const elSexo       = document.getElementById('input-sexo');
-    const elFecha      = document.getElementById('input-fecha');
-    const elBtn        = document.getElementById('btn-guardar');
-    const elCongreSub  = document.getElementById('congre-sub');
-    const elMatchWrap  = document.getElementById('match-badge-wrap');
-
-    // Fecha máxima = hoy
-    elFecha.max = new Date().toISOString().split('T')[0];
+    const elLoading   = document.getElementById('loading-state');
+    const elForm      = document.getElementById('form-state');
+    const elAvatar    = document.getElementById('avatar-img');
+    const elFallback  = document.getElementById('avatar-fallback');
+    const elNombre    = document.getElementById('input-nombre');
+    const elSexo      = document.getElementById('input-sexo');
+    const elBtn       = document.getElementById('btn-guardar');
+    const elCongreSub = document.getElementById('congre-sub');
+    const elMatchWrap = document.getElementById('match-badge-wrap');
 
     function iniciales(nombre) {
       return (nombre || '?').trim().split(/\s+/).slice(0,2).map(w => w[0].toUpperCase()).join('');
     }
 
-    function renderMatch(matchEstado, displayName) {
+    function renderMatch(matchEstado) {
       const msgs = {
-        ok:        { cls: 'ok',       txt: `✓ Perfil vinculado con tu registro en la congregación` },
-        pendiente: { cls: 'pendiente', txt: `⚠ Coincidencia ambigua — el admin revisará tu cuenta` },
-        sin_match: { cls: 'sin_match', txt: `✗ No encontramos tu nombre. Contactá al encargado para vincularte manualmente` },
+        ok:        { cls: 'ok',        txt: '✓ Perfil vinculado con tu registro en la congregación' },
+        pendiente: { cls: 'pendiente', txt: '⚠ Coincidencia ambigua — el admin revisará tu cuenta' },
+        sin_match: { cls: 'sin_match', txt: '✗ No encontramos tu nombre. Contactá al encargado para vincularte manualmente' },
       };
       const m = msgs[matchEstado];
       if (!m) return;
@@ -250,17 +444,8 @@
     }
 
     window.addEventListener('authStateChanged', ({ detail: { user } }) => {
-      if (!user) {
-        window.location.replace('/');
-        return;
-      }
+      if (!user || !user.primerLogin) { window.location.replace('/'); return; }
 
-      if (!user.primerLogin) {
-        window.location.replace('/');
-        return;
-      }
-
-      // Rellenar UI
       const congre = sessionStorage.getItem('congreNombre') || user.congregacionId || '';
       elCongreSub.textContent = congre ? `Congregación ${congre}` : 'Ziv';
 
@@ -274,19 +459,18 @@
       }
 
       elNombre.value = user.displayName || '';
-      if (user.sexo)  elSexo.value  = user.sexo;
-      if (user.birthDate) elFecha.value = user.birthDate;
+      if (user.sexo)      elSexo.value = user.sexo;
+      if (user.birthDate) dobSetValue(user.birthDate);
 
-      renderMatch(user.matchEstado, user.displayName);
+      renderMatch(user.matchEstado);
 
-      elLoading.style.display = 'none';
-      elForm.style.display    = 'flex';
+      elLoading.style.display    = 'none';
+      elForm.style.display       = 'flex';
       elForm.style.flexDirection = 'column';
       elForm.style.alignItems    = 'center';
       elForm.style.gap           = '0';
     });
 
-    // Si auth ya estaba listo antes de que el listener se registrara
     window.waitForAuth().then(user => {
       if (!user) window.location.replace('/');
     });
@@ -294,12 +478,12 @@
     window.guardarPerfil = async function() {
       const nombre = elNombre.value.trim();
       const sexo   = elSexo.value;
-      const fecha  = elFecha.value;
+      const fecha  = dobGetValue();
 
       if (!nombre) { elNombre.focus(); return; }
       if (!sexo)   { elSexo.focus();  return; }
 
-      elBtn.disabled = true;
+      elBtn.disabled    = true;
       elBtn.textContent = 'Guardando…';
 
       try {
