@@ -1568,3 +1568,168 @@ body.light-mode .cs-module-card:hover {
 `;
   document.head.appendChild(style);
 })();
+
+/* ─────────────────────────────────────────
+   SESSION HEADER — chip flotante top-right
+   Actualizado desde auth.js via window.updateSessionHeader(user)
+───────────────────────────────────────── */
+(function initSessionHeader() {
+  const style = document.createElement('style');
+  style.textContent = `
+    #ziv-session {
+      position: fixed; top: 12px; right: 12px; z-index: 300;
+    }
+    .ziv-sBtn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(35,38,40,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 5px 10px 5px 5px;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      color: #aaa; font-size: 13px;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap; max-width: 200px;
+    }
+    .ziv-sBtn:hover { background: rgba(50,53,58,0.95); border-color: rgba(255,255,255,0.14); }
+    .ziv-sAvatar {
+      width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    }
+    .ziv-sAvatarFallback {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(127,119,221,0.25); color: #7F77DD;
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ziv-sAvatarAnon {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,0.07); color: #666;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ziv-sName {
+      overflow: hidden; text-overflow: ellipsis; max-width: 100px;
+    }
+    .ziv-sChevron { color: #555; flex-shrink: 0; transition: transform 0.15s; }
+    .ziv-sBtn.open .ziv-sChevron { transform: rotate(180deg); }
+    .ziv-sMenu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      background: #252525; border: 1px solid #3a3a3a;
+      border-radius: 12px; min-width: 168px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden;
+    }
+    .ziv-sItem {
+      display: block; width: 100%; padding: 10px 14px;
+      font-size: 14px; color: #e8e8e8; text-decoration: none;
+      background: none; border: none; text-align: left;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.12s;
+    }
+    .ziv-sItem:hover { background: #2e2e2e; }
+    .ziv-sItem--danger { color: #F09595; }
+    .ziv-sDivider { height: 1px; background: #333; }
+    body.light-mode .ziv-sBtn {
+      background: rgba(255,255,255,0.88); border-color: rgba(0,0,0,0.1); color: #555;
+    }
+    body.light-mode .ziv-sBtn:hover { background: rgba(255,255,255,0.98); }
+    body.light-mode .ziv-sMenu {
+      background: #fff; border-color: #e8e0d4;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    body.light-mode .ziv-sItem { color: #2a2a2a; }
+    body.light-mode .ziv-sItem:hover { background: #f7f3ed; }
+    body.light-mode .ziv-sDivider { background: #e8e0d4; }
+  `;
+  document.head.appendChild(style);
+
+  const el = document.createElement('div');
+  el.id = 'ziv-session';
+  el.style.display = 'none';
+  el.innerHTML = `
+    <button class="ziv-sBtn" id="ziv-sBtn" onclick="toggleSessionMenu()">
+      <span id="ziv-sAvatarWrap"></span>
+      <span class="ziv-sName" id="ziv-sName"></span>
+      <svg class="ziv-sChevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="ziv-sMenu" id="ziv-sMenu" style="display:none">
+      <a id="ziv-sPerfil" href="/perfil.html" class="ziv-sItem">Ver perfil</a>
+      <div class="ziv-sDivider"></div>
+      <button class="ziv-sItem ziv-sItem--danger" onclick="sessionSignOut()">Cerrar sesión</button>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  document.addEventListener('click', function(e) {
+    if (!el.contains(e.target)) {
+      const m = document.getElementById('ziv-sMenu');
+      const b = document.getElementById('ziv-sBtn');
+      if (m) m.style.display = 'none';
+      if (b) b.classList.remove('open');
+    }
+  });
+})();
+
+window.updateSessionHeader = function(user) {
+  const el     = document.getElementById('ziv-session');
+  const wrap   = document.getElementById('ziv-sAvatarWrap');
+  const name   = document.getElementById('ziv-sName');
+  const perfil = document.getElementById('ziv-sPerfil');
+  if (!el) return;
+
+  if (!user) { el.style.display = 'none'; return; }
+
+  el.style.display = 'block';
+
+  if (user.isAnonymous) {
+    wrap.innerHTML = `
+      <div class="ziv-sAvatarAnon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>`;
+    name.textContent   = 'Invitado';
+    perfil.textContent = 'Vincular con Google';
+    perfil.removeAttribute('href');
+    perfil.onclick = function(e) {
+      e.preventDefault();
+      window.closeSessionMenu();
+      if (typeof window.linkWithGoogle === 'function') {
+        window.linkWithGoogle()
+          .then(() => window.location.replace('/perfil.html'))
+          .catch(err => console.error(err));
+      }
+    };
+  } else {
+    const ini = (user.displayName || user.email || '?')
+      .trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+    wrap.innerHTML = user.photoURL
+      ? `<img class="ziv-sAvatar" src="${user.photoURL}" alt="">`
+      : `<div class="ziv-sAvatarFallback">${ini}</div>`;
+    name.textContent   = (user.displayName || user.email || '').split(' ')[0];
+    perfil.textContent = 'Ver perfil';
+    perfil.href        = '/perfil.html';
+    perfil.onclick     = null;
+  }
+};
+
+window.toggleSessionMenu = function() {
+  const m    = document.getElementById('ziv-sMenu');
+  const b    = document.getElementById('ziv-sBtn');
+  const open = m && m.style.display !== 'none';
+  if (m) m.style.display = open ? 'none' : 'block';
+  if (b) b.classList.toggle('open', !open);
+};
+
+window.closeSessionMenu = function() {
+  const m = document.getElementById('ziv-sMenu');
+  const b = document.getElementById('ziv-sBtn');
+  if (m) m.style.display = 'none';
+  if (b) b.classList.remove('open');
+};
+
+window.sessionSignOut = async function() {
+  ['ziv_congre_id', 'ziv_congre_nombre', 'ziv_congre_color'].forEach(k => localStorage.removeItem(k));
+  ['congreId', 'congreNombre', 'congreColor'].forEach(k => sessionStorage.removeItem(k));
+  if (typeof window.signOutUser === 'function') await window.signOutUser();
+  window.location.replace('/');
+};

@@ -287,36 +287,6 @@
     .btn-skip:disabled { opacity: 0.4; cursor: default; }
     .auth-note { font-size: 12px; color: #444; }
 
-    /* ── Usuario logueado (mini-chip en menú) ── */
-    .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      background: #232628;
-      border: 1px solid #2e3033;
-      border-radius: 20px;
-      font-size: 13px;
-      color: #aaa;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .user-chip:hover { background: #2a2d30; }
-    .user-chip img {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .user-chip-avatar-fallback {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: rgba(127,119,221,0.3);
-      color: #7F77DD;
-      font-size: 10px;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-
     /* ── Botón instalar PWA ── */
     .btn-instalar {
       position: fixed;
@@ -471,7 +441,6 @@
       </a>
 
       <div class="cs-footer" id="menu-footer"></div>
-      <div id="user-chip-wrap"></div>
       <a class="cs-back-btn" href="#" onclick="volverACongres();return false;">← Congregaciones</a>
     </div>
   </div>
@@ -580,7 +549,6 @@
       congreIcon.style.color      = col;
       titulo.textContent = nombre;
       document.getElementById('menu-footer').textContent = nombre + ' · App interna';
-      renderUserChip();
       btnAdmin.classList.add('hidden');
       document.body.classList.add('en-menu');
       showView('view-menu');
@@ -592,25 +560,8 @@
       showView('view-auth');
     }
 
-    function renderUserChip() {
-      const user = window.currentUser;
-      const wrap = document.getElementById('user-chip-wrap');
-      if (!user) { wrap.innerHTML = ''; return; }
-
-      const avatarHtml = user.photoURL
-        ? `<img src="${user.photoURL}" alt="">`
-        : `<div class="user-chip-avatar-fallback">${iniciales(user.displayName)}</div>`;
-
-      wrap.innerHTML = `
-        <button class="user-chip" onclick="handleSignOut()">
-          ${avatarHtml}
-          <span>${user.displayName || user.email}</span>
-          <span style="color:#444;font-size:11px">· Salir</span>
-        </button>
-      `;
-    }
-
     window.volverACongres = function() {
+      // Limpia solo la sesión actual (no localStorage — se recuerda en próxima visita)
       sessionStorage.removeItem('congreId');
       sessionStorage.removeItem('congreNombre');
       sessionStorage.removeItem('congreColor');
@@ -650,11 +601,6 @@
         console.error(err);
         btn.disabled = false;
       }
-    };
-
-    window.handleSignOut = async function() {
-      await window.signOutUser();
-      window.volverACongres();
     };
 
     // Reaccionar a cambios de auth (login completado, sesión restaurada)
@@ -722,6 +668,9 @@
             sessionStorage.setItem('congreId',     id);
             sessionStorage.setItem('congreNombre', nombre);
             sessionStorage.setItem('congreColor',  c.color);
+            localStorage.setItem('ziv_congre_id',     id);
+            localStorage.setItem('ziv_congre_nombre', nombre);
+            localStorage.setItem('ziv_congre_color',  c.color);
             navegarDespuesDeAuth(nombre, c.color);
           });
           list.appendChild(card);
@@ -732,11 +681,17 @@
       }
     }
 
-    // Si ya hay sesión de congregación guardada → validar auth y navegar
-    const savedId     = sessionStorage.getItem('congreId');
-    const savedNombre = sessionStorage.getItem('congreNombre');
-    const savedColor  = sessionStorage.getItem('congreColor');
+    // Si ya hay congregación guardada (sesión o persistente) → navegar directo
+    const savedId     = sessionStorage.getItem('congreId')     || localStorage.getItem('ziv_congre_id');
+    const savedNombre = sessionStorage.getItem('congreNombre') || localStorage.getItem('ziv_congre_nombre');
+    const savedColor  = sessionStorage.getItem('congreColor')  || localStorage.getItem('ziv_congre_color');
     if (savedId && savedNombre) {
+      // Sincronizar sessionStorage desde localStorage si es una sesión nueva
+      if (!sessionStorage.getItem('congreId')) {
+        sessionStorage.setItem('congreId',     savedId);
+        sessionStorage.setItem('congreNombre', savedNombre);
+        sessionStorage.setItem('congreColor',  savedColor || '');
+      }
       navegarDespuesDeAuth(savedNombre, savedColor);
     }
 

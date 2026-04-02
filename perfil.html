@@ -444,7 +444,8 @@
     }
 
     window.addEventListener('authStateChanged', ({ detail: { user } }) => {
-      if (!user || !user.primerLogin) { window.location.replace('/'); return; }
+      // Usuarios anónimos no tienen perfil que editar
+      if (!user || user.isAnonymous) { window.location.replace('/'); return; }
 
       const congre = sessionStorage.getItem('congreNombre') || user.congregacionId || '';
       elCongreSub.textContent = congre ? `Congregación ${congre}` : 'Ziv';
@@ -457,6 +458,11 @@
         elFallback.textContent = iniciales(user.displayName);
         elFallback.style.display = 'flex';
       }
+
+      // Título dinámico según contexto
+      document.querySelector('[style*="Completá"]').textContent =
+        user.primerLogin ? 'Completá tu perfil' : 'Tu perfil';
+      elBtn.textContent = user.primerLogin ? 'Guardar y continuar' : 'Guardar cambios';
 
       elNombre.value = user.displayName || '';
       if (user.sexo)      elSexo.value = user.sexo;
@@ -487,12 +493,9 @@
       elBtn.textContent = 'Guardando…';
 
       try {
-        await window.updateUserProfile({
-          displayName: nombre,
-          sexo,
-          birthDate:   fecha || null,
-          primerLogin: false,
-        });
+        const updates = { displayName: nombre, sexo, birthDate: fecha || null };
+        if (window.currentUser?.primerLogin) updates.primerLogin = false;
+        await window.updateUserProfile(updates);
         window.location.replace('/');
       } catch (err) {
         console.error(err);

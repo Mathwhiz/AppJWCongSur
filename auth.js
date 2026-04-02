@@ -138,6 +138,7 @@ onAuthStateChanged(auth, async (fbUser) => {
     _authReady = true;
     _waiters.forEach(resolve => resolve(_user));
     _waiters.length = 0;
+    if (typeof window.updateSessionHeader === 'function') window.updateSessionHeader(_user);
     window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: _user } }));
   }
 });
@@ -227,6 +228,7 @@ window.linkWithGoogle = async () => {
   await updateDoc(ref, updates);
   Object.assign(_user, updates, { _firebaseUser: fbUser });
 
+  if (typeof window.updateSessionHeader === 'function') window.updateSessionHeader(_user);
   window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: _user } }));
   return _user;
 };
