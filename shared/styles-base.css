@@ -1,0 +1,36 @@
+/* ─────────────────────────────────────────────
+   shared/styles-base.css
+   Reglas comunes a todos los módulos de AppJW
+   ───────────────────────────────────────────── */
+
+/* ── Reset ── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Animaciones ── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+
+/* ── Loading ── */
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 14px; }
+.spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--spinner-color, #7F77DD); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.loading-txt { font-size: 14px; color: #888; }
+
+/* ── Estados ── */
+.error-wrap { background: #2e1a1a; border: 0.5px solid #A32D2D; border-radius: 10px; padding: 1rem 1.25rem; font-size: 13px; color: #F09595; }
+.empty-state { text-align: center; padding: 3rem 1rem; color: #555; font-size: 14px; }
+
+/* ── Section headers ── */
+.section-title { font-size: 22px; font-weight: 500; color: #eee; margin-bottom: 4px; text-align: center; }
+.section-sub   { font-size: 14px; color: #888; margin-bottom: 16px; text-align: center; }
+
+/* ── Encargado menú ── */
+.enc-menu { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+/* ── Banner offline ── */
+.offline-banner {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: #2e1a1a; border-bottom: 1.5px solid #A32D2D;
+  color: #F09595; font-size: 13px; font-weight: 500;
+  text-align: center; padding: 10px; z-index: 999; display: none;
+}
+.offline-banner.visible { display: block; }

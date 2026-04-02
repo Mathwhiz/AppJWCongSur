@@ -1,9 +1,8 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --spinner-color: #D85A30; }
 body { font-family: system-ui, sans-serif; background: #1a1c1f; color: #eee; min-height: 100vh; }
 
 .view { display: none; animation: fadeIn 0.2s ease; }
 .view.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── Botón casita ── */
 .btn-home {
@@ -270,12 +269,6 @@ body { font-family: system-ui, sans-serif; background: #1a1c1f; color: #eee; min
 .btn-secondary:hover { border-color: #666; color: #eee; }
 
 /* ── Misc ── */
-.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 14px; }
-.spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: #D85A30; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-txt { font-size: 14px; color: #888; }
-.error-wrap { background: #2e1a1a; border: 1px solid #A32D2D; border-radius: 10px; padding: 1rem; font-size: 13px; color: #F09595; }
-.empty-state { text-align: center; padding: 3rem 1rem; color: #555; font-size: 14px; }
 
 /* ── Semanas especiales ── */
 .enc-especiales {

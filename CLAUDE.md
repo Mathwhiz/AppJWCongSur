@@ -59,7 +59,6 @@ El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al c
 ```
 /
 ├── index.html              # SPA: elegir congregación → elegir módulo
-├── menu.html               # Redirect → index.html (compatibilidad)
 ├── admin.html              # Panel de superadmin (URL + PIN)
 ├── admin.js                # Lógica del panel de admin
 ├── firebase.js             # Inicialización compartida de Firebase (exporta `db`)
