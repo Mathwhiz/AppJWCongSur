@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1c1f">
   <title>Ziv — Comunidad Conectada</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Tokens: dark (default) ── */
     :root {
       --bg:        #1a1c1f;
       --surface:   #232628;
@@ -15,20 +17,40 @@
       --border-h:  #4a4d52;
       --text:      #e8e8e8;
       --text-2:    #aaa;
+      --text-3:    #666;
       --accent:    #7F77DD;
       --accent-h:  #6a62cc;
-      --green:     #5DB85D;   --green-bg:  rgba(93,184,93,0.12);
-      --blue:      #5B8DDE;   --blue-bg:   rgba(91,141,222,0.12);
-      --amber:     #EF9F27;   --amber-bg:  rgba(239,159,39,0.12);
-      --teal:      #1D9E75;   --teal-bg:   rgba(29,158,117,0.12);
+      --accent-bg: rgba(127,119,221,0.10);
+      --green:     #5DB85D;  --green-bg:  rgba(93,184,93,0.12);
+      --blue:      #5B8DDE;  --blue-bg:   rgba(91,141,222,0.12);
+      --amber:     #EF9F27;  --amber-bg:  rgba(239,159,39,0.12);
+      --teal:      #1D9E75;  --teal-bg:   rgba(29,158,117,0.12);
+      --body-bg:   #0e1012;
+      --glow:      rgba(127,119,221,0.09);
+    }
+
+    /* ── Tokens: light ── */
+    html.light {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --surface-h: #ebebef;
+      --border:    #dddde3;
+      --border-h:  #b8b8c2;
+      --text:      #18191c;
+      --text-2:    #5a5a68;
+      --text-3:    #9595a2;
+      --accent-bg: rgba(127,119,221,0.08);
+      --body-bg:   #e2e3e8;
+      --glow:      rgba(127,119,221,0.06);
     }
 
     html, body {
       height: 100%;
-      background: #0e1012;
+      background: var(--body-bg);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
+      transition: background .3s, color .3s;
     }
 
     /* ── Ambient glow ── */
@@ -39,7 +61,7 @@
       transform: translateX(-50%);
       width: min(80vw, 800px);
       aspect-ratio: 1;
-      background: radial-gradient(circle, rgba(127,119,221,0.09) 0%, transparent 68%);
+      background: radial-gradient(circle, var(--glow) 0%, transparent 68%);
       pointer-events: none;
       z-index: 0;
     }
@@ -54,20 +76,20 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background .3s, border-color .3s, box-shadow .3s;
     }
 
-    /* Tablet/desktop: float as a card */
     @media (min-width: 600px) {
       body { display: flex; align-items: center; justify-content: center; padding: 24px; }
       .shell {
         height: auto;
-        min-height: min(85vh, 800px);
+        min-height: min(82vh, 760px);
         max-height: 88vh;
         width: 100%;
         max-width: 480px;
         border-radius: 32px;
         border: 1px solid var(--border);
-        box-shadow: 0 32px 64px -16px rgba(0,0,0,.7);
+        box-shadow: 0 32px 64px -16px rgba(0,0,0,.45);
       }
     }
     @media (min-width: 900px) {
@@ -79,10 +101,8 @@
       position: relative;
       flex: 1;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      min-height: 0;
     }
-
     .screen {
       position: absolute;
       inset: 0;
@@ -91,104 +111,163 @@
       opacity: 0;
       visibility: hidden;
       transform: translateX(20px) scale(0.99);
-      transition: opacity .45s cubic-bezier(.32,.72,0,1),
-                  transform .45s cubic-bezier(.32,.72,0,1),
-                  visibility .45s;
+      transition: opacity .42s cubic-bezier(.32,.72,0,1),
+                  transform .42s cubic-bezier(.32,.72,0,1),
+                  visibility .42s;
     }
-    .screen.active {
-      opacity: 1;
-      visibility: visible;
-      transform: none;
-      z-index: 2;
-    }
+    .screen.active  { opacity: 1; visibility: visible; transform: none; z-index: 2; }
     .screen.out-left  { transform: translateX(-20px) scale(0.99); opacity: 0; visibility: hidden; }
     .screen.out-right { transform: translateX(20px) scale(0.99);  opacity: 0; visibility: hidden; }
 
     /* ── Shared scroll area ── */
-    .scroll {
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      flex: 1;
-    }
+    .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; }
     .scroll::-webkit-scrollbar { width: 3px; }
     .scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     /* ── Back button ── */
     .back-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: none;
-      color: var(--text-2);
-      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border: none; background: none;
+      color: var(--text-2); cursor: pointer;
       border-radius: 10px;
       transition: color .15s, background .15s;
     }
-    .back-btn:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .back-btn:hover { color: var(--text); background: rgba(127,119,221,.08); }
+
+    /* ── Primary button ── */
+    .btn-primary {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 20px;
+      background: var(--accent); color: #fff;
+      font-size: 15px; font-weight: 600;
+      border: none; border-radius: 16px; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(127,119,221,.28);
+      transition: background .15s, transform .12s, box-shadow .15s;
+      font-family: inherit;
+    }
+    .btn-primary:hover  { background: var(--accent-h); box-shadow: 0 6px 24px rgba(127,119,221,.35); }
+    .btn-primary:active { transform: scale(.97); }
+    .btn-primary:disabled {
+      opacity: .35; cursor: default;
+      background: var(--surface); color: var(--text-2); box-shadow: none;
+    }
 
     /* ════════════════════════════════════════
        SCREEN 1 — Welcome
     ════════════════════════════════════════ */
-    #s1 {
-      align-items: center;
-      justify-content: space-between;
-      padding: 64px 28px 36px;
+    #s1 { padding: 0; justify-content: space-between; }
+
+    /* Top bar */
+    .s1-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px 0;
+      flex-shrink: 0;
     }
-    .hero-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .btn-pwa {
+      display: none;
+      align-items: center; gap: 7px;
+      padding: 7px 13px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      font-size: 13px; font-weight: 500;
+      border-radius: 10px; cursor: pointer;
+      font-family: inherit;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .btn-pwa.visible { display: flex; }
+    .btn-pwa:hover { color: var(--text); border-color: var(--border-h); }
+
+    .btn-theme {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .btn-theme:hover { color: var(--text); border-color: var(--border-h); }
+
+    /* Hero */
+    .s1-hero {
+      display: flex; flex-direction: column; align-items: center;
       text-align: center;
-      gap: 20px;
-      transform: translateY(-4%);
+      padding: 16px 28px 12px;
+      gap: 10px;
+      flex-shrink: 0;
     }
-    .app-icon {
-      filter: drop-shadow(0 0 16px rgba(127,119,221,.35));
-    }
+    .app-icon { filter: drop-shadow(0 0 14px rgba(127,119,221,.4)); }
     .app-name {
-      font-size: 2.8rem;
-      font-weight: 700;
-      letter-spacing: -0.04em;
+      font-size: 2.5rem; font-weight: 700; letter-spacing: -0.04em;
       color: var(--text);
     }
     .app-tagline {
-      font-size: 15px;
-      color: var(--text-2);
-      line-height: 1.5;
-      max-width: 220px;
+      font-size: 14px; color: var(--text-2); line-height: 1.5;
+      max-width: 240px;
     }
 
-    /* ── Primary button ── */
-    .btn-primary {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 15px 20px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 600;
-      border: none;
-      border-radius: 18px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(127,119,221,.3);
-      transition: background .15s, transform .12s;
-      font-family: inherit;
+    /* Feature slider */
+    .s1-slider { flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+    .slider-viewport { overflow: hidden; height: 152px; padding: 0 20px; }
+    .slider-track {
+      display: flex; height: 100%;
+      transition: transform .4s cubic-bezier(.32,.72,0,1);
+      will-change: transform;
     }
-    .btn-primary:hover  { background: var(--accent-h); }
-    .btn-primary:active { transform: scale(.97); }
-    .btn-primary:disabled {
-      opacity: .3;
-      cursor: default;
+    .slide { flex: 0 0 100%; padding: 0 4px; height: 100%; }
+    .slide-card {
+      height: 100%;
       background: var(--surface);
-      color: var(--text-2);
-      box-shadow: none;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: background .3s, border-color .3s;
     }
+    .slide-header {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .slide-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .slide-feature-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .slide-feature-desc  { font-size: 12px; color: var(--text-2); line-height: 1.35; }
+    .slide-body { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+    .fake-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+    }
+    .fake-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .fake-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .fake-line { height: 7px; border-radius: 4px; background: var(--border); }
+    .fake-line-s { width: 38%; }
+    .fake-line-m { width: 55%; }
+    .fake-line-l { flex: 1; }
+    .fake-badge {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 5px;
+      flex-shrink: 0; white-space: nowrap;
+    }
+
+    /* Slider dots */
+    .slider-dots {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .sdot {
+      width: 6px; height: 6px; border-radius: 50%;
+      border: none; padding: 0; cursor: pointer;
+      background: var(--border);
+      transition: background .2s, transform .2s, width .2s;
+    }
+    .sdot.active { background: var(--accent); width: 18px; border-radius: 3px; }
+
+    /* Bottom CTA */
+    .s1-foot { padding: 8px 24px 24px; flex-shrink: 0; }
 
     /* ════════════════════════════════════════
        SCREEN 2 — Congregation
@@ -199,187 +278,109 @@
       padding: 48px 24px 20px;
       flex-shrink: 0;
       position: relative;
+      text-align: center;
     }
-    .screen-header .back-btn { position: absolute; top: 16px; left: 20px; }
+    .screen-header .back-btn { position: absolute; top: 14px; left: 18px; }
     .screen-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -.03em;
-      color: var(--text);
-      margin-bottom: 4px;
+      font-size: 1.45rem; font-weight: 700; letter-spacing: -.03em;
+      color: var(--text); margin-bottom: 4px;
     }
-    .screen-sub {
-      font-size: 14px;
-      color: var(--text-2);
-    }
+    .screen-sub { font-size: 14px; color: var(--text-2); }
 
     /* Congregation list */
-    .congre-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 0 24px 16px;
-    }
+    .congre-list { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 16px; }
     .congre-item { display: block; cursor: pointer; }
     .congre-item input { position: absolute; opacity: 0; pointer-events: none; }
     .congre-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
       transition: border-color .15s, background .15s;
     }
     .congre-item input:checked + .congre-card {
       border-color: var(--accent);
-      background: rgba(127,119,221,.04);
+      background: var(--accent-bg);
     }
     .congre-card:hover { border-color: var(--border-h); }
-    .congre-card-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .congre-card-left { display: flex; align-items: center; gap: 12px; }
     .congre-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      color: var(--text-2);
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--text-2);
+      transition: background .3s, border-color .3s;
     }
-    .congre-name {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text);
-    }
+    .congre-name { font-size: 15px; font-weight: 500; color: var(--text); }
 
-    /* Radio circle */
     .radio {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid var(--text-2);
-      flex-shrink: 0;
-      position: relative;
-      transition: border-color .2s;
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--text-2); flex-shrink: 0;
+      position: relative; transition: border-color .2s;
     }
     .radio::after {
-      content: '';
-      position: absolute;
+      content: ''; position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%,-50%) scale(0);
-      width: 10px; height: 10px;
-      border-radius: 50%;
+      width: 10px; height: 10px; border-radius: 50%;
       background: var(--accent);
       transition: transform .2s cubic-bezier(.34,1.56,.64,1);
     }
-    .congre-item input:checked + .congre-card .radio {
-      border-color: var(--accent);
-    }
-    .congre-item input:checked + .congre-card .radio::after {
-      transform: translate(-50%,-50%) scale(1);
-    }
+    .congre-item input:checked + .congre-card .radio { border-color: var(--accent); }
+    .congre-item input:checked + .congre-card .radio::after { transform: translate(-50%,-50%) scale(1); }
 
-    /* Footer bar */
-    .screen-footer {
-      padding: 12px 24px 28px;
-      flex-shrink: 0;
-    }
+    .screen-footer { padding: 12px 24px 28px; flex-shrink: 0; }
     .footnote {
-      font-size: 12px;
-      color: var(--text-2);
-      text-align: center;
-      margin-bottom: 12px;
-      opacity: .8;
+      font-size: 12px; color: var(--text-2);
+      text-align: center; margin-bottom: 12px; opacity: .8;
     }
 
     /* ════════════════════════════════════════
        SCREEN 3 — Auth
     ════════════════════════════════════════ */
-    #s3 {
-      align-items: center;
-      justify-content: center;
-      padding: 28px;
-    }
+    #s3 { align-items: center; justify-content: center; padding: 28px; }
+    .back-top { position: absolute; top: 14px; left: 18px; }
     .auth-center {
-      width: 100%;
-      max-width: 340px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .back-top {
-      position: absolute;
-      top: 16px;
-      left: 20px;
+      width: 100%; max-width: 340px;
+      display: flex; flex-direction: column; align-items: center;
     }
     .auth-icon-wrap {
-      width: 60px;
-      height: 60px;
-      border-radius: 18px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 28px;
+      width: 60px; height: 60px; border-radius: 18px;
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
     }
     .auth-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -.03em;
-      margin-bottom: 8px;
-      text-align: center;
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em;
+      margin-bottom: 8px; text-align: center;
     }
     .auth-sub {
-      font-size: 14px;
-      color: var(--text-2);
-      line-height: 1.55;
-      text-align: center;
-      margin-bottom: 36px;
+      font-size: 14px; color: var(--text-2); line-height: 1.55;
+      text-align: center; margin-bottom: 32px;
     }
     .btn-google {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px;
       padding: 14px 20px;
-      background: #fff;
-      color: #1f2937;
-      font-size: 15px;
-      font-weight: 500;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      background: #fff; color: #1f2937;
+      font-size: 15px; font-weight: 500;
+      border: none; border-radius: 14px; cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
       transition: background .15s, transform .12s;
-      font-family: inherit;
-      margin-bottom: 14px;
+      font-family: inherit; margin-bottom: 12px;
     }
     .btn-google:hover  { background: #f3f4f6; }
     .btn-google:active { transform: scale(.97); }
     .btn-skip {
       width: 100%;
-      padding: 13px 20px;
+      padding: 14px 20px;
       background: none;
-      border: none;
+      border: 1px solid var(--border);
       color: var(--text-2);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      border-radius: 14px;
-      transition: color .15s;
+      font-size: 15px; font-weight: 500;
+      cursor: pointer; border-radius: 14px;
+      transition: color .15s, border-color .15s, background .15s;
       font-family: inherit;
     }
-    .btn-skip:hover { color: var(--text); }
+    .btn-skip:hover { color: var(--text); border-color: var(--border-h); background: var(--surface); }
 
     /* ════════════════════════════════════════
        SCREEN 4 — Dashboard
@@ -387,110 +388,76 @@
     #s4 { padding: 0; }
 
     .dash-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 44px 24px 18px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 40px 24px 18px;
+      background: var(--bg); border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      transition: background .3s, border-color .3s;
     }
     .dash-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 4px;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 3px;
     }
-    .dash-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -.02em;
-    }
+    .dash-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; }
     .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-2);
-      flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); flex-shrink: 0;
+      transition: background .3s, border-color .3s;
     }
 
-    /* Module grid */
     .dash-content { padding: 20px 24px 32px; }
     .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text-2);
-      margin-bottom: 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-2); margin-bottom: 14px;
     }
-    .module-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
+    .module-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
     @media (min-width: 420px) {
       .module-grid { grid-template-columns: 1fr 1fr; }
     }
 
     .module-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
+      display: flex; align-items: flex-start; gap: 14px;
       padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      cursor: pointer;
-      text-align: left;
-      width: 100%;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+      cursor: pointer; text-align: left; width: 100%;
       font-family: inherit;
       transition: border-color .18s, background .18s, transform .12s, box-shadow .18s;
     }
     .module-card:hover {
-      border-color: var(--border-h);
-      background: var(--surface-h);
+      border-color: var(--border-h); background: var(--surface-h);
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(0,0,0,.3);
+      box-shadow: 0 6px 24px rgba(0,0,0,.18);
     }
     .module-card:active { transform: scale(.98); box-shadow: none; }
 
     .mod-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      width: 46px; height: 46px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .mod-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-    .mod-desc {
-      font-size: 12px;
-      color: var(--text-2);
-      line-height: 1.4;
+    .mod-text { display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+    .mod-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .mod-desc  { font-size: 12px; color: var(--text-2); line-height: 1.35; }
+
+    /* Desktop: bigger module cards */
+    @media (min-width: 600px) {
+      .dash-header { padding: 44px 28px 20px; }
+      .dash-content { padding: 24px 28px 40px; }
+      .module-grid { gap: 14px; }
+      .module-card { padding: 18px; gap: 16px; }
+      .mod-icon { width: 52px; height: 52px; border-radius: 14px; }
+      .mod-title { font-size: 16px; }
+      .mod-desc  { font-size: 13px; }
     }
 
-    /* ── Utility ── */
+    /* ── Entrance animations ── */
     @keyframes up-in {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: none; }
     }
-    .screen.active .animate-in {
-      animation: up-in .4s cubic-bezier(.16,1,.3,1) both;
-    }
+    .screen.active .animate-in { animation: up-in .4s cubic-bezier(.16,1,.3,1) both; }
     .screen.active .d1 { animation-delay: .05s; }
     .screen.active .d2 { animation-delay: .12s; }
     .screen.active .d3 { animation-delay: .19s; }
@@ -503,45 +470,201 @@
   <div class="shell">
     <div class="screens">
 
-      <!-- ══ SCREEN 1: Welcome ══ -->
+      <!-- ══════════════════════════════════════
+           SCREEN 1 — Welcome
+      ══════════════════════════════════════ -->
       <div id="s1" class="screen active">
-        <div class="hero-center animate-in d1">
-          <!-- Hexagon icon -->
-          <svg class="app-icon" width="110" height="110" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Top bar: PWA install + theme toggle -->
+        <div class="s1-bar animate-in d1">
+          <button id="pwa-btn" class="btn-pwa" onclick="installPWA()" aria-label="Instalar aplicación">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Instalar app
+          </button>
+          <button class="btn-theme" id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
+            <!-- Moon icon (dark mode default) -->
+            <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg id="icon-sun"  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+        </div>
+
+        <!-- Hero: icon + name + tagline -->
+        <div class="s1-hero animate-in d1">
+          <svg class="app-icon" width="88" height="88" viewBox="0 0 110 110" fill="none">
             <defs>
-              <linearGradient id="hex-grad" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="hex-g" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#9B8FFF"/>
                 <stop offset="100%" stop-color="#5A4FCC"/>
               </linearGradient>
-              <linearGradient id="people-grad" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="ppl-g" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#C4BEFF"/>
                 <stop offset="100%" stop-color="#9B8FFF"/>
               </linearGradient>
             </defs>
-            <!-- Hex fill -->
-            <path d="M55 6 L100 30.5 V79.5 L55 104 L10 79.5 V30.5 Z" fill="url(#hex-grad)" opacity=".9"/>
-            <!-- Hex border highlight -->
-            <path d="M55 6 L100 30.5 V79.5 L55 104 L10 79.5 V30.5 Z" fill="none" stroke="rgba(180,172,255,0.4)" stroke-width="1.5"/>
-            <!-- Person left -->
-            <circle cx="42" cy="46" r="8.5" fill="url(#people-grad)"/>
-            <path d="M26 75 C26 66 33.2 59 42 59 S58 66 58 75" stroke="url(#people-grad)" stroke-width="4" stroke-linecap="round" fill="none"/>
-            <!-- Person right -->
-            <circle cx="65" cy="44" r="7" fill="url(#people-grad)" opacity=".8"/>
-            <path d="M53 75 C53 68.4 58.4 63 65 63 S77 68.4 77 75" stroke="url(#people-grad)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".8"/>
+            <path d="M55 6L100 30.5V79.5L55 104L10 79.5V30.5Z" fill="url(#hex-g)" opacity=".92"/>
+            <path d="M55 6L100 30.5V79.5L55 104L10 79.5V30.5Z" fill="none" stroke="rgba(180,172,255,.4)" stroke-width="1.5"/>
+            <circle cx="42" cy="47" r="8.5" fill="url(#ppl-g)"/>
+            <path d="M26 76C26 67 33.2 60 42 60S58 67 58 76" stroke="url(#ppl-g)" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <circle cx="66" cy="45" r="7" fill="url(#ppl-g)" opacity=".8"/>
+            <path d="M54 76C54 69.4 59.4 64 66 64S78 69.4 78 76" stroke="url(#ppl-g)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".8"/>
           </svg>
-
           <h1 class="app-name">Ziv</h1>
           <p class="app-tagline">Organización e información para tu comunidad de fe.</p>
         </div>
 
-        <button class="btn-primary animate-in d2" onclick="go(1,2)">
-          Comenzar
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
+        <!-- Feature slider -->
+        <div class="s1-slider animate-in d2">
+          <div class="slider-viewport" id="slider-vp"
+               ontouchstart="slTouch(event,'s')"
+               ontouchend="slTouch(event,'e')">
+            <div class="slider-track" id="slider-track">
 
-      <!-- ══ SCREEN 2: Congregation ══ -->
+              <!-- Slide 1: Territorios -->
+              <div class="slide">
+                <div class="slide-card">
+                  <div class="slide-header">
+                    <div class="slide-icon" style="background:var(--green-bg)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <div>
+                      <div class="slide-feature-title">Territorios</div>
+                      <div class="slide-feature-desc">Asigná zonas y controlá el estado de cada área.</div>
+                    </div>
+                  </div>
+                  <div class="slide-body">
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--green)"></div>
+                      <div class="fake-line fake-line-m"></div>
+                      <div class="fake-badge" style="background:var(--green-bg);color:var(--green)">Activo</div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--amber)"></div>
+                      <div class="fake-line fake-line-s"></div>
+                      <div class="fake-badge" style="background:var(--amber-bg);color:var(--amber)">En curso</div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--border-h)"></div>
+                      <div class="fake-line fake-line-l"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 2: Asignaciones -->
+              <div class="slide">
+                <div class="slide-card">
+                  <div class="slide-header">
+                    <div class="slide-icon" style="background:var(--blue-bg)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><line x1="14" y1="14" x2="20" y2="14"/><line x1="14" y1="17" x2="20" y2="17"/></svg>
+                    </div>
+                    <div>
+                      <div class="slide-feature-title">Asignaciones</div>
+                      <div class="slide-feature-desc">Consultá tus partes en la reunión semanal.</div>
+                    </div>
+                  </div>
+                  <div class="slide-body">
+                    <div class="fake-row">
+                      <div class="fake-badge" style="background:var(--blue-bg);color:var(--blue);min-width:60px;text-align:center">LECTOR</div>
+                      <div class="fake-line fake-line-l"></div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-badge" style="background:var(--blue-bg);color:var(--blue);min-width:60px;text-align:center">SONIDO</div>
+                      <div class="fake-line fake-line-m"></div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-badge" style="background:var(--blue-bg);color:var(--blue);min-width:60px;text-align:center">MICRO</div>
+                      <div class="fake-line fake-line-s"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 3: Vida y Ministerio -->
+              <div class="slide">
+                <div class="slide-card">
+                  <div class="slide-header">
+                    <div class="slide-icon" style="background:var(--teal-bg)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </div>
+                    <div>
+                      <div class="slide-feature-title">Vida y Ministerio</div>
+                      <div class="slide-feature-desc">Programa de reuniones VM con asignaciones.</div>
+                    </div>
+                  </div>
+                  <div class="slide-body">
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--teal)"></div>
+                      <div class="fake-line" style="width:30%"></div>
+                      <div class="fake-badge" style="background:var(--teal-bg);color:var(--teal)">Canción 52</div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--border-h)"></div>
+                      <div class="fake-line fake-line-l"></div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--border-h)"></div>
+                      <div class="fake-line fake-line-m"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 4: Administrador -->
+              <div class="slide">
+                <div class="slide-card">
+                  <div class="slide-header">
+                    <div class="slide-icon" style="background:var(--amber-bg)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
+                    </div>
+                    <div>
+                      <div class="slide-feature-title">Administrador</div>
+                      <div class="slide-feature-desc">Gestioná hermanos, roles y semanas especiales.</div>
+                    </div>
+                  </div>
+                  <div class="slide-body">
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--accent)"></div>
+                      <div class="fake-line fake-line-m"></div>
+                      <div class="fake-badge" style="background:var(--accent-bg);color:var(--accent)">Anciano</div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--border-h)"></div>
+                      <div class="fake-line fake-line-l"></div>
+                    </div>
+                    <div class="fake-row">
+                      <div class="fake-dot" style="background:var(--border-h)"></div>
+                      <div class="fake-line fake-line-s"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /.slider-track -->
+          </div><!-- /.slider-viewport -->
+
+          <div class="slider-dots" id="slider-dots">
+            <button class="sdot active" onclick="goSlide(0)" aria-label="Slide 1"></button>
+            <button class="sdot" onclick="goSlide(1)" aria-label="Slide 2"></button>
+            <button class="sdot" onclick="goSlide(2)" aria-label="Slide 3"></button>
+            <button class="sdot" onclick="goSlide(3)" aria-label="Slide 4"></button>
+          </div>
+        </div><!-- /.s1-slider -->
+
+        <!-- CTA -->
+        <div class="s1-foot animate-in d3">
+          <button class="btn-primary" onclick="go(1,2)">
+            Comenzar
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+      </div><!-- /#s1 -->
+
+      <!-- ══════════════════════════════════════
+           SCREEN 2 — Congregation selection
+      ══════════════════════════════════════ -->
       <div id="s2" class="screen">
+
         <div class="screen-header animate-in d1">
           <button class="back-btn" onclick="go(2,1)" aria-label="Volver">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -614,22 +737,25 @@
             </div>
           </form>
         </div>
-      </div>
 
-      <!-- ══ SCREEN 3: Auth ══ -->
+      </div><!-- /#s2 -->
+
+      <!-- ══════════════════════════════════════
+           SCREEN 3 — Auth
+      ══════════════════════════════════════ -->
       <div id="s3" class="screen">
+
         <button class="back-btn back-top animate-in d1" onclick="go(3,2)" aria-label="Volver">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
 
         <div class="auth-center animate-in d2">
           <div class="auth-icon-wrap">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <polyline points="9 12 11 14 15 10"/>
             </svg>
           </div>
-
           <h2 class="auth-title">Ingresá a Ziv</h2>
           <p class="auth-sub">Vinculá tu cuenta de Google para acceder a los módulos de tu congregación.</p>
 
@@ -642,12 +768,17 @@
             </svg>
             Continuar con Google
           </button>
+
           <button class="btn-skip" onclick="go(3,4)">Omitir por ahora</button>
         </div>
-      </div>
 
-      <!-- ══ SCREEN 4: Dashboard ══ -->
+      </div><!-- /#s3 -->
+
+      <!-- ══════════════════════════════════════
+           SCREEN 4 — Dashboard
+      ══════════════════════════════════════ -->
       <div id="s4" class="screen">
+
         <header class="dash-header animate-in d1">
           <div>
             <p class="dash-eyebrow">Ziv App</p>
@@ -667,7 +798,7 @@
                 <div class="mod-icon" style="background:var(--green-bg)">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
-                <div>
+                <div class="mod-text">
                   <div class="mod-title">Territorios</div>
                   <div class="mod-desc">Gestión de zonas de predicación.</div>
                 </div>
@@ -677,7 +808,7 @@
                 <div class="mod-icon" style="background:var(--blue-bg)">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><line x1="14" y1="14" x2="20" y2="14"/><line x1="14" y1="17" x2="20" y2="17"/></svg>
                 </div>
-                <div>
+                <div class="mod-text">
                   <div class="mod-title">Asignaciones</div>
                   <div class="mod-desc">Programa semanal de reuniones.</div>
                 </div>
@@ -685,9 +816,9 @@
 
               <button class="module-card">
                 <div class="mod-icon" style="background:var(--amber-bg)">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
                 </div>
-                <div>
+                <div class="mod-text">
                   <div class="mod-title">Administrador</div>
                   <div class="mod-desc">Hermanos, roles y configuración.</div>
                 </div>
@@ -697,7 +828,7 @@
                 <div class="mod-icon" style="background:var(--teal-bg)">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 </div>
-                <div>
+                <div class="mod-text">
                   <div class="mod-title">Vida y Ministerio</div>
                   <div class="mod-desc">Programa de reuniones VM.</div>
                 </div>
@@ -706,49 +837,105 @@
             </div>
           </div>
         </div>
-      </div>
+
+      </div><!-- /#s4 -->
 
     </div><!-- /.screens -->
   </div><!-- /.shell -->
 
   <script>
+    /* ── Screen navigation ── */
     function go(from, to) {
       const a = document.getElementById('s' + from);
       const b = document.getElementById('s' + to);
       if (!a || !b) return;
       const fwd = to > from;
-
-      // Snap b to its start position without transition
       b.style.transition = 'none';
       b.classList.remove('active', 'out-left', 'out-right');
       b.style.transform = fwd ? 'translateX(20px) scale(0.99)' : 'translateX(-20px) scale(0.99)';
       b.style.opacity = '0';
       b.style.visibility = 'hidden';
-
-      // Force reflow
       void b.offsetWidth;
-
-      // Remove inline overrides and let CSS take over
       b.style.transition = '';
       b.style.transform = '';
       b.style.opacity = '';
       b.style.visibility = '';
-
       a.classList.remove('active');
       a.classList.add(fwd ? 'out-left' : 'out-right');
       b.classList.add('active');
     }
 
+    /* ── Congregation form ── */
     function unlockContinue() {
       document.getElementById('btn-continuar').disabled = false;
     }
-
     function submitCongre(e) {
       e.preventDefault();
       const v = document.querySelector('[name=congre]:checked')?.value;
       if (!v) return;
       document.getElementById('dash-congre').textContent = v;
       go(2, 3);
+    }
+
+    /* ── Feature slider ── */
+    let slideIdx = 0;
+    const TOTAL_SLIDES = 4;
+    let slideTimer = null;
+    let touchX0 = 0;
+
+    function goSlide(i) {
+      slideIdx = ((i % TOTAL_SLIDES) + TOTAL_SLIDES) % TOTAL_SLIDES;
+      document.getElementById('slider-track').style.transform = `translateX(-${slideIdx * 100}%)`;
+      document.querySelectorAll('.sdot').forEach((d, j) => d.classList.toggle('active', j === slideIdx));
+    }
+
+    function startSlider() {
+      stopSlider();
+      slideTimer = setInterval(() => goSlide(slideIdx + 1), 3600);
+    }
+
+    function stopSlider() {
+      if (slideTimer) { clearInterval(slideTimer); slideTimer = null; }
+    }
+
+    function slTouch(e, phase) {
+      if (phase === 's') { touchX0 = e.touches[0].clientX; stopSlider(); }
+      else {
+        const dx = e.changedTouches[0].clientX - touchX0;
+        if (Math.abs(dx) > 38) goSlide(dx < 0 ? slideIdx + 1 : slideIdx - 1);
+        startSlider();
+      }
+    }
+
+    startSlider();
+
+    /* ── Theme toggle ── */
+    let isDark = true;
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.classList.toggle('light', !isDark);
+      document.getElementById('icon-moon').style.display = isDark ? '' : 'none';
+      document.getElementById('icon-sun').style.display  = isDark ? 'none' : '';
+    }
+
+    /* ── PWA install ── */
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwa-btn').classList.add('visible');
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      document.getElementById('pwa-btn').classList.remove('visible');
+    });
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById('pwa-btn').classList.remove('visible');
+      });
     }
   </script>
 </body>
