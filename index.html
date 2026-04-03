@@ -272,18 +272,20 @@
     .btn-google:active { background: #222427; }
     .btn-google:disabled { opacity: 0.4; cursor: default; }
     .btn-skip {
+      width: 100%;
       background: transparent;
-      border: none;
-      color: #555;
-      font-size: 14px;
+      border: 1px solid #3a3a3a;
+      border-radius: 10px;
+      color: #aaa;
+      font-size: 15px;
+      font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      padding: 4px 0;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      transition: color 0.15s;
+      padding: 12px 20px;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
-    .btn-skip:hover   { color: #888; }
+    .btn-skip:hover    { background: #2a2d30; border-color: #4a4a4a; color: #ccc; }
     .btn-skip:disabled { opacity: 0.4; cursor: default; }
     .auth-note { font-size: 12px; color: #444; }
 
@@ -364,7 +366,7 @@
           Continuar con Google
         </button>
 
-        <button class="btn-skip" id="btn-skip" onclick="handleSkip()">Omitir por ahora</button>
+        <button class="btn-skip" id="btn-skip" onclick="handleSkip()">OMITIR</button>
         <div class="auth-note">Solo para uso interno de la congregación</div>
       </div>
 
