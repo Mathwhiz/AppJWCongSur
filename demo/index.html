@@ -114,7 +114,7 @@
         min-height: min(82vh, 760px);
         max-height: 88vh;
         width: 100%;
-        max-width: 480px;
+        max-width: none;
         border-radius: 32px;
         border: 1px solid var(--border);
         box-shadow: 0 32px 64px -16px rgba(0,0,0,.45);
@@ -123,12 +123,14 @@
     @media (min-width: 900px) {
       body { padding: 24px 28px; }
       .shell {
-        max-width: 1180px;
+        width: min(100%, 1220px);
+        max-width: 1220px;
         min-height: min(84vh, 860px);
       }
       .shell[data-screen="s1"],
       .shell[data-screen="s3"] {
-        max-width: 1120px;
+        width: min(100%, 1220px);
+        max-width: 1220px;
       }
     }
 
@@ -341,7 +343,7 @@
       grid-template-columns: 1fr;
       gap: 12px;
       padding: 0 24px 16px;
-      max-width: 780px;
+      max-width: 100%;
       margin: 0 auto;
     }
     .congre-item { display: block; cursor: pointer; }
@@ -412,7 +414,7 @@
       display: flex; flex-direction: column; align-items: center;
     }
     @media (min-width: 900px) {
-      .auth-center { max-width: 420px; }
+      .auth-center { max-width: 520px; }
     }
     .auth-icon-wrap {
       width: 60px; height: 60px; border-radius: 18px;
@@ -653,7 +655,9 @@
     }
     @media (min-width: 900px) {
       .congre-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .screen-footer { max-width: 780px; margin: 0 auto; width: 100%; }
+      .congre-list { max-width: 1180px; }
+      .screen-footer { max-width: 1180px; margin: 0 auto; width: 100%; }
+      .screen-header { max-width: 1180px; margin: 0 auto; width: 100%; }
       .demo-menu-head { padding: 28px 30px 20px; }
       .dash-content { padding: 12px 30px 40px; }
     }
