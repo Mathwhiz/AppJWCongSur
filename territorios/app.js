@@ -1323,7 +1323,10 @@ function renderInfoBtn(container, n) {
 function renderInfoGrid() {
   const g = document.getElementById('info-grid');
   g.innerHTML = '';
-  const nums = Object.keys(territoriosData).sort((a,b) => parseInt(a)-parseInt(b));
+  const nums = Object.keys(territoriosData).sort((a,b) => {
+    const na = parseInt(a), nb = parseInt(b);
+    return na !== nb ? na - nb : a.localeCompare(b);
+  });
 
   const hasCiudades = nums.some(n => territoriosData[n].ciudad);
   if (hasCiudades) {
