@@ -956,7 +956,13 @@ const ROLES_ASIGNABLES = [
   'encargado_asignaciones', 'encargado_vm', 'admin_congre', 'pendiente',
 ];
 
+// Estado de la vista de usuarios (necesario para refrescar tras vincular)
+let _usuariosCongreId     = null;
+let _usuariosCongreNombre = null;
+
 async function openUsuarios(congreId, congreNombre) {
+  _usuariosCongreId     = congreId;
+  _usuariosCongreNombre = congreNombre;
   showView('view-usuarios');
   document.getElementById('usuarios-title').textContent = congreNombre;
   document.getElementById('usuarios-sub').textContent   = 'Cargando...';
@@ -991,6 +997,9 @@ async function openUsuarios(congreId, congreNombre) {
         pendiente: '<span class="mbadge pendiente">⚠ Ambiguo</span>',
         sin_match: '<span class="mbadge sin_match">Sin match</span>',
       }[u.matchEstado] || '';
+      const vincularBtn = u.matchEstado !== 'ok'
+        ? `<button class="btn-vincular" onclick="abrirVincularModal('${u.uid}','${(u.displayName||'').replace(/'/g,"\\'")}')">🔗 Vincular</button>`
+        : '';
       const opts = ROLES_ASIGNABLES.map(r =>
         `<option value="${r}" ${r === u.appRol ? 'selected' : ''}>${ROL_LABELS[r]}</option>`
       ).join('');
@@ -1001,7 +1010,7 @@ async function openUsuarios(congreId, congreNombre) {
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:600;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.displayName || '(sin nombre)'}</div>
             <div style="font-size:11px;color:#666;margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email || 'Sin email'}</span>${badge}
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email || 'Sin email'}</span>${badge}${vincularBtn}
             </div>
             <select class="rol-select" data-prev="${u.appRol}"
               onchange="cambiarRol('${u.uid}','${nameSafe}',this)">
@@ -1013,6 +1022,97 @@ async function openUsuarios(congreId, congreNombre) {
 
   } catch (err) {
     loading.innerHTML = `<span style="color:#F09595;font-size:14px;">Error: ${err.message}</span>`;
+  }
+}
+
+// ─────────────────────────────────────────
+//   MODAL VINCULAR
+// ─────────────────────────────────────────
+let _vincPubs    = [];
+let _vincUid     = null;
+let _vincNombre  = null;
+
+function cerrarVincularModal() {
+  const m = document.getElementById('vincular-modal');
+  if (m) m.remove();
+}
+
+async function abrirVincularModal(uid, nombre) {
+  cerrarVincularModal();
+
+  const modal = document.createElement('div');
+  modal.id = 'vincular-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `
+    <div class="vincular-sheet">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#eee;">Vincular publicador</div>
+          <div style="font-size:12px;color:#666;margin-top:2px;">${nombre}</div>
+        </div>
+        <button onclick="cerrarVincularModal()" style="background:#333;border:none;border-radius:8px;width:32px;height:32px;color:#aaa;font-size:20px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <input class="vincular-search" id="vincular-search" type="text" placeholder="Buscar publicador…" oninput="filtrarVincPubs(this.value)">
+      <div class="vincular-pub-list" id="vincular-list">
+        <div class="loading-wrap"><div class="spinner"></div><div>Cargando...</div></div>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) cerrarVincularModal(); });
+  document.body.appendChild(modal);
+
+  _vincUid    = uid;
+  _vincNombre = nombre;
+  _vincPubs   = [];
+
+  try {
+    const snap = await getDocs(collection(db, 'congregaciones', _usuariosCongreId, 'publicadores'));
+    _vincPubs  = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => p.activo !== false)
+      .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+    filtrarVincPubs('');
+  } catch (err) {
+    document.getElementById('vincular-list').innerHTML =
+      `<p style="color:#F09595;font-size:14px;">Error: ${err.message}</p>`;
+  }
+}
+
+function filtrarVincPubs(q) {
+  const norm = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const list = document.getElementById('vincular-list');
+  if (!list) return;
+  const filtrados = _vincPubs.filter(p =>
+    (p.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(norm)
+  );
+  if (filtrados.length === 0) {
+    list.innerHTML = '<p style="color:#666;font-size:14px;text-align:center;padding:16px 0;">Sin resultados</p>';
+    return;
+  }
+  list.innerHTML = filtrados.map(p => `
+    <div class="match-pub-row">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;color:#ddd;">${p.nombre}</div>
+        ${p.roles?.length ? `<div style="font-size:11px;color:#666;margin-top:2px;">${fmtRoles(p.roles)}</div>` : ''}
+      </div>
+      <button class="btn-match-sel" onclick="confirmarVinculo('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">Vincular</button>
+    </div>`).join('');
+}
+
+async function confirmarVinculo(pubId, pubNombre) {
+  const ok = await uiConfirm({
+    title:       'Confirmar vínculo',
+    msg:         `¿Vincular "${_vincNombre}" con "${pubNombre}"?`,
+    confirmText: 'Vincular',
+    type:        'info',
+  });
+  if (!ok) return;
+  try {
+    await updateDoc(doc(db, 'usuarios', _vincUid), { matchedPublisherId: pubId, matchEstado: 'ok' });
+    cerrarVincularModal();
+    uiToast('Vínculo guardado', 'success');
+    openUsuarios(_usuariosCongreId, _usuariosCongreNombre);
+  } catch (err) {
+    uiToast('Error: ' + err.message, 'error');
   }
 }
 
@@ -1061,3 +1161,7 @@ window.resolverMatch     = resolverMatch;
 window.marcarSinMatch    = marcarSinMatch;
 window.openUsuarios      = openUsuarios;
 window.cambiarRol        = cambiarRol;
+window.abrirVincularModal  = abrirVincularModal;
+window.cerrarVincularModal = cerrarVincularModal;
+window.filtrarVincPubs     = filtrarVincPubs;
+window.confirmarVinculo    = confirmarVinculo;
