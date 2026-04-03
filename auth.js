@@ -68,7 +68,9 @@ async function loadOrCreateUser(fbUser) {
   const snap = await getDoc(ref);
 
   if (snap.exists()) {
-    return { ...snap.data(), _firebaseUser: fbUser };
+    const data = snap.data();
+    console.log('[auth] usuario cargado:', { uid: fbUser.uid, appRol: data.appRol, matchEstado: data.matchEstado, primerLogin: data.primerLogin });
+    return { ...data, _firebaseUser: fbUser };
   }
 
   // Sesión anónima — doc mínimo, sin matching, sin perfil obligatorio
@@ -107,6 +109,10 @@ async function loadOrCreateUser(fbUser) {
     }
   }
 
+  // sin_match → publicador (acceso base; admin puede elevar el rol)
+  // pendiente (ambiguo) → pendiente (admin debe confirmar cuál publicador es)
+  const appRol = matchEstado === 'pendiente' ? 'pendiente' : 'publicador';
+
   const data = {
     uid:               fbUser.uid,
     email:             fbUser.email,
@@ -116,13 +122,14 @@ async function loadOrCreateUser(fbUser) {
     sexo:              null,
     matchedPublisherId,
     congregacionId:    congreId || null,
-    appRol:            matchEstado === 'ok' ? 'publicador' : 'pendiente',
+    appRol,
     matchEstado,
     isAnonymous:       false,
     primerLogin:       true,
     createdAt:         serverTimestamp(),
   };
 
+  console.log('[auth] nuevo usuario creado:', { uid: fbUser.uid, appRol, matchEstado, congreId });
   await setDoc(ref, data);
   return { ...data, _firebaseUser: fbUser };
 }
@@ -132,7 +139,7 @@ onAuthStateChanged(auth, async (fbUser) => {
   try {
     _user = fbUser ? await loadOrCreateUser(fbUser) : null;
   } catch (err) {
-    console.error('[auth] Error al cargar usuario:', err);
+    console.error('[auth] Error al cargar usuario — authGuard bloqueará el acceso:', err);
     _user = null;
   } finally {
     _authReady = true;
@@ -168,7 +175,15 @@ window.hasPermission = (feature) => {
  */
 window.authGuard = async (feature) => {
   await window.waitForAuth();
-  if (!window.hasPermission(feature)) {
+  const allowed = window.hasPermission(feature);
+  console.log('[authGuard]', feature, {
+    uid:        _user?.uid        ?? null,
+    appRol:     _user?.appRol     ?? null,
+    matchEstado: _user?.matchEstado ?? null,
+    isAnonymous: _user?.isAnonymous ?? null,
+    allowed,
+  });
+  if (!allowed) {
     window.location.replace('/?sin_acceso=1');
     throw new Error(`Sin acceso: ${feature}`);
   }
@@ -212,18 +227,21 @@ window.linkWithGoogle = async () => {
     }
   }
 
+  const appRol = matchEstado === 'pendiente' ? 'pendiente' : 'publicador';
+
   const updates = {
     email:             fbUser.email,
     displayName:       fbUser.displayName || '',
     photoURL:          fbUser.photoURL    || null,
     matchedPublisherId,
     congregacionId:    congreId || null,
-    appRol:            matchEstado === 'ok' ? 'publicador' : 'pendiente',
+    appRol,
     matchEstado,
     isAnonymous:       false,
     primerLogin:       true,
   };
 
+  console.log('[auth] linkWithGoogle:', { uid: fbUser.uid, appRol, matchEstado, congreId });
   const ref = doc(db, 'usuarios', fbUser.uid);
   await updateDoc(ref, updates);
   Object.assign(_user, updates, { _firebaseUser: fbUser });

@@ -219,6 +219,18 @@ Al registrarse con Google, `auth.js` intenta matchear `displayName` con `publica
 2. Todos los tokens del nombre de Google presentes en el nombre del pub
 3. Si ambiguo (`matchEstado: 'pendiente'`) → admin resuelve en `admin.html`
 
+**Tabla de `appRol` asignado al crear el doc (lógica en `auth.js`):**
+
+| `matchEstado` | `appRol` asignado | Motivo |
+|---------------|-------------------|--------|
+| `ok` | `publicador` | Coincidencia exacta con un publicador |
+| `pendiente` | `pendiente` | Coincidencia ambigua — admin debe confirmar cuál publicador es |
+| `sin_match` | `publicador` | Sin coincidencia — acceso base; admin puede elevar el rol después |
+
+> ⚠️ Solo `matchEstado: 'pendiente'` (ambiguo) bloquea el acceso. `sin_match` **no** bloquea — de lo contrario, congregaciones sin `publicadores` cargados en Firestore dejarían a todos los usuarios nuevos sin acceso.
+
+La misma lógica aplica en `linkWithGoogle()` (anónimo → Google).
+
 ### API global expuesta por `auth.js`
 
 | Función | Descripción |
@@ -259,6 +271,12 @@ Chip flotante fijo en `top: 12px; right: 12px` — aparece en todas las páginas
 - Usuarios anónimos: redirigidos a `/` (no tienen perfil)
 - DOB picker custom con dropdown de año (año actual → 1900) y mes — sin `<input type="date">`
 
+**Arquitectura del script (importante):**
+- `waitForAuth()` es el mecanismo **primario** para el render inicial — siempre resuelve (el `finally` de `auth.js` lo garantiza)
+- El listener `authStateChanged` solo se usa para detectar cierre de sesión **después** de que el perfil ya se renderizó (flag `_perfilCargado`)
+- Timeout de seguridad de 10 s: si `waitForAuth()` no resuelve (Firestore colgado), redirige a `/`
+- El div del título tiene `id="titulo-perfil"` — **no usar** `querySelector('[style*="..."]')` para encontrar elementos por texto
+
 ### Guards activos por módulo (✅ implementado)
 
 Cada `app.js` llama `authGuard` justo después de los imports:
@@ -271,6 +289,12 @@ Cada `app.js` llama `authGuard` justo después de los imports:
 | `hermanos/app.js` | `await window.authGuard('acceso_hermanos')` |
 
 Si no tiene permiso → redirige a `/?sin_acceso=1` → `index.html` muestra un toast de error y limpia el parámetro de la URL.
+
+**Logs de diagnóstico en `auth.js`** (visibles en DevTools → Console):
+- `[auth] usuario cargado:` — uid, appRol, matchEstado, primerLogin en cada carga de página
+- `[auth] nuevo usuario creado:` — al registrarse por primera vez
+- `[authGuard] acceso_X { ... allowed }` — qué rol tiene y si se permite el acceso
+- `[auth] Error al cargar usuario — authGuard bloqueará el acceso:` — si Firestore falla
 
 ---
 
@@ -757,3 +781,6 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 - No llamar `window.signOutUser()` directamente desde UI — usar `window.sessionSignOut()` (limpia localStorage + sessionStorage + Firebase)
 - No modificar permisos inline en el código — editar solo `auth-config.js` (`PERMISOS`)
 - No hacer `initializeApp()` más de una vez — `firebase.js` ya lo hace; importar `{ db, auth }` desde ahí
+- No usar `querySelector('[style*="texto"]')` para buscar elementos por su contenido de texto — el atributo `style` contiene CSS, no texto. Siempre usar `id` o una clase semántica
+- No cambiar `appRol: 'pendiente'` al crear un usuario con `sin_match` — `sin_match` debe dar `'publicador'` (acceso base). Solo `matchEstado: 'pendiente'` (ambiguo) justifica bloquear el acceso hasta que el admin confirme
+- No usar el evento `authStateChanged` como mecanismo primario de render en páginas que usan `waitForAuth()` — el evento puede perderse si llega antes de que el listener esté registrado; `waitForAuth()` es siempre más fiable
