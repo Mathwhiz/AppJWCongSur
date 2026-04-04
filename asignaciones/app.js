@@ -155,7 +155,7 @@ function showView(id) {
   const btn = document.getElementById('btn-home');
   if (btn) {
     btn.classList.toggle("visible", id !== "view-cover");
-    btn.onclick = VISTAS_ENCARGADO.includes(id) ? goToEncargado : goToCover;
+    btn.onclick = (VISTAS_ENCARGADO.includes(id) || (id === "view-semana" && esEncargado)) ? goToEncargado : goToCover;
   }
 }
 

@@ -205,6 +205,9 @@ function checkPin() {
   if (pinBuffer === pinEncargado) {
     pinBuffer = ''; updatePinDots();
     hidePinModal();
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-menu').classList.add('active');
+    document.getElementById('btn-home').classList.remove('visible');
   } else {
     document.getElementById('pin-error').textContent = 'PIN incorrecto';
     pinBuffer = ''; updatePinDots();
@@ -212,7 +215,7 @@ function checkPin() {
 }
 
 window.goToCover = function() {
-  window.location.href = '../index.html';
+  window.location.href = '../index.html#menu';
 };
 
 window.goToMenu = function() {

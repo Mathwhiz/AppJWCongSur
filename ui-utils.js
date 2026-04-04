@@ -15,53 +15,57 @@
   --bg-primary:    #1a1c1f;
   --bg-secondary:  #232628;
   --bg-card:       #232628;
-  --bg-hover:      #272a2d;
-  --bg-input:      #1e1e1e;
-  --bg-modal:      #252525;
-  --bg-header:     #1e1e1e;
-  --bg-badge:      rgba(255,255,255,0.06);
+  --bg-hover:      #272a2e;
+  --bg-input:      #232628;
+  --bg-modal:      #232628;
+  --bg-header:     #232628;
+  --bg-badge:      rgba(127,119,221,0.10);
 
   --text-primary:  #e8e8e8;
   --text-secondary:#aaa;
   --text-muted:    #666;
-  --text-dim:      #555;
+  --text-dim:      #666;
 
   --border-primary:#2e3033;
-  --border-light:  #333;
-  --border-input:  #444;
+  --border-light:  #3a3d42;
+  --border-input:  #4a4d52;
 
   --shadow-card:   0 2px 12px rgba(0,0,0,0.25);
-  --shadow-hover:  0 6px 28px rgba(0,0,0,0.4);
+  --shadow-hover:  0 8px 28px rgba(0,0,0,0.24);
 
-  --toggle-bg:     #333;
+  --accent:        #7F77DD;
+  --accent-hover:  #6a62cc;
+  --toggle-bg:     #232628;
   --toggle-knob:   #e8e8e8;
 }
 
 /* ── MODO CLARO — respeta estructura visual, colores claros ── */
 body.light-mode {
-  --bg-primary:    #f7f3ed;
-  --bg-secondary:  #fefcf9;
-  --bg-card:       #fefcf9;
-  --bg-hover:      #fff;
-  --bg-input:      #fefcf9;
-  --bg-modal:      #fefcf9;
-  --bg-header:     #f0ebe2;
-  --bg-badge:      rgba(0,0,0,0.04);
+  --bg-primary:    #f4f5f7;
+  --bg-secondary:  #ffffff;
+  --bg-card:       #ffffff;
+  --bg-hover:      #ebebef;
+  --bg-input:      #ffffff;
+  --bg-modal:      #ffffff;
+  --bg-header:     #ffffff;
+  --bg-badge:      rgba(127,119,221,0.08);
 
-  --text-primary:  #2a2a2a;
-  --text-secondary:#6a6a6a;
-  --text-muted:    #8a8a8a;
-  --text-dim:      #b0b0b0;
+  --text-primary:  #18191c;
+  --text-secondary:#5a5a68;
+  --text-muted:    #9595a2;
+  --text-dim:      #9595a2;
 
-  --border-primary:#e8e0d4;
-  --border-light:  #ddd6ca;
-  --border-input:  #ccc4b8;
+  --border-primary:#dddde3;
+  --border-light:  #d2d3dd;
+  --border-input:  #b8b8c2;
 
-  --shadow-card:   0 2px 12px rgba(0,0,0,0.06);
-  --shadow-hover:  0 6px 24px rgba(0,0,0,0.10);
+  --shadow-card:   0 8px 24px rgba(47,55,78,0.08);
+  --shadow-hover:  0 14px 34px rgba(47,55,78,0.14);
 
-  --toggle-bg:     #e8e0d4;
-  --toggle-knob:   #fff;
+  --accent:        #7F77DD;
+  --accent-hover:  #6a62cc;
+  --toggle-bg:     #ffffff;
+  --toggle-knob:   #18191c;
 }
 
 /* ── Background del body ── */
@@ -130,6 +134,12 @@ window.uiToggleTheme = function() {
   const moon = document.getElementById('theme-icon-moon');
   if (sun) sun.style.display = isLight ? '' : 'none';
   if (moon) moon.style.display = isLight ? 'none' : '';
+  document.querySelectorAll('[data-theme-sun]').forEach(el => {
+    el.style.display = isLight ? '' : 'none';
+  });
+  document.querySelectorAll('[data-theme-moon]').forEach(el => {
+    el.style.display = isLight ? 'none' : '';
+  });
 };
 
 // Insertar botón toggle cuando el DOM esté listo
@@ -141,6 +151,7 @@ function shouldShowThemeToggle() {
 }
 
 function insertThemeToggle() {
+  if (document.querySelector('[data-theme-sun], [data-theme-moon]')) return;
   if (!shouldShowThemeToggle()) return;
   if (document.getElementById('btn-theme')) return;
   const btn = document.createElement('button');

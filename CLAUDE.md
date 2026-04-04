@@ -783,6 +783,7 @@ Almacenamiento: `YYYY-MM-DD`. Display: `DD/MM/YY`.
 - ✅ Guards activos en módulos — `authGuard()` llamado al inicio de cada `app.js`
 - ✅ Resolución de matches ambiguos en `admin.html` (vista `view-matches`)
 - ⬜ Reemplazar PINs internos por auth real (decisión pendiente)
+- ✅ PIN Administrador endurecido: `view-menu` ya no tiene `active` al inicio. El PIN modal cubre una página vacía; solo tras validación correcta se navega a `view-menu`. Pendiente migrar a auth/backend real.
 - ⬜ Auditoría: log de cambios importantes (quién modificó qué y cuándo)
 
 ### Mejorar integración Google Sheets (Asignaciones)

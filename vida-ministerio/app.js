@@ -1724,10 +1724,12 @@ window.exportarMesASheets = async function() {
   congreId     = savedId;
   congreNombre = savedNombre;
   document.getElementById('cover-congre').textContent = congreNombre || '—';
+  showView('view-cover');
 
+  uiLoading.show('Cargando…');
   try {
     const snap = await getDoc(doc(db, 'congregaciones', congreId));
-    if (!snap.exists()) { window.location.href = '../index.html'; return; }
+    if (!snap.exists()) { uiLoading.hide(); window.location.href = '../index.html'; return; }
     const data = snap.data();
     pinVM = data.pinVidaMinisterio || '1234';
     tieneAuxiliar = data.tieneAuxiliar === true;
@@ -1737,6 +1739,5 @@ window.exportarMesASheets = async function() {
   } catch(e) {
     console.error('Error al inicializar:', e);
   }
-
-  showView('view-cover');
+  uiLoading.hide();
 })();

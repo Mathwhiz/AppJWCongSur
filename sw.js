@@ -1,4 +1,4 @@
-const CACHE = 'ziv-v1';
+const CACHE = 'ziv-v2';
 
 // Archivos estáticos que se pre-cachean al instalar
 const SHELL = [

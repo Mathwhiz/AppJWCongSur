@@ -110,18 +110,41 @@
     .error   { color: #e07070; font-size: 0.85rem; text-align: center; padding: 20px 0; }
 
     /* ── Menú de módulos ── */
+    #view-menu {
+      align-items: stretch;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 0;
+    }
     .menu-wrap {
+      width: 100%;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      max-width: 340px;
-      padding: 2rem 1rem;
     }
+    .demo-menu-head {
+      position: relative;
+      padding: 24px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      max-width: 1180px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .demo-menu-top {
+      position: static;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .menu-top-spacer { display: none; }
 
     /* ── Título de congregación ── */
     .menu-congre { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+    .menu-congre { position: relative; }
 
     .menu-congre-wrapper {
       position: relative;
@@ -160,22 +183,80 @@
       position: relative;
       background: var(--bg-card, #232628);
       border-radius: 18px;
-      padding: 18px 20px;
-      display: flex;
+      padding: 20px 72px 18px;
+      display: block;
       align-items: center;
       gap: 16px;
       z-index: 1;
     }
-    .menu-congre-icon {
-      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; font-weight: 800;
+    .menu-congre-icon { display: none; }
+    .menu-congre-copy { min-width: 0; text-align: center; }
+    .dash-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-secondary, #aaa);
+      margin-bottom: 4px;
+      text-align: center;
     }
+    .demo-menu-head .cs-logo-sub { display: none; }
     #menu-titulo {
       font-size: 22px;
       font-weight: 700;
       color: var(--text-primary, #e8e8e8);
       letter-spacing: -0.4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    .menu-congre-sub {
+      font-size: 13px;
+      color: var(--text-muted, #666);
+      line-height: 1.35;
+      text-align: center;
+    }
+    .dash-content {
+      padding: 8px 24px 32px;
+      max-width: 1180px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-secondary, #aaa);
+      margin-bottom: 14px;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    #view-menu .cs-back-btn,
+    #view-menu .menu-back-top {
+      display: none !important;
+    }
+    #view-menu .menu-session-slot {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      z-index: 3;
+    }
+    #view-menu .menu-session-slot #ziv-session {
+      position: relative;
+      top: auto;
+      right: auto;
+      z-index: 5;
+    }
+    #view-menu .menu-session-slot #ziv-session .ziv-sBtn {
+      max-width: 236px;
+      padding: 7px 12px 7px 7px;
+      border-radius: 22px;
     }
 
     /* ── Botón admin ── */
@@ -211,83 +292,132 @@
     }
 
     /* ── Vista de autenticación ── */
-    .auth-card {
+    #view-auth {
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 28px;
+    }
+    .auth-screen {
       width: 100%;
-      background: #232628;
-      border: 1px solid #2e3033;
-      border-radius: 18px;
-      padding: 1.5rem 1.25rem;
+      max-width: 340px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
       text-align: center;
+    }
+    .auth-congre-block { margin-bottom: 10px; }
+    .auth-back-btn {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: none;
+      color: var(--text-secondary, #aaa);
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color .15s, background .15s;
+    }
+    .auth-back-btn:hover {
+      color: var(--text-primary, #e8e8e8);
+      background: rgba(127,119,221,.08);
+    }
+    .auth-icon-wrap {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: var(--bg-card, #232628);
+      border: 1px solid var(--border-primary, #2e3033);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,.25));
     }
     .auth-congre-label {
       font-size: 12px;
-      color: #555;
+      color: var(--text-muted, #666);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
+      letter-spacing: .08em;
+      font-weight: 700;
+      margin-bottom: 6px;
     }
     .auth-congre-name {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 700;
-      color: #e8e8e8;
-      margin-top: 2px;
-    }
-    .auth-divider {
-      width: 100%;
-      height: 1px;
-      background: #2e3033;
+      letter-spacing: -.03em;
+      color: var(--text-primary, #e8e8e8);
+      margin-bottom: 10px;
     }
     .auth-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #e8e8e8;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      color: var(--text-primary, #e8e8e8);
+      margin-bottom: 8px;
+      text-align: center;
     }
     .auth-sub {
-      font-size: 13px;
-      color: #666;
-      margin-top: -8px;
+      font-size: 14px;
+      color: var(--text-secondary, #aaa);
+      line-height: 1.55;
+      text-align: center;
+      margin-bottom: 32px;
     }
     .btn-google {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      background: #2a2d30;
-      border: 1px solid #3a3a3a;
-      border-radius: 10px;
-      padding: 12px 18px;
-      color: #e8e8e8;
+      gap: 12px;
+      padding: 14px 20px;
+      background: #fff;
+      color: #1f2937;
       font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
+      font-weight: 500;
+      border: none;
+      border-radius: 14px;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      transition: background .15s, transform .12s, opacity .15s;
+      font-family: inherit;
+      margin-bottom: 12px;
     }
-    .btn-google:hover  { background: #333639; border-color: #4a4a4a; }
-    .btn-google:active { background: #222427; }
+    .btn-google:hover  { background: #f3f4f6; }
+    .btn-google:active { transform: scale(.97); }
     .btn-google:disabled { opacity: 0.4; cursor: default; }
     .btn-skip {
       width: 100%;
-      background: transparent;
-      border: 1px solid #3a3a3a;
-      border-radius: 10px;
-      color: #aaa;
+      padding: 14px 20px;
+      background: none;
+      border: 1px solid var(--border-primary, #2e3033);
+      color: var(--text-secondary, #aaa);
       font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
+      font-weight: 500;
       cursor: pointer;
-      padding: 12px 20px;
-      letter-spacing: 0.04em;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      border-radius: 14px;
+      transition: color .15s, border-color .15s, background .15s, opacity .15s;
+      font-family: inherit;
     }
-    .btn-skip:hover    { background: #2a2d30; border-color: #4a4a4a; color: #ccc; }
+    .btn-skip:hover {
+      color: var(--text-primary, #e8e8e8);
+      border-color: var(--border-input, #4a4d52);
+      background: var(--bg-card, #232628);
+    }
     .btn-skip:disabled { opacity: 0.4; cursor: default; }
-    .auth-note { font-size: 12px; color: #444; }
+    .auth-note {
+      font-size: 12px;
+      color: var(--text-muted, #666);
+      line-height: 1.45;
+      margin-top: 16px;
+    }
+    #view-auth .cs-back-btn { display: none; }
 
     /* ── Botón instalar PWA ── */
     .btn-instalar {
@@ -321,12 +451,558 @@
       color: #127055;
     }
 
+    /* ── Integración pantalla inicial demo ── */
+    #view-welcome {
+      align-items: stretch;
+      min-height: 100vh;
+      padding: 0;
+    }
+    .welcome-shell {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 0 24px;
+    }
+    .welcome-shell > .s1-foot { margin-top: auto; }
+    .s1-bar,
+    .s1-hero,
+    .s1-slider,
+    .s1-foot {
+      width: min(100%, 760px);
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .s1-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 20px;
+    }
+    .welcome-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-pwa,
+    .btn-admin-top,
+    .btn-theme {
+      border: 1px solid var(--border-light, #3a3d42);
+      background: var(--bg-card, #232628);
+      color: var(--text-secondary, #aaa);
+      font-family: inherit;
+      transition: color .15s, border-color .15s, background .15s, transform .12s;
+    }
+    .btn-pwa,
+    .btn-admin-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .btn-pwa { display: none; }
+    .btn-pwa.visible { display: inline-flex; }
+    .btn-pwa:hover,
+    .btn-admin-top:hover,
+    .btn-theme:hover {
+      color: var(--text-primary, #e8e8e8);
+      border-color: var(--border-input, #4a4d52);
+      background: var(--bg-hover, #272a2e);
+    }
+    .btn-pwa:active,
+    .btn-admin-top:active,
+    .btn-theme:active { transform: scale(.97); }
+    .btn-theme {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-theme-float {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      z-index: 10020;
+      display: flex !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .s1-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 16px 28px 12px;
+      gap: 10px;
+    }
+    .app-icon { filter: drop-shadow(0 0 14px rgba(127,119,221,.4)); }
+    .app-name {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text-primary, #e8e8e8);
+    }
+    .app-tagline {
+      font-size: 14px;
+      color: var(--text-secondary, #aaa);
+      line-height: 1.5;
+      max-width: 240px;
+    }
+    .s1-slider {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .slider-viewport {
+      overflow: hidden;
+      height: 152px;
+      padding: 0 20px;
+    }
+    .slider-track {
+      display: flex;
+      height: 100%;
+      transition: transform .4s cubic-bezier(.32,.72,0,1);
+      will-change: transform;
+    }
+    .slide {
+      flex: 0 0 100%;
+      padding: 0 4px;
+      height: 100%;
+    }
+    .slide-card {
+      height: 100%;
+      background: var(--bg-card, #232628);
+      border: 1px solid var(--border-primary, #2e3033);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,.25));
+    }
+    .slide-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slide-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .slide-feature-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary, #e8e8e8);
+    }
+    .slide-feature-desc {
+      font-size: 12px;
+      color: var(--text-secondary, #aaa);
+      line-height: 1.35;
+    }
+    .slide-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .fake-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border-primary, #2e3033);
+    }
+    .fake-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .fake-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .fake-line {
+      height: 7px;
+      border-radius: 4px;
+      background: var(--border-primary, #2e3033);
+    }
+    .fake-line-s { width: 38%; }
+    .fake-line-m { width: 55%; }
+    .fake-line-l { flex: 1; }
+    .fake-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .slider-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      background: var(--border-primary, #2e3033);
+      transition: background .2s, transform .2s, width .2s;
+    }
+    .sdot.active {
+      width: 18px;
+      border-radius: 3px;
+      background: var(--accent, #7F77DD);
+    }
+    .s1-foot {
+      padding: 8px 24px 24px;
+    }
+    .btn-primary {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px 20px;
+      background: var(--accent, #7F77DD);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(127,119,221,.28);
+      transition: background .15s, transform .12s, box-shadow .15s;
+      font-family: inherit;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover, #6a62cc);
+      box-shadow: 0 6px 24px rgba(127,119,221,.35);
+    }
+    .btn-primary:active { transform: scale(.97); }
+    body[data-view="view-welcome"] .btn-instalar,
+    body[data-view="view-welcome"] .btn-admin-fixed {
+      display: none !important;
+    }
+
+    .menu-congre-inner {
+      background: var(--bg-card, #232628);
+      border-color: var(--border-primary, #2e3033);
+      box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,.25));
+    }
+    .cs-nav-card {
+      width: 100%;
+      background: var(--bg-card, #232628);
+      border: 1px solid var(--border-primary, #2e3033);
+      border-radius: 18px;
+      padding: 1.1rem 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.18s, background 0.18s, transform 0.1s, box-shadow 0.18s;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,.25));
+      font-family: inherit;
+    }
+    .cs-nav-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-hover, 0 8px 28px rgba(0,0,0,.24));
+    }
+    .cs-nav-card:active { transform: scale(0.98); box-shadow: none; }
+    .cs-nav-title {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--text-primary, #e8e8e8);
+      margin-bottom: 3px;
+    }
+    .cs-nav-sub {
+      font-size: 14px;
+      color: var(--text-muted, #666);
+      line-height: 1.4;
+    }
+    .auth-congre-label,
+    .auth-sub,
+    .auth-note,
+    .loading,
+    .congre-id,
+    .congre-arrow {
+      color: var(--text-muted, #666);
+    }
+    .auth-congre-name,
+    .auth-title {
+      color: var(--text-primary, #e8e8e8);
+    }
+    .btn-skip {
+      border-color: var(--border-light, #3a3d42);
+      color: var(--text-secondary, #aaa);
+    }
+    .btn-skip:hover {
+      background: var(--bg-hover, #272a2e);
+      border-color: var(--border-input, #4a4d52);
+      color: var(--text-primary, #e8e8e8);
+    }
+    .btn-admin-fixed {
+      background: var(--bg-card, #232628);
+      border-color: rgba(127,119,221,0.35);
+      color: var(--accent, #7F77DD);
+    }
+    .btn-admin-fixed:hover {
+      background: var(--bg-hover, #272a2e);
+      border-color: rgba(127,119,221,0.6);
+      color: #a09af0;
+    }
+
+    @media (min-width: 420px) {
+      .module-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 600px) {
+      .demo-menu-head { padding: 28px 28px 18px; }
+      .dash-content { padding: 10px 28px 40px; }
+      .module-grid { gap: 14px; }
+      .cs-nav-card { padding: 1.2rem 1.3rem; gap: 16px; }
+      .cs-nav-icon { width: 52px; height: 52px; border-radius: 14px; }
+      .cs-nav-title { font-size: 20px; }
+      .cs-nav-sub { font-size: 13px; }
+    }
+    @media (min-width: 900px) {
+      .welcome-shell { padding-bottom: 32px; }
+      .slider-viewport { padding: 0; }
+      .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+      .demo-menu-head { padding: 30px 34px 22px; }
+      .demo-menu-top { top: 24px; left: 34px; right: 34px; }
+      .menu-congre-inner { padding: 22px 84px 20px; }
+      .dash-content { padding: 14px 34px 44px; }
+      .cs-nav-card { min-height: 112px; }
+    }
+    @media (min-width: 1100px) {
+      .module-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+      .demo-menu-head { padding: 32px 40px 24px; }
+      .demo-menu-top { top: 26px; left: 40px; right: 40px; }
+      .menu-congre-inner { padding: 24px 92px 22px; }
+      .dash-content { padding: 18px 40px 52px; }
+      .cs-nav-card { min-height: 120px; }
+    }
+
   </style>
 </head>
 <body>
 
+  <!-- ── VISTA: BIENVENIDA (demo integrada) ── -->
+  <div id="view-welcome" class="view" style="display:none">
+    <button class="btn-theme btn-theme-float" onclick="window.uiToggleTheme(); syncThemeButtonUI()" aria-label="Cambiar tema">
+      <svg data-theme-sun width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none;">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <svg data-theme-moon width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="welcome-shell">
+      <div class="s1-bar">
+        <button id="pwa-btn" class="btn-pwa" onclick="instalarApp()" aria-label="Instalar aplicación">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Instalar app
+        </button>
+        <div class="welcome-actions">
+          <a href="admin.html" class="btn-admin-top" title="Super admin">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Super admin
+          </a>
+        </div>
+      </div>
+
+      <div class="s1-hero">
+        <img src="/icon-192.png" alt="Ziv" class="app-icon" width="88" height="88" style="border-radius:22px;">
+        <h1 class="app-name">Ziv</h1>
+        <p class="app-tagline">Organización e información.</p>
+      </div>
+
+      <div class="s1-slider">
+        <div class="slider-viewport" ontouchstart="welcomeTouch(event,'start')" ontouchend="welcomeTouch(event,'end')">
+          <div class="slider-track" id="welcome-slider-track">
+            <div class="slide">
+              <div class="slide-card">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(93,184,93,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5DB85D" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Territorios</div>
+                    <div class="slide-feature-desc">Asigná zonas y controlá el estado de cada área.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#5DB85D"></div>
+                    <div class="fake-line fake-line-m"></div>
+                    <div class="fake-badge" style="background:rgba(93,184,93,0.12);color:#5DB85D">Activo</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#EF9F27"></div>
+                    <div class="fake-line fake-line-s"></div>
+                    <div class="fake-badge" style="background:rgba(239,159,39,0.12);color:#EF9F27">En curso</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-l"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slide">
+              <div class="slide-card">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(91,141,222,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B8DDE" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><line x1="14" y1="14" x2="20" y2="14"/><line x1="14" y1="17" x2="20" y2="17"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Asignaciones</div>
+                    <div class="slide-feature-desc">Consultá tus partes en la reunión semanal.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-badge" style="background:rgba(91,141,222,0.12);color:#5B8DDE;min-width:60px;text-align:center">LECTOR</div>
+                    <div class="fake-line fake-line-l"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-badge" style="background:rgba(91,141,222,0.12);color:#5B8DDE;min-width:60px;text-align:center">SONIDO</div>
+                    <div class="fake-line fake-line-m"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-badge" style="background:rgba(91,141,222,0.12);color:#5B8DDE;min-width:60px;text-align:center">MICRO</div>
+                    <div class="fake-line fake-line-s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slide">
+              <div class="slide-card">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(29,158,117,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Vida y Ministerio</div>
+                    <div class="slide-feature-desc">Programa de reuniones VM con asignaciones.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#1D9E75"></div>
+                    <div class="fake-line" style="width:30%"></div>
+                    <div class="fake-badge" style="background:rgba(29,158,117,0.12);color:#1D9E75">Canción 52</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-l"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-m"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slide">
+              <div class="slide-card">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(239,159,39,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Administrador</div>
+                    <div class="slide-feature-desc">Gestioná hermanos, roles y semanas especiales.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#7F77DD"></div>
+                    <div class="fake-line fake-line-m"></div>
+                    <div class="fake-badge" style="background:rgba(127,119,221,0.10);color:#7F77DD">Anciano</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-l"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slider-dots" id="welcome-slider-dots">
+          <button class="sdot active" onclick="goWelcomeSlide(0)" aria-label="Slide 1"></button>
+          <button class="sdot" onclick="goWelcomeSlide(1)" aria-label="Slide 2"></button>
+          <button class="sdot" onclick="goWelcomeSlide(2)" aria-label="Slide 3"></button>
+          <button class="sdot" onclick="goWelcomeSlide(3)" aria-label="Slide 4"></button>
+        </div>
+      </div>
+
+      <div class="s1-foot">
+        <button class="btn-primary" onclick="continuarDesdeInicio()">
+          Comenzar
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── VISTA: ELEGIR CONGREGACIÓN ── -->
-  <div id="view-congres" class="view">
+  <div id="view-congres" class="view" style="display:none">
+    <button class="btn-theme btn-theme-float" onclick="window.uiToggleTheme(); syncThemeButtonUI()" aria-label="Cambiar tema">
+      <svg data-theme-sun width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none;">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <svg data-theme-moon width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <div class="wrap">
       <div class="logo">
         <div class="cs-logo-placeholder"></div>
@@ -342,17 +1018,33 @@
 
   <!-- ── VISTA: AUTENTICACIÓN ── -->
   <div id="view-auth" class="view" style="display:none">
-    <div class="wrap">
-      <div class="logo">
-        <div class="cs-logo-placeholder"></div>
+    <button class="btn-theme btn-theme-float" onclick="window.uiToggleTheme(); syncThemeButtonUI()" aria-label="Cambiar tema">
+      <svg data-theme-sun width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none;">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <svg data-theme-moon width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="auth-back-btn" onclick="volverACongres()" aria-label="Volver">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <div class="auth-screen">
+      <div class="auth-icon-wrap">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent, #7F77DD)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
       </div>
 
-      <div class="auth-card">
-        <div>
+      <div class="auth-congre-block">
           <div class="auth-congre-label">Congregación seleccionada</div>
           <div class="auth-congre-name" id="auth-congre-name">—</div>
         </div>
-        <div class="auth-divider"></div>
         <div class="auth-title">Iniciá sesión para continuar</div>
         <div class="auth-sub">Usamos tu cuenta de Google para identificarte dentro de la congregación</div>
 
@@ -366,7 +1058,7 @@
           Continuar con Google
         </button>
 
-        <button class="btn-skip" id="btn-skip" onclick="handleSkip()">OMITIR</button>
+        <button class="btn-skip" id="btn-skip" onclick="handleSkip()">Omitir por ahora</button>
         <div class="auth-note">Solo para uso interno de la congregación</div>
       </div>
 
@@ -376,19 +1068,39 @@
 
   <!-- ── VISTA: ELEGIR MÓDULO ── -->
   <div id="view-menu" class="view" style="display:none">
+    <button class="btn-theme btn-theme-float" onclick="window.uiToggleTheme(); syncThemeButtonUI()" aria-label="Cambiar tema">
+      <svg data-theme-sun width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none;">
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <svg data-theme-moon width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <div class="menu-wrap">
-      <div class="logo">
+      <header class="demo-menu-head">
+        <div class="demo-menu-top">
+          <a class="cs-back-btn menu-back-top" href="#" onclick="volverACongres();return false;" aria-label="Volver a congregaciones">← Congregaciones</a>
+          <div class="menu-top-spacer" aria-hidden="true"></div>
+        </div>
         <div class="menu-congre">
           <div class="menu-congre-wrapper" id="menu-congre-wrapper">
             <div class="menu-congre-inner">
               <div class="menu-congre-icon" id="menu-congre-icon"></div>
-              <div id="menu-titulo">—</div>
+              <div class="menu-congre-copy">
+                <p class="dash-eyebrow">Ziv App</p>
+                <div id="menu-titulo">—</div>
+              </div>
             </div>
           </div>
+          <div class="menu-session-slot" id="menu-session-slot"></div>
+          <p class="menu-congre-sub">Seleccioná un módulo para continuar.</p>
         </div>
-        <div class="cs-logo-sub">Seleccioná un módulo</div>
-      </div>
+      </header>
 
+      <div class="dash-content">
+        <p class="section-label">Módulos disponibles</p>
+        <div class="module-grid">
       <a class="cs-nav-card cs-nav-card-terr" href="territorios/index.html">
         <div class="cs-nav-icon cs-nav-icon-terr">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -442,7 +1154,8 @@
         </div>
       </a>
 
-      <div class="cs-footer" id="menu-footer"></div>
+        </div>
+        <div class="cs-footer" id="menu-footer"></div>
       <a class="cs-back-btn" href="#" onclick="volverACongres();return false;">← Congregaciones</a>
     </div>
   </div>
@@ -456,7 +1169,7 @@
   </button>
 
   <!-- ── Botón Admin (fijo) ── -->
-  <a href="admin.html" class="btn-admin" title="Admin">
+  <a href="admin.html" class="btn-admin btn-admin-fixed" title="Admin">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
       <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -464,28 +1177,41 @@
   </a>
 
   <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=2');
+
+    const btnInstalar = document.getElementById('btn-instalar');
+    const btnPwaDemo = document.getElementById('pwa-btn');
+    function syncInstallButtons() {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches;
+      const visible = !!_installPrompt && !standalone;
+      btnInstalar.classList.toggle('oculto', standalone);
+      if (btnPwaDemo) btnPwaDemo.classList.toggle('visible', visible);
+    }
 
     // Ocultar el botón si ya está instalada (modo standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      document.getElementById('btn-instalar').classList.add('oculto');
+      btnInstalar.classList.add('oculto');
     }
 
     let _installPrompt = null;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       _installPrompt = e;
+      syncInstallButtons();
     });
     window.addEventListener('appinstalled', () => {
-      document.getElementById('btn-instalar').classList.add('oculto');
       _installPrompt = null;
+      syncInstallButtons();
     });
 
     function instalarApp() {
       if (_installPrompt) {
         // Android Chrome: prompt nativo
         _installPrompt.prompt();
-        _installPrompt.userChoice.then(() => { _installPrompt = null; });
+        _installPrompt.userChoice.then(() => {
+          _installPrompt = null;
+          syncInstallButtons();
+        });
       } else {
         // iOS o cuando Chrome no ofrece el prompt: mostrar instrucciones
         const esIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -495,8 +1221,9 @@
         uiAlert(msg, 'Instalar Ziv');
       }
     }
+    syncInstallButtons();
   </script>
-  <script src="ui-utils.js?v=1.3"></script>
+  <script src="ui-utils.js?v=1.4"></script>
   <script type="module">
     import { db } from './firebase.js';
     import './auth.js';
@@ -526,6 +1253,66 @@
       return PALETA[h % PALETA.length];
     }
 
+    let welcomeSlideIdx = 0;
+    let welcomeSlideTimer = null;
+    let welcomeTouchStartX = 0;
+
+    function syncThemeButtonIcons() {
+      const isLight = document.body.classList.contains('light-mode');
+      document.querySelectorAll('[data-theme-sun]').forEach(el => {
+        el.style.display = isLight ? '' : 'none';
+      });
+      document.querySelectorAll('[data-theme-moon]').forEach(el => {
+        el.style.display = isLight ? 'none' : '';
+      });
+    }
+
+    function syncThemeButtonUI() {
+      syncThemeButtonIcons();
+    }
+
+    window.goWelcomeSlide = function(i) {
+      const dots = document.querySelectorAll('#welcome-slider-dots .sdot');
+      const total = dots.length || 4;
+      welcomeSlideIdx = ((i % total) + total) % total;
+      document.getElementById('welcome-slider-track').style.transform = `translateX(-${welcomeSlideIdx * 100}%)`;
+      dots.forEach((dot, idx) => dot.classList.toggle('active', idx === welcomeSlideIdx));
+    };
+
+    function startWelcomeSlider() {
+      stopWelcomeSlider();
+      welcomeSlideTimer = setInterval(() => window.goWelcomeSlide(welcomeSlideIdx + 1), 3600);
+    }
+
+    function stopWelcomeSlider() {
+      if (welcomeSlideTimer) {
+        clearInterval(welcomeSlideTimer);
+        welcomeSlideTimer = null;
+      }
+    }
+
+    window.welcomeTouch = function(event, phase) {
+      if (phase === 'start') {
+        welcomeTouchStartX = event.touches[0].clientX;
+        stopWelcomeSlider();
+        return;
+      }
+      const dx = event.changedTouches[0].clientX - welcomeTouchStartX;
+      if (Math.abs(dx) > 38) window.goWelcomeSlide(dx < 0 ? welcomeSlideIdx + 1 : welcomeSlideIdx - 1);
+      startWelcomeSlider();
+    };
+
+    function relocateSessionHeader(viewId) {
+      const session = document.getElementById('ziv-session');
+      if (!session) return;
+      const menuSlot = document.getElementById('menu-session-slot');
+      if (viewId === 'view-menu' && menuSlot) {
+        if (session.parentElement !== menuSlot) menuSlot.appendChild(session);
+      } else if (session.parentElement !== document.body) {
+        document.body.appendChild(session);
+      }
+    }
+
     function showView(id) {
       document.querySelectorAll('.view').forEach(v => { v.style.display = 'none'; });
       const el = document.getElementById(id);
@@ -533,12 +1320,17 @@
       el.style.display = 'flex';
       el.offsetHeight;
       el.style.animation = '';
+      document.body.dataset.view = id;
+      relocateSessionHeader(id);
     }
 
     const btnAdmin   = document.querySelector('.btn-admin');
     const titulo     = document.getElementById('menu-titulo');
     const congreIcon = document.getElementById('menu-congre-icon');
     const congreWrap = document.getElementById('menu-congre-wrapper');
+    const savedId = sessionStorage.getItem('congreId') || localStorage.getItem('ziv_congre_id');
+    const savedNombre = sessionStorage.getItem('congreNombre') || localStorage.getItem('ziv_congre_nombre');
+    const savedColor  = sessionStorage.getItem('congreColor')  || localStorage.getItem('ziv_congre_color');
 
     function mostrarMenu(nombre, color) {
       const col = color || '#7F77DD';
@@ -550,7 +1342,7 @@
       congreIcon.style.border     = `1px solid ${hexToRgba(col, 0.3)}`;
       congreIcon.style.color      = col;
       titulo.textContent = nombre;
-      document.getElementById('menu-footer').textContent = nombre + ' · App interna';
+      document.getElementById('menu-footer').textContent = '';
       btnAdmin.classList.add('hidden');
       document.body.classList.add('en-menu');
       showView('view-menu');
@@ -561,6 +1353,21 @@
       btnAdmin.classList.add('hidden');
       showView('view-auth');
     }
+
+    window.continuarDesdeInicio = async function() {
+      btnAdmin.classList.remove('hidden');
+      document.body.classList.remove('en-menu');
+      if (savedId && savedNombre) {
+        if (!sessionStorage.getItem('congreId')) {
+          sessionStorage.setItem('congreId', savedId);
+          sessionStorage.setItem('congreNombre', savedNombre);
+          sessionStorage.setItem('congreColor', savedColor || '');
+        }
+        await navegarDespuesDeAuth(savedNombre, savedColor);
+        return;
+      }
+      showView('view-congres');
+    };
 
     window.volverACongres = function() {
       // Limpia solo la sesión actual (no localStorage — se recuerda en próxima visita)
@@ -683,27 +1490,40 @@
       }
     }
 
-    // Si ya hay congregación guardada (sesión o persistente) → navegar directo
-    const savedId     = sessionStorage.getItem('congreId')     || localStorage.getItem('ziv_congre_id');
-    const savedNombre = sessionStorage.getItem('congreNombre') || localStorage.getItem('ziv_congre_nombre');
-    const savedColor  = sessionStorage.getItem('congreColor')  || localStorage.getItem('ziv_congre_color');
-    if (savedId && savedNombre) {
-      // Sincronizar sessionStorage desde localStorage si es una sesión nueva
-      if (!sessionStorage.getItem('congreId')) {
-        sessionStorage.setItem('congreId',     savedId);
-        sessionStorage.setItem('congreNombre', savedNombre);
-        sessionStorage.setItem('congreColor',  savedColor || '');
-      }
-      navegarDespuesDeAuth(savedNombre, savedColor);
-    }
-
     // Mostrar toast si viene de un authGuard que rechazó
     if (new URLSearchParams(location.search).get('sin_acceso')) {
       history.replaceState({}, '', '/');
       window.waitForAuth().then(() => uiToast('No tenés acceso a esa sección', 'error'));
     }
 
+    syncThemeButtonUI();
+    startWelcomeSlider();
     cargarCongres();
+
+    const wantsMenu = location.hash === '#menu';
+    if (wantsMenu) {
+      if (savedId && savedNombre) {
+        if (!sessionStorage.getItem('congreId')) {
+          sessionStorage.setItem('congreId', savedId);
+          sessionStorage.setItem('congreNombre', savedNombre);
+          sessionStorage.setItem('congreColor', savedColor || '');
+        }
+        mostrarMenu(savedNombre, savedColor);
+        navegarDespuesDeAuth(savedNombre, savedColor);
+      } else {
+        showView('view-congres');
+      }
+    } else if (savedId && savedNombre) {
+      // Hay congregación guardada → saltear welcome y navegar directo al menú/auth
+      if (!sessionStorage.getItem('congreId')) {
+        sessionStorage.setItem('congreId',     savedId);
+        sessionStorage.setItem('congreNombre', savedNombre);
+        sessionStorage.setItem('congreColor',  savedColor || '');
+      }
+      navegarDespuesDeAuth(savedNombre, savedColor);
+    } else {
+      showView('view-welcome');
+    }
   </script>
 
 </body>

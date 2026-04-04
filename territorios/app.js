@@ -372,7 +372,7 @@ function goToModo() {
 
 function goToMapa() {
   sessionStorage.setItem('selectedGrupo', selectedGrupo);
-  window.location.href = 'mapa.html';
+  window.location.href = '/territorios/mapa.html';
 }
 
 async function cerrarSesion() {
@@ -894,7 +894,7 @@ function openMapaPicker(salidaId) {
   const title  = document.getElementById('mapa-popup-title');
   const grupoLabel = selectedGrupo === 'C' ? 'Congregación' : 'Grupo ' + selectedGrupo;
   title.textContent = `Elegir territorio — ${grupoLabel}`;
-  iframe.src = `mapa.html?grupo=${selectedGrupo}&modo=picker&salidaid=${salidaId}&picker=1`;
+  iframe.src = `/territorios/mapa.html?grupo=${selectedGrupo}&modo=picker&salidaid=${salidaId}&picker=1`;
   popup.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -905,7 +905,7 @@ function openEncuentroPicker(salidaId) {
   const iframe  = document.getElementById('mapa-iframe');
   const title   = document.getElementById('mapa-popup-title');
   title.textContent = 'Elegir lugar de encuentro';
-  iframe.src = `mapa.html?modo=encuentro&salidaid=${salidaId}&grupo=${selectedGrupo}${terrVal ? '&terrid=' + encodeURIComponent(terrVal) : ''}`;
+  iframe.src = `/territorios/mapa.html?modo=encuentro&salidaid=${salidaId}&grupo=${selectedGrupo}${terrVal ? '&terrid=' + encodeURIComponent(terrVal) : ''}`;
   popup.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -1800,7 +1800,7 @@ function openMapaPopup(modo) {
     enProgresoParam = '&enprogreso=' + encodeURIComponent(enProg.join(','));
   }
 
-  iframe.src = `mapa.html?grupo=${g}&modo=${modo}${enProgresoParam}`;
+  iframe.src = `/territorios/mapa.html?grupo=${g}&modo=${modo}${enProgresoParam}`;
   popup.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
