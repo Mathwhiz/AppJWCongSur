@@ -1514,12 +1514,13 @@
         showView('view-congres');
       }
     } else if (savedId && savedNombre) {
-      // Hay congregación guardada → saltear welcome y navegar directo al menú/auth
+      // Hay congregación guardada → saltear welcome, mostrar menú de inmediato y validar auth en background
       if (!sessionStorage.getItem('congreId')) {
         sessionStorage.setItem('congreId',     savedId);
         sessionStorage.setItem('congreNombre', savedNombre);
         sessionStorage.setItem('congreColor',  savedColor || '');
       }
+      mostrarMenu(savedNombre, savedColor);
       navegarDespuesDeAuth(savedNombre, savedColor);
     } else {
       showView('view-welcome');
