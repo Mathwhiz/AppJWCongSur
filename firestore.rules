@@ -147,6 +147,10 @@ service cloud.firestore {
         );
 
       allow delete: if false;
+
+      match /predicacion/{mes} {
+        allow read, write: if isSelf(uid);
+      }
     }
 
     /*

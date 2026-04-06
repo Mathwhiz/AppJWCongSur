@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-title" content="Ziv">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="../shared/styles-base.css">
-  <link rel="stylesheet" href="styles.css?v=1.0">
+  <link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
 
-<!-- ── view-noauth: usuario anónimo o sin sesión ── -->
+<!-- ── view-noauth ── -->
 <div id="view-noauth" class="view">
   <div class="noauth-wrap">
     <div class="noauth-icon">
@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<!-- ── view-app: app principal ── -->
+<!-- ── view-app ── -->
 <div id="view-app" class="view">
 
   <div class="pred-header">
@@ -52,75 +52,122 @@
     <span class="pred-header-title">Predicación</span>
   </div>
 
-  <div class="pred-body">
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" id="tab-btn-tiempo" onclick="switchTab('tiempo')">Tiempo</button>
+    <button class="tab-btn" id="tab-btn-contactos" onclick="switchTab('contactos')">Revisitas y estudios</button>
+  </div>
 
-    <!-- Cronómetro -->
-    <div class="pred-card">
-      <div class="timer-display" id="timer-display">00:00:00</div>
-      <div class="timer-btns">
-        <button class="pred-btn pred-btn-primary" id="timer-toggle-btn" onclick="timerToggle()">Iniciar</button>
-        <button class="pred-btn pred-btn-ghost" onclick="timerReset()">Reiniciar</button>
-      </div>
-      <div id="timer-add-wrap" class="timer-add-wrap" style="display:none;">
-        <button class="timer-add-btn" id="timer-add-btn" onclick="timerAgregarAlMes()">+ Agregar al mes</button>
-      </div>
-    </div>
+  <!-- ── Tab: Tiempo ── -->
+  <div class="tab-panel active" id="tab-tiempo">
+    <div class="pred-body">
 
-    <!-- Mes actual -->
-    <div class="pred-card">
-      <div class="month-nav">
-        <button class="month-nav-btn" onclick="navMes(-1)" title="Mes anterior">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <span class="month-nav-label" id="month-label">—</span>
-        <button class="month-nav-btn" id="month-next-btn" onclick="navMes(1)" title="Mes siguiente">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label-text">Tiempo</span>
-        <div class="tiempo-row">
-          <span class="stat-value-text" id="stat-tiempo">0 min</span>
-          <button class="tiempo-edit-btn" onclick="abrirEditTiempo()">Editar</button>
+      <!-- Cronómetro -->
+      <div class="pred-card">
+        <div class="timer-display" id="timer-display">00:00:00</div>
+        <div class="timer-btns">
+          <button class="pred-btn pred-btn-primary" id="timer-toggle-btn" onclick="timerToggle()">Iniciar</button>
+          <button class="pred-btn pred-btn-ghost" onclick="timerReset()">Reiniciar</button>
+        </div>
+        <div id="timer-add-wrap" class="timer-add-wrap" style="display:none;">
+          <button class="timer-add-btn" id="timer-add-btn" onclick="timerAgregarAlMes()">+ Agregar al mes</button>
         </div>
       </div>
 
-      <div class="stat-row">
-        <span class="stat-label-text">Revisitas</span>
-        <div class="stat-counter-wrap">
-          <button class="counter-btn" onclick="cambiarContador('revisitas', -1)">−</button>
-          <span class="counter-val" id="stat-revisitas">0</span>
-          <button class="counter-btn" onclick="cambiarContador('revisitas', 1)">+</button>
+      <button class="add-manual-link" onclick="abrirAgregarTiempo()">+ Agregar tiempo de otro día</button>
+
+      <!-- Mes -->
+      <div class="pred-card">
+        <div class="month-nav">
+          <button class="month-nav-btn" onclick="navMes(-1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="month-nav-label" id="month-label">—</span>
+          <button class="month-nav-btn" id="month-next-btn" onclick="navMes(1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Empty state -->
+        <div id="mes-vacio" class="mes-vacio" style="display:none;">
+          <div class="mes-vacio-text">Sin predicación este mes</div>
+          <button class="mes-vacio-btn" onclick="abrirAgregarTiempo()">Registrar tiempo</button>
+        </div>
+
+        <!-- Stats -->
+        <div id="mes-stats">
+          <div class="stat-row">
+            <span class="stat-label-text">Tiempo</span>
+            <div class="tiempo-row">
+              <span class="stat-value-text" id="stat-tiempo">0 min</span>
+              <button class="tiempo-edit-btn" onclick="abrirEditTiempo()">Editar</button>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label-text">Revisitas</span>
+            <div class="stat-counter-wrap">
+              <button class="counter-btn" onclick="cambiarContador('revisitas', -1)">−</button>
+              <span class="counter-val" id="stat-revisitas">0</span>
+              <button class="counter-btn" onclick="cambiarContador('revisitas', 1)">+</button>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label-text">Estudios</span>
+            <div class="stat-counter-wrap">
+              <button class="counter-btn" onclick="cambiarContador('estudios', -1)">−</button>
+              <span class="counter-val" id="stat-estudios">0</span>
+              <button class="counter-btn" onclick="cambiarContador('estudios', 1)">+</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="stat-row">
-        <span class="stat-label-text">Estudios</span>
-        <div class="stat-counter-wrap">
-          <button class="counter-btn" onclick="cambiarContador('estudios', -1)">−</button>
-          <span class="counter-val" id="stat-estudios">0</span>
-          <button class="counter-btn" onclick="cambiarContador('estudios', 1)">+</button>
+      <!-- Historial -->
+      <div class="hist-section-title">Historial</div>
+      <div id="hist-container">
+        <div class="loading-wrap"><div class="spinner"></div></div>
+      </div>
+
+    </div>
+  </div><!-- /tab-tiempo -->
+
+  <!-- ── Tab: Revisitas y estudios ── -->
+  <div class="tab-panel" id="tab-contactos">
+    <div class="pred-body">
+
+      <!-- Revisitas -->
+      <div class="contact-section">
+        <div class="contact-section-header">
+          <span class="contact-section-title">Revisitas</span>
+          <button class="contact-add-btn" onclick="abrirContacto('revisita', null)">+ Nueva</button>
+        </div>
+        <div id="revisitas-list">
+          <div class="loading-wrap"><div class="spinner"></div></div>
         </div>
       </div>
+
+      <!-- Estudios -->
+      <div class="contact-section">
+        <div class="contact-section-header">
+          <span class="contact-section-title">Estudios bíblicos</span>
+          <button class="contact-add-btn" onclick="abrirContacto('estudio', null)">+ Nuevo</button>
+        </div>
+        <div id="estudios-list">
+          <div class="loading-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+
     </div>
+  </div><!-- /tab-contactos -->
 
-    <!-- Historial -->
-    <div class="hist-section-title">Historial</div>
-    <div id="hist-container">
-      <div class="loading-wrap"><div class="spinner"></div></div>
-    </div>
-
-  </div><!-- /pred-body -->
-
-  <!-- Modal: editar tiempo -->
-  <div id="edit-tiempo-modal" class="modal-overlay" style="display:none;"
+  <!-- ── Modal: editar tiempo ── -->
+  <div id="modal-edit-tiempo" class="modal-overlay" style="display:none;"
        onclick="if(event.target===this) cerrarEditTiempo()">
     <div class="modal-card">
       <div class="modal-title">Editar tiempo</div>
@@ -138,6 +185,49 @@
       <div class="modal-actions">
         <button class="pred-btn pred-btn-ghost" onclick="cerrarEditTiempo()">Cancelar</button>
         <button class="pred-btn pred-btn-primary" onclick="guardarEditTiempo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: agregar tiempo manual ── -->
+  <div id="modal-add-tiempo" class="modal-overlay" style="display:none;"
+       onclick="if(event.target===this) cerrarAgregarTiempo()">
+    <div class="modal-card">
+      <div class="modal-title">Agregar tiempo</div>
+      <div class="edit-time-wrap">
+        <div class="edit-time-field">
+          <label>Horas</label>
+          <input class="edit-time-input" type="number" id="add-horas" min="0" max="99" placeholder="0">
+        </div>
+        <span class="edit-time-sep">:</span>
+        <div class="edit-time-field">
+          <label>Minutos</label>
+          <input class="edit-time-input" type="number" id="add-mins" min="0" max="59" placeholder="0">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="pred-btn pred-btn-ghost" onclick="cerrarAgregarTiempo()">Cancelar</button>
+        <button class="pred-btn pred-btn-primary" onclick="guardarAgregarTiempo()">Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: revisita / estudio ── -->
+  <div id="modal-contacto" class="modal-overlay" style="display:none;"
+       onclick="if(event.target===this) cerrarContacto()">
+    <div class="modal-card">
+      <div class="modal-title" id="modal-contacto-title">Nueva revisita</div>
+      <div class="modal-field">
+        <label class="modal-label">Nombre</label>
+        <input class="modal-input" type="text" id="contacto-nombre" placeholder="Nombre de la persona">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Notas</label>
+        <textarea class="modal-textarea" id="contacto-notas" placeholder="Dirección, observaciones, próxima visita…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="pred-btn pred-btn-ghost" onclick="cerrarContacto()">Cancelar</button>
+        <button class="pred-btn pred-btn-primary" onclick="guardarContacto()">Guardar</button>
       </div>
     </div>
   </div>
