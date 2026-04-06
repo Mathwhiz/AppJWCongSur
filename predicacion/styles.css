@@ -180,6 +180,30 @@ body { font-family: system-ui, sans-serif; background: var(--bg-primary); color:
 .counter-val { font-size: 18px; font-weight: 600; min-width: 26px; text-align: center; color: var(--text-primary); }
 
 /* ─────────────────────────────────────────
+   DÍAS DEL MES
+───────────────────────────────────────── */
+#dias-list { margin: 2px 0 4px; }
+.dia-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border-primary);
+}
+.dia-row:last-child { border-bottom: none; }
+.dia-fecha { flex: 1; font-size: 13px; color: var(--text-muted); }
+.dia-tiempo { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.dia-del {
+  width: 26px; height: 26px; border-radius: 7px; background: none;
+  border: none; cursor: pointer; color: var(--text-muted); font-size: 18px;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+  transition: background 0.1s, color 0.1s; flex-shrink: 0;
+}
+.dia-del:hover { background: rgba(224,82,119,0.1); color: #E05277; }
+
+/* date input */
+.modal-input[type="date"] {
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────
    HISTORY
 ───────────────────────────────────────── */
 .hist-section-title {
@@ -197,9 +221,21 @@ body { font-family: system-ui, sans-serif; background: var(--bg-primary); color:
 .hist-header-cell { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .hist-header-cell:first-child { flex: 1; }
 .hist-header-cell:not(:first-child) { min-width: 54px; text-align: right; }
-.hist-row { display: flex; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border-primary); }
+.hist-row {
+  display: flex; align-items: center; padding: 11px 14px;
+  border-bottom: 1px solid var(--border-primary);
+  cursor: pointer; transition: background 0.1s;
+}
 .hist-row:last-child { border-bottom: none; }
-.hist-mes { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.hist-row:hover { background: var(--bg-hover); }
+.hist-row-active { background: rgba(224,82,119,0.07); }
+.hist-row-active:hover { background: rgba(224,82,119,0.11); }
+.hist-mes { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; gap: 7px; }
+.hist-badge-hoy {
+  font-size: 10px; font-weight: 600; color: #E05277;
+  background: rgba(224,82,119,0.12); border: 1px solid rgba(224,82,119,0.25);
+  border-radius: 20px; padding: 1px 7px; white-space: nowrap;
+}
 .hist-val { min-width: 54px; text-align: right; font-size: 13px; color: var(--text-secondary); }
 .hist-val-dim { font-size: 11px; color: var(--text-muted); }
 .hist-empty { padding: 28px 14px; text-align: center; font-size: 13px; color: var(--text-muted); }

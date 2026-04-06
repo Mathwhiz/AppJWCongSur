@@ -10,10 +10,16 @@ import {
 // ─────────────────────────────────────────
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_CORTOS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
 function mesHoy() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function fechaHoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function navearMes(iso, delta) {
@@ -27,6 +33,12 @@ function navearMes(iso, delta) {
 function fmtMes(iso) {
   const [y, m] = iso.split('-').map(Number);
   return `${MESES[m - 1]} ${y}`;
+}
+
+function fmtFecha(iso) {
+  // '2026-04-06' → '6 de abr'
+  const [, m, d] = iso.split('-').map(Number);
+  return `${d} de ${MESES_CORTOS[m - 1]}`;
 }
 
 function fmtTiempo(mins) {
@@ -55,8 +67,9 @@ function toast(msg, type = 'success') {
 // ─────────────────────────────────────────
 let _uid         = '';
 let _mesMostrado = mesHoy();
+let _diasMes     = [];   // [{ id, fecha, minutos }] del mes actual, ordenado por fecha desc
 let _dataMes     = { minutos: 0, revisitas: 0, estudios: 0 };
-let _mesExiste   = false;  // si hay doc en Firestore para el mes actual
+let _mesExiste   = false;
 
 // Timer
 let _timerInterval = null;
@@ -64,16 +77,16 @@ let _timerStart    = 0;
 let _timerAccum    = 0;
 let _timerRunning  = false;
 
-// Debounce
+// Debounce para contadores
 let _saveTimeout = null;
-function scheduleSave() {
+function scheduleGuardarContadores() {
   clearTimeout(_saveTimeout);
-  _saveTimeout = setTimeout(guardarMes, 600);
+  _saveTimeout = setTimeout(guardarContadores, 600);
 }
 
 // Estado modal contacto
-let _contactoTipo = 'revisita';   // 'revisita' | 'estudio'
-let _contactoId   = null;         // null = nuevo, string = editar
+let _contactoTipo = 'revisita';
+let _contactoId   = null;
 
 // ─────────────────────────────────────────
 //   AUTH CHECK
@@ -110,41 +123,116 @@ window.switchTab = function(tab) {
 };
 
 // ─────────────────────────────────────────
-//   FIRESTORE — MES
+//   FIRESTORE — REFS
 // ─────────────────────────────────────────
 function mesRef(mes) {
   return doc(db, 'usuarios', _uid, 'predicacion', mes);
 }
 
+function diasRef(mes) {
+  return collection(db, 'usuarios', _uid, 'predicacion', mes, 'dias');
+}
+
+function diaRef(mes, id) {
+  return doc(db, 'usuarios', _uid, 'predicacion', mes, 'dias', id);
+}
+
+// ─────────────────────────────────────────
+//   CARGAR MES
+// ─────────────────────────────────────────
 async function cargarMes() {
-  const snap = await getDoc(mesRef(_mesMostrado));
-  _mesExiste = snap.exists();
-  _dataMes   = _mesExiste
-    ? { minutos: 0, revisitas: 0, estudios: 0, ...snap.data() }
-    : { minutos: 0, revisitas: 0, estudios: 0 };
+  // Carga el doc padre (revisitas/estudios) y la subcolección de días en paralelo
+  const [parentSnap, diasSnap] = await Promise.all([
+    getDoc(mesRef(_mesMostrado)),
+    getDocs(diasRef(_mesMostrado)),
+  ]);
+
+  const parentData = parentSnap.exists() ? parentSnap.data() : {};
+  _dataMes.revisitas = parentData.revisitas || 0;
+  _dataMes.estudios  = parentData.estudios  || 0;
+
+  _diasMes = [];
+  diasSnap.forEach(d => _diasMes.push({ id: d.id, ...d.data() }));
+  _diasMes.sort((a, b) => b.fecha.localeCompare(a.fecha)); // más reciente primero
+
+  _dataMes.minutos = _diasMes.reduce((s, d) => s + (d.minutos || 0), 0);
+  _mesExiste = parentSnap.exists() || _diasMes.length > 0;
+
   renderStats();
 }
 
-async function guardarMes() {
+// ─────────────────────────────────────────
+//   GUARDAR
+// ─────────────────────────────────────────
+
+// Guarda un día individual y actualiza el total en el doc padre
+async function guardarDia(fecha, minutos) {
+  const newRef = await addDoc(diasRef(_mesMostrado), {
+    fecha,
+    minutos,
+    creadoEn: serverTimestamp(),
+  });
+
+  // Actualiza estado local sin refetch
+  _diasMes.push({ id: newRef.id, fecha, minutos });
+  _diasMes.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  _dataMes.minutos = _diasMes.reduce((s, d) => s + (d.minutos || 0), 0);
   _mesExiste = true;
+
+  // Actualiza el total en el doc padre (para que el historial lo lea rápido)
   await setDoc(mesRef(_mesMostrado), {
-    minutos:   _dataMes.minutos   || 0,
+    minutos:   _dataMes.minutos,
     revisitas: _dataMes.revisitas || 0,
     estudios:  _dataMes.estudios  || 0,
     updatedAt: serverTimestamp(),
-  });
+  }, { merge: true });
 }
 
+// Solo guarda revisitas/estudios (contadores)
+async function guardarContadores() {
+  _mesExiste = true;
+  await setDoc(mesRef(_mesMostrado), {
+    minutos:   _dataMes.minutos,
+    revisitas: _dataMes.revisitas || 0,
+    estudios:  _dataMes.estudios  || 0,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+// Elimina un día y recalcula el total
+window.eliminarDia = async function(id) {
+  const ok = await window.uiConfirm({
+    title: 'Eliminar día',
+    msg: '¿Eliminar este registro?',
+    confirmText: 'Eliminar',
+    type: 'danger',
+  });
+  if (!ok) return;
+
+  await deleteDoc(diaRef(_mesMostrado, id));
+  _diasMes = _diasMes.filter(d => d.id !== id);
+  _dataMes.minutos = _diasMes.reduce((s, d) => s + (d.minutos || 0), 0);
+  renderStats();
+
+  // Actualiza total en padre
+  await setDoc(mesRef(_mesMostrado), {
+    minutos:   _dataMes.minutos,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+
+  // Refresca historial para que el total se vea actualizado
+  cargarHistorial();
+};
+
+// ─────────────────────────────────────────
+//   HISTORIAL
+// ─────────────────────────────────────────
 async function cargarHistorial() {
   const cont = document.getElementById('hist-container');
   try {
-    const ref  = collection(db, 'usuarios', _uid, 'predicacion');
-    const snap = await getDocs(ref);
-    const hoy  = mesHoy();
+    const snap = await getDocs(collection(db, 'usuarios', _uid, 'predicacion'));
     const meses = [];
-    snap.forEach(d => {
-      if (d.id < hoy) meses.push({ id: d.id, ...d.data() });
-    });
+    snap.forEach(d => meses.push({ id: d.id, ...d.data() }));
     meses.sort((a, b) => b.id.localeCompare(a.id));
     renderHistorial(meses);
   } catch {
@@ -156,13 +244,11 @@ async function cargarHistorial() {
 //   FIRESTORE — CONTACTOS
 // ─────────────────────────────────────────
 function contactosRef(tipo) {
-  // 'revisita' → 'revisitas', 'estudio' → 'estudios'
   return collection(db, 'usuarios', _uid, tipo === 'revisita' ? 'revisitas' : 'estudios');
 }
 
 function contactoDocRef(tipo, id) {
-  const col = tipo === 'revisita' ? 'revisitas' : 'estudios';
-  return doc(db, 'usuarios', _uid, col, id);
+  return doc(db, 'usuarios', _uid, tipo === 'revisita' ? 'revisitas' : 'estudios', id);
 }
 
 async function cargarContactos(tipo) {
@@ -188,27 +274,44 @@ function renderMonthLabel() {
 
 function renderStats() {
   const sinActividad = !_mesExiste ||
-    ((_dataMes.minutos || 0) === 0 && (_dataMes.revisitas || 0) === 0 && (_dataMes.estudios || 0) === 0);
+    (_diasMes.length === 0 && (_dataMes.revisitas || 0) === 0 && (_dataMes.estudios || 0) === 0);
 
-  document.getElementById('mes-vacio').style.display  = sinActividad ? '' : 'none';
-  document.getElementById('mes-stats').style.display  = sinActividad ? 'none' : '';
+  document.getElementById('mes-vacio').style.display = sinActividad ? ''     : 'none';
+  document.getElementById('mes-stats').style.display = sinActividad ? 'none' : '';
 
   if (!sinActividad) {
     document.getElementById('stat-tiempo').textContent    = fmtTiempo(_dataMes.minutos);
     document.getElementById('stat-revisitas').textContent = _dataMes.revisitas || 0;
     document.getElementById('stat-estudios').textContent  = _dataMes.estudios  || 0;
+    renderDias();
   }
+}
+
+function renderDias() {
+  const cont = document.getElementById('dias-list');
+  if (!_diasMes.length) {
+    cont.innerHTML = '';
+    return;
+  }
+  cont.innerHTML = _diasMes.map(d => `
+    <div class="dia-row">
+      <span class="dia-fecha">${fmtFecha(d.fecha)}</span>
+      <span class="dia-tiempo">${fmtTiempo(d.minutos)}</span>
+      <button class="dia-del" onclick="eliminarDia('${d.id}')" title="Eliminar">×</button>
+    </div>
+  `).join('');
 }
 
 function renderHistorial(meses) {
   const cont = document.getElementById('hist-container');
   if (!meses.length) {
-    cont.innerHTML = '<div class="hist-empty">Sin meses anteriores registrados</div>';
+    cont.innerHTML = '<div class="hist-empty">Sin meses registrados</div>';
     return;
   }
   const filas = meses.map(m => `
-    <div class="hist-row">
-      <span class="hist-mes">${fmtMes(m.id)}</span>
+    <div class="hist-row ${m.id === _mesMostrado ? 'hist-row-active' : ''}"
+         data-mes="${m.id}" onclick="irAMes('${m.id}')">
+      <span class="hist-mes">${fmtMes(m.id)}${m.id === mesHoy() ? ' <span class="hist-badge-hoy">este mes</span>' : ''}</span>
       <span class="hist-val">${fmtTiempo(m.minutos || 0)}</span>
       <span class="hist-val">${m.revisitas || 0} <span class="hist-val-dim">rev</span></span>
       <span class="hist-val">${m.estudios  || 0} <span class="hist-val-dim">est</span></span>
@@ -259,7 +362,22 @@ window.navMes = async function(delta) {
   _mesMostrado = navearMes(_mesMostrado, delta);
   renderMonthLabel();
   await cargarMes();
+  actualizarHistActividad();
 };
+
+window.irAMes = async function(mes) {
+  _mesMostrado = mes;
+  renderMonthLabel();
+  await cargarMes();
+  actualizarHistActividad();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function actualizarHistActividad() {
+  document.querySelectorAll('#hist-container .hist-row').forEach(row => {
+    row.classList.toggle('hist-row-active', row.dataset.mes === _mesMostrado);
+  });
+}
 
 // ─────────────────────────────────────────
 //   CONTADORES +/−
@@ -268,39 +386,14 @@ window.cambiarContador = function(campo, delta) {
   _dataMes[campo] = Math.max(0, (_dataMes[campo] || 0) + delta);
   _mesExiste = true;
   renderStats();
-  scheduleSave();
+  scheduleGuardarContadores();
 };
 
 // ─────────────────────────────────────────
-//   EDITAR TIEMPO
-// ─────────────────────────────────────────
-window.abrirEditTiempo = function() {
-  const mins = _dataMes.minutos || 0;
-  document.getElementById('edit-horas').value = Math.floor(mins / 60) || '';
-  document.getElementById('edit-mins').value  = mins % 60 || '';
-  document.getElementById('modal-edit-tiempo').style.display = 'flex';
-  setTimeout(() => document.getElementById('edit-horas').focus(), 60);
-};
-
-window.cerrarEditTiempo = function() {
-  document.getElementById('modal-edit-tiempo').style.display = 'none';
-};
-
-window.guardarEditTiempo = async function() {
-  const h = Math.max(0, parseInt(document.getElementById('edit-horas').value) || 0);
-  const m = Math.max(0, Math.min(59, parseInt(document.getElementById('edit-mins').value) || 0));
-  _dataMes.minutos = h * 60 + m;
-  _mesExiste = true;
-  renderStats();
-  cerrarEditTiempo();
-  await guardarMes();
-  toast(`Tiempo actualizado: ${fmtTiempo(_dataMes.minutos)}`);
-};
-
-// ─────────────────────────────────────────
-//   AGREGAR TIEMPO MANUAL
+//   AGREGAR TIEMPO (cronómetro o manual)
 // ─────────────────────────────────────────
 window.abrirAgregarTiempo = function() {
+  document.getElementById('add-fecha').value = fechaHoy();
   document.getElementById('add-horas').value = '';
   document.getElementById('add-mins').value  = '';
   document.getElementById('modal-add-tiempo').style.display = 'flex';
@@ -312,16 +405,28 @@ window.cerrarAgregarTiempo = function() {
 };
 
 window.guardarAgregarTiempo = async function() {
-  const h = Math.max(0, parseInt(document.getElementById('add-horas').value) || 0);
-  const m = Math.max(0, Math.min(59, parseInt(document.getElementById('add-mins').value) || 0));
-  const mins = h * 60 + m;
+  const fecha = document.getElementById('add-fecha').value;
+  const h     = Math.max(0, parseInt(document.getElementById('add-horas').value) || 0);
+  const m     = Math.max(0, Math.min(59, parseInt(document.getElementById('add-mins').value) || 0));
+  const mins  = h * 60 + m;
+
+  if (!fecha) { toast('Seleccioná una fecha', 'error'); return; }
   if (mins < 1) { toast('Ingresá al menos 1 minuto', 'error'); return; }
-  _dataMes.minutos = (_dataMes.minutos || 0) + mins;
-  _mesExiste = true;
-  renderStats();
+
+  // Si la fecha es de otro mes, navegar a ese mes
+  const mesDeFecha = fecha.slice(0, 7);
+  if (mesDeFecha !== _mesMostrado) {
+    _mesMostrado = mesDeFecha;
+    renderMonthLabel();
+    await cargarMes();
+    actualizarHistActividad();
+  }
+
   cerrarAgregarTiempo();
-  await guardarMes();
-  toast(`${fmtTiempo(mins)} agregados a ${fmtMes(_mesMostrado)}`);
+  await guardarDia(fecha, mins);
+  renderStats();
+  await cargarHistorial();
+  toast(`${fmtTiempo(mins)} agregados — ${fmtFecha(fecha)}`);
 };
 
 // ─────────────────────────────────────────
@@ -452,10 +557,10 @@ window.timerAgregarAlMes = async function() {
   const ms   = timerElapsedMs();
   const mins = Math.floor(ms / 60000);
   if (mins < 1) { toast('Menos de 1 minuto registrado', 'error'); return; }
-  _dataMes.minutos = (_dataMes.minutos || 0) + mins;
-  _mesExiste = true;
-  renderStats();
+
   timerReset();
-  await guardarMes();
-  toast(`${fmtTiempo(mins)} agregados al mes`);
+  await guardarDia(fechaHoy(), mins);
+  renderStats();
+  await cargarHistorial();
+  toast(`${fmtTiempo(mins)} agregados — ${fmtFecha(fechaHoy())}`);
 };
