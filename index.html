@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ziv</title>
-  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1a1c1f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ziv">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -41,6 +41,65 @@
       display: flex;
       justify-content: center;
       animation: fadeIn 0.2s ease;
+    }
+    .view.no-view-anim {
+      animation: none !important;
+    }
+    .view.intro-layer {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .view.welcome-out {
+      opacity: 0;
+      transform: translateY(-72px) scale(.96);
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+      pointer-events: none;
+    }
+    .wrap.congre-wrap-prep {
+      opacity: 0;
+      transform: translateY(72px) scale(.98);
+      pointer-events: none;
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+    }
+    .wrap.congre-wrap-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .view.congre-out-left {
+      opacity: 0;
+      transform: translateX(-88px) scale(.97);
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+      pointer-events: none;
+    }
+    .auth-screen.auth-screen-prep {
+      opacity: 0;
+      transform: translateX(88px) scale(.985);
+      pointer-events: none;
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+    }
+    .auth-screen.auth-screen-in {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    .view.auth-out-right {
+      opacity: 0;
+      transform: translateX(88px) scale(.97);
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+      pointer-events: none;
+    }
+    .wrap.congre-back-prep {
+      opacity: 0;
+      transform: translateX(-88px) scale(.985);
+      pointer-events: none;
+      transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .72s cubic-bezier(.16,1,.3,1);
+    }
+    .wrap.congre-back-in {
+      opacity: 1;
+      transform: translateX(0) scale(1);
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
@@ -259,37 +318,6 @@
       border-radius: 22px;
     }
 
-    /* ── Botón admin ── */
-    .btn-admin {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
-      background: #1e1e2e;
-      border: 1px solid rgba(127,119,221,0.35);
-      border-radius: 12px;
-      color: #7F77DD;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background .15s, border-color .15s, color .15s, opacity .2s;
-    }
-    .btn-admin:hover { background: #252535; border-color: rgba(127,119,221,0.6); color: #a09af0; }
-    .btn-admin.hidden { opacity: 0; pointer-events: none; }
-    body.light-mode .btn-admin {
-      background: #f4f0ff;
-      border-color: rgba(127,119,221,0.35);
-      color: #6d62cf;
-      box-shadow: 0 4px 18px rgba(127,119,221,0.14);
-    }
-    body.light-mode .btn-admin:hover {
-      background: #ede7ff;
-      border-color: rgba(127,119,221,0.55);
-      color: #5f54c5;
-    }
 
     /* ── Vista de autenticación ── */
     #view-auth {
@@ -465,7 +493,6 @@
       justify-content: space-between;
       padding: 14px 0 24px;
     }
-    .welcome-shell > .s1-foot { margin-top: auto; }
     .s1-bar,
     .s1-hero,
     .s1-slider,
@@ -487,7 +514,6 @@
       gap: 10px;
     }
     .btn-pwa,
-    .btn-admin-top,
     .btn-theme {
       border: 1px solid var(--border-light, #3a3d42);
       background: var(--bg-card, #232628);
@@ -495,8 +521,7 @@
       font-family: inherit;
       transition: color .15s, border-color .15s, background .15s, transform .12s;
     }
-    .btn-pwa,
-    .btn-admin-top {
+    .btn-pwa {
       display: inline-flex;
       align-items: center;
       gap: 7px;
@@ -510,14 +535,12 @@
     .btn-pwa { display: none; }
     .btn-pwa.visible { display: inline-flex; }
     .btn-pwa:hover,
-    .btn-admin-top:hover,
     .btn-theme:hover {
       color: var(--text-primary, #e8e8e8);
       border-color: var(--border-input, #4a4d52);
       background: var(--bg-hover, #272a2e);
     }
     .btn-pwa:active,
-    .btn-admin-top:active,
     .btn-theme:active { transform: scale(.97); }
     .btn-theme {
       width: 36px;
@@ -547,9 +570,58 @@
       align-items: center;
       text-align: center;
       padding: 16px 28px 12px;
-      gap: 10px;
+      gap: 12px;
     }
-    .app-icon { filter: drop-shadow(0 0 14px rgba(127,119,221,.4)); }
+    .app-icon-shell {
+      position: relative;
+      width: 116px;
+      height: 116px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 34px;
+      isolation: isolate;
+    }
+    .app-icon-shell::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 38px;
+      background: conic-gradient(from 0deg, rgba(127,119,221,0.0), rgba(127,119,221,0.6), rgba(55,138,221,0.42), rgba(29,158,117,0.16), rgba(127,119,221,0.0));
+      filter: blur(10px);
+      animation: hero-spin 10s linear infinite;
+      opacity: .9;
+      z-index: 0;
+    }
+    .app-icon-shell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 34px;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.18), transparent 38%), rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      z-index: 1;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .app-icon-orbit {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #97C459;
+      box-shadow: 0 0 0 5px rgba(151,196,89,.14);
+      z-index: 3;
+      transform: translate(-50%, -50%) rotate(var(--clock-angle, 35deg)) translateY(-46px);
+      transition: transform .5s cubic-bezier(.22,.68,0,1);
+    }
+    .app-icon {
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 0 14px rgba(127,119,221,.4));
+    }
     .app-name {
       font-size: 2.5rem;
       font-weight: 700;
@@ -557,11 +629,12 @@
       color: var(--text-primary, #e8e8e8);
     }
     .app-tagline {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-secondary, #aaa);
-      line-height: 1.5;
-      max-width: 240px;
+      line-height: 1.55;
+      max-width: 320px;
     }
+    @keyframes hero-spin { to { transform: rotate(360deg); } }
     .s1-slider {
       display: flex;
       flex-direction: column;
@@ -569,9 +642,12 @@
     }
     .slider-viewport {
       overflow: hidden;
-      height: 152px;
+      height: 178px;
       padding: 0 20px;
+      touch-action: pan-y;
+      cursor: grab;
     }
+    .slider-viewport.dragging { cursor: grabbing; }
     .slider-track {
       display: flex;
       height: 100%;
@@ -584,6 +660,8 @@
       height: 100%;
     }
     .slide-card {
+      position: relative;
+      overflow: hidden;
       height: 100%;
       background: var(--bg-card, #232628);
       border: 1px solid var(--border-primary, #2e3033);
@@ -593,6 +671,32 @@
       flex-direction: column;
       gap: 10px;
       box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,.25));
+      transition: background .3s, border-color .3s, box-shadow .3s;
+    }
+    .slide-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--slide-accent, var(--accent, #7F77DD)) 0%, transparent 78%);
+      opacity: .95;
+    }
+    .slide-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -18% -42% auto;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--slide-accent, var(--accent, #7F77DD)) 22%, transparent 78%) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .slide-card:hover {
+      border-color: color-mix(in srgb, var(--slide-accent, var(--accent, #7F77DD)) 42%, var(--border-primary, #2e3033) 58%);
+      background: color-mix(in srgb, var(--bg-card, #232628) 92%, var(--slide-accent, var(--accent, #7F77DD)) 8%);
+      box-shadow: 0 8px 28px rgba(0,0,0,.28);
     }
     .slide-header {
       display: flex;
@@ -704,8 +808,7 @@
       box-shadow: 0 6px 24px rgba(127,119,221,.35);
     }
     .btn-primary:active { transform: scale(.97); }
-    body[data-view="view-welcome"] .btn-instalar,
-    body[data-view="view-welcome"] .btn-admin-fixed {
+    body[data-view="view-welcome"] .btn-instalar {
       display: none !important;
     }
 
@@ -768,16 +871,6 @@
       border-color: var(--border-input, #4a4d52);
       color: var(--text-primary, #e8e8e8);
     }
-    .btn-admin-fixed {
-      background: var(--bg-card, #232628);
-      border-color: rgba(127,119,221,0.35);
-      color: var(--accent, #7F77DD);
-    }
-    .btn-admin-fixed:hover {
-      background: var(--bg-hover, #272a2e);
-      border-color: rgba(127,119,221,0.6);
-      color: #a09af0;
-    }
 
     @media (min-width: 420px) {
       .module-grid { grid-template-columns: 1fr 1fr; }
@@ -835,28 +928,22 @@
           </svg>
           Instalar app
         </button>
-        <div class="welcome-actions">
-          <a href="admin.html" class="btn-admin-top" title="Super admin">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            Super admin
-          </a>
-        </div>
       </div>
 
       <div class="s1-hero">
-        <img src="/icon-192.png" alt="Ziv" class="app-icon" width="88" height="88" style="border-radius:22px;">
+        <div class="app-icon-shell" aria-hidden="true">
+          <div class="app-icon-orbit"></div>
+          <img src="/assets/icon-192.png" alt="Ziv" class="app-icon" width="88" height="88" style="border-radius:22px;">
+        </div>
         <h1 class="app-name">Ziv</h1>
         <p class="app-tagline">Organización e información.</p>
       </div>
 
       <div class="s1-slider">
-        <div class="slider-viewport" ontouchstart="welcomeTouch(event,'start')" ontouchend="welcomeTouch(event,'end')">
+        <div class="slider-viewport" id="welcome-slider-vp" ontouchstart="welcomeTouch(event,'start')" ontouchend="welcomeTouch(event,'end')">
           <div class="slider-track" id="welcome-slider-track">
             <div class="slide">
-              <div class="slide-card">
+              <div class="slide-card" style="--slide-accent:#5DB85D;">
                 <div class="slide-header">
                   <div class="slide-icon" style="background:rgba(93,184,93,0.12)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5DB85D" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -886,7 +973,7 @@
             </div>
 
             <div class="slide">
-              <div class="slide-card">
+              <div class="slide-card" style="--slide-accent:#5B8DDE;">
                 <div class="slide-header">
                   <div class="slide-icon" style="background:rgba(91,141,222,0.12)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B8DDE" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><line x1="14" y1="14" x2="20" y2="14"/><line x1="14" y1="17" x2="20" y2="17"/></svg>
@@ -914,7 +1001,7 @@
             </div>
 
             <div class="slide">
-              <div class="slide-card">
+              <div class="slide-card" style="--slide-accent:#1D9E75;">
                 <div class="slide-header">
                   <div class="slide-icon" style="background:rgba(29,158,117,0.12)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -943,7 +1030,7 @@
             </div>
 
             <div class="slide">
-              <div class="slide-card">
+              <div class="slide-card" style="--slide-accent:#EF9F27;">
                 <div class="slide-header">
                   <div class="slide-icon" style="background:rgba(239,159,39,0.12)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
@@ -970,6 +1057,64 @@
                 </div>
               </div>
             </div>
+
+            <div class="slide">
+              <div class="slide-card" style="--slide-accent:#E05277;">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(224,82,119,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E05277" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M21 22H3"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Predicación</div>
+                    <div class="slide-feature-desc">Tiempos, revisitas y estudios en una sola vista.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-badge" style="background:rgba(224,82,119,0.12);color:#E05277;min-width:44px;text-align:center">12 h</div>
+                    <div class="fake-line fake-line-m"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#E05277"></div>
+                    <div class="fake-line fake-line-l"></div>
+                    <div class="fake-badge" style="background:rgba(224,82,119,0.12);color:#E05277">3 estudios</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slide">
+              <div class="slide-card" style="--slide-accent:#0DB6CC;">
+                <div class="slide-header">
+                  <div class="slide-icon" style="background:rgba(13,182,204,0.12)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0DB6CC" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4"/></svg>
+                  </div>
+                  <div>
+                    <div class="slide-feature-title">Conferencias</div>
+                    <div class="slide-feature-desc">Seguimiento simple de visitas y discursos del fin de semana.</div>
+                  </div>
+                </div>
+                <div class="slide-body">
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:#0DB6CC"></div>
+                    <div class="fake-line fake-line-m"></div>
+                    <div class="fake-badge" style="background:rgba(13,182,204,0.10);color:#0DB6CC">Confirmada</div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-badge" style="background:rgba(13,182,204,0.10);color:#0DB6CC">Domingo</div>
+                    <div class="fake-line fake-line-l"></div>
+                  </div>
+                  <div class="fake-row">
+                    <div class="fake-dot" style="background:var(--border-input,#4a4d52)"></div>
+                    <div class="fake-line fake-line-s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -978,11 +1123,13 @@
           <button class="sdot" onclick="goWelcomeSlide(1)" aria-label="Slide 2"></button>
           <button class="sdot" onclick="goWelcomeSlide(2)" aria-label="Slide 3"></button>
           <button class="sdot" onclick="goWelcomeSlide(3)" aria-label="Slide 4"></button>
+          <button class="sdot" onclick="goWelcomeSlide(4)" aria-label="Slide 5"></button>
+          <button class="sdot" onclick="goWelcomeSlide(5)" aria-label="Slide 6"></button>
         </div>
       </div>
 
       <div class="s1-foot">
-        <button class="btn-primary" onclick="continuarDesdeInicio()">
+        <button class="btn-primary" onclick="startWelcomeIntroTransition()">
           Comenzar
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -1154,6 +1301,33 @@
         </div>
       </a>
 
+      <a class="cs-nav-card cs-nav-card-pred" href="predicacion/index.html">
+        <div class="cs-nav-icon cs-nav-icon-pred">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#E05277" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 22V12h6v10" stroke="#E05277" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-nav-title">Predicación</div>
+          <div class="cs-nav-sub">Tiempos, revisitas y estudios</div>
+        </div>
+      </a>
+
+      <a class="cs-nav-card cs-nav-card-conf" href="conferencias/index.html">
+        <div class="cs-nav-icon cs-nav-icon-conf">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#0DB6CC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9" cy="7" r="4" stroke="#0DB6CC" stroke-width="1.8"/>
+            <path d="M23 11l-4 4-2-2" stroke="#0DB6CC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-nav-title">Conferencias</div>
+          <div class="cs-nav-sub">Arreglos de discursos del fin de semana</div>
+        </div>
+      </a>
+
         </div>
         <div class="cs-footer" id="menu-footer"></div>
       <a class="cs-back-btn" href="#" onclick="volverACongres();return false;">← Congregaciones</a>
@@ -1168,13 +1342,6 @@
     </svg>
   </button>
 
-  <!-- ── Botón Admin (fijo) ── -->
-  <a href="admin.html" class="btn-admin btn-admin-fixed" title="Admin">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>
-  </a>
 
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=2');
@@ -1223,10 +1390,10 @@
     }
     syncInstallButtons();
   </script>
-  <script src="ui-utils.js?v=1.4"></script>
+  <script src="shared/ui-utils.js?v=1.4"></script>
   <script type="module">
-    import { db } from './firebase.js';
-    import './auth.js';
+    import { db } from './shared/firebase.js';
+    import './shared/auth.js';
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
     const PALETA = [
@@ -1256,6 +1423,11 @@
     let welcomeSlideIdx = 0;
     let welcomeSlideTimer = null;
     let welcomeTouchStartX = 0;
+    let welcomeIntroRunning = false;
+    let congreAuthTransitionRunning = false;
+    let authCongreTransitionRunning = false;
+    let welcomePointerStartX = 0;
+    let welcomePointerDragging = false;
 
     function syncThemeButtonIcons() {
       const isLight = document.body.classList.contains('light-mode');
@@ -1269,6 +1441,14 @@
 
     function syncThemeButtonUI() {
       syncThemeButtonIcons();
+    }
+
+    function syncHeroClock() {
+      const now = new Date();
+      const hours = now.getHours() % 12;
+      const minutes = now.getMinutes();
+      const angle = ((hours + minutes / 60) * 30);
+      document.documentElement.style.setProperty('--clock-angle', `${angle}deg`);
     }
 
     window.goWelcomeSlide = function(i) {
@@ -1302,6 +1482,53 @@
       startWelcomeSlider();
     };
 
+    function bindWelcomeDrag() {
+      const viewport = document.getElementById('welcome-slider-vp');
+      const track = document.getElementById('welcome-slider-track');
+      if (!viewport || !track) return;
+
+      viewport.addEventListener('pointerdown', event => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        welcomePointerDragging = true;
+        welcomePointerStartX = event.clientX;
+        viewport.classList.add('dragging');
+        stopWelcomeSlider();
+      });
+
+      viewport.addEventListener('pointermove', event => {
+        if (!welcomePointerDragging) return;
+        const dx = event.clientX - welcomePointerStartX;
+        const preview = (welcomeSlideIdx * -100) + ((dx / Math.max(viewport.clientWidth, 1)) * 18);
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${preview}%)`;
+      });
+
+      function finishPointerDrag(clientX) {
+        if (!welcomePointerDragging) return;
+        const dx = clientX - welcomePointerStartX;
+        welcomePointerDragging = false;
+        viewport.classList.remove('dragging');
+        track.style.transition = '';
+        if (Math.abs(dx) > 42) {
+          window.goWelcomeSlide(dx < 0 ? welcomeSlideIdx + 1 : welcomeSlideIdx - 1);
+        } else {
+          window.goWelcomeSlide(welcomeSlideIdx);
+        }
+        startWelcomeSlider();
+      }
+
+      viewport.addEventListener('pointerup', event => finishPointerDrag(event.clientX));
+      viewport.addEventListener('pointercancel', () => finishPointerDrag(welcomePointerStartX));
+      viewport.addEventListener('lostpointercapture', () => finishPointerDrag(welcomePointerStartX));
+      viewport.addEventListener('pointerleave', event => {
+        if (event.pointerType === 'mouse' && welcomePointerDragging) finishPointerDrag(event.clientX);
+      });
+    }
+
+    syncHeroClock();
+    setInterval(syncHeroClock, 60000);
+    bindWelcomeDrag();
+
     function relocateSessionHeader(viewId) {
       const session = document.getElementById('ziv-session');
       if (!session) return;
@@ -1312,6 +1539,39 @@
         document.body.appendChild(session);
       }
     }
+
+    window.startWelcomeIntroTransition = async function() {
+      if (welcomeIntroRunning) return;
+      const welcome = document.getElementById('view-welcome');
+      const congre = document.getElementById('view-congres');
+      const congreBox = congre ? congre.querySelector('.wrap') : null;
+      if (!welcome || !congre) return window.continuarDesdeInicio();
+      if (savedId && savedNombre) return window.continuarDesdeInicio();
+      welcomeIntroRunning = true;
+      stopWelcomeSlider();
+      congre.classList.add('no-view-anim');
+      welcome.classList.add('intro-layer');
+      congre.classList.add('intro-layer');
+      congre.style.display = 'flex';
+      if (congreBox) congreBox.classList.add('congre-wrap-prep');
+      document.body.dataset.view = 'view-welcome';
+      relocateSessionHeader('view-congres');
+      requestAnimationFrame(() => {
+        welcome.classList.add('welcome-out');
+        if (congreBox) congreBox.classList.add('congre-wrap-in');
+      });
+      window.setTimeout(() => {
+        welcome.style.display = 'none';
+        welcome.classList.remove('welcome-out');
+        welcome.classList.remove('intro-layer');
+        document.body.dataset.view = 'view-congres';
+        requestAnimationFrame(() => {
+          if (congreBox) congreBox.classList.remove('congre-wrap-prep', 'congre-wrap-in');
+          congre.classList.remove('intro-layer');
+        });
+        welcomeIntroRunning = false;
+      }, 740);
+    };
 
     function showView(id) {
       document.querySelectorAll('.view').forEach(v => { v.style.display = 'none'; });
@@ -1324,7 +1584,6 @@
       relocateSessionHeader(id);
     }
 
-    const btnAdmin   = document.querySelector('.btn-admin');
     const titulo     = document.getElementById('menu-titulo');
     const congreIcon = document.getElementById('menu-congre-icon');
     const congreWrap = document.getElementById('menu-congre-wrapper');
@@ -1343,19 +1602,87 @@
       congreIcon.style.color      = col;
       titulo.textContent = nombre;
       document.getElementById('menu-footer').textContent = '';
-      btnAdmin.classList.add('hidden');
       document.body.classList.add('en-menu');
       showView('view-menu');
     }
 
     function mostrarViewAuth(nombre) {
       document.getElementById('auth-congre-name').textContent = nombre;
-      btnAdmin.classList.add('hidden');
+      const congre = document.getElementById('view-congres');
+      const congreVisible = congre && congre.style.display !== 'none';
+      if (congreVisible) {
+        startCongreAuthTransition();
+        return;
+      }
       showView('view-auth');
     }
 
+    function startCongreAuthTransition() {
+      if (congreAuthTransitionRunning) return;
+      const congre = document.getElementById('view-congres');
+      const auth = document.getElementById('view-auth');
+      const authScreen = auth ? auth.querySelector('.auth-screen') : null;
+      if (!congre || !auth || !authScreen) {
+        showView('view-auth');
+        return;
+      }
+      congreAuthTransitionRunning = true;
+      document.body.classList.remove('en-menu');
+      congre.classList.add('no-view-anim', 'intro-layer');
+      auth.classList.add('no-view-anim', 'intro-layer');
+      auth.style.display = 'flex';
+      authScreen.classList.add('auth-screen-prep');
+      document.body.dataset.view = 'view-congres';
+      relocateSessionHeader('view-auth');
+      requestAnimationFrame(() => {
+        congre.classList.add('congre-out-left');
+        authScreen.classList.add('auth-screen-in');
+      });
+      window.setTimeout(() => {
+        congre.style.display = 'none';
+        congre.classList.remove('congre-out-left', 'intro-layer');
+        document.body.dataset.view = 'view-auth';
+        requestAnimationFrame(() => {
+          auth.classList.remove('intro-layer');
+          authScreen.classList.remove('auth-screen-prep', 'auth-screen-in');
+        });
+        congreAuthTransitionRunning = false;
+      }, 740);
+    }
+
+    function startAuthCongreTransition() {
+      if (authCongreTransitionRunning) return;
+      const auth = document.getElementById('view-auth');
+      const congre = document.getElementById('view-congres');
+      const congreBox = congre ? congre.querySelector('.wrap') : null;
+      if (!auth || !congre || !congreBox) {
+        showView('view-congres');
+        return;
+      }
+      authCongreTransitionRunning = true;
+      auth.classList.add('no-view-anim', 'intro-layer');
+      congre.classList.add('no-view-anim', 'intro-layer');
+      congre.style.display = 'flex';
+      congreBox.classList.add('congre-back-prep');
+      document.body.dataset.view = 'view-auth';
+      relocateSessionHeader('view-congres');
+      requestAnimationFrame(() => {
+        auth.classList.add('auth-out-right');
+        congreBox.classList.add('congre-back-in');
+      });
+      window.setTimeout(() => {
+        auth.style.display = 'none';
+        auth.classList.remove('auth-out-right', 'intro-layer');
+        document.body.dataset.view = 'view-congres';
+        requestAnimationFrame(() => {
+          congre.classList.remove('intro-layer');
+          congreBox.classList.remove('congre-back-prep', 'congre-back-in');
+        });
+        authCongreTransitionRunning = false;
+      }, 740);
+    }
+
     window.continuarDesdeInicio = async function() {
-      btnAdmin.classList.remove('hidden');
       document.body.classList.remove('en-menu');
       if (savedId && savedNombre) {
         if (!sessionStorage.getItem('congreId')) {
@@ -1374,8 +1701,12 @@
       sessionStorage.removeItem('congreId');
       sessionStorage.removeItem('congreNombre');
       sessionStorage.removeItem('congreColor');
-      btnAdmin.classList.remove('hidden');
       document.body.classList.remove('en-menu');
+      const auth = document.getElementById('view-auth');
+      if (auth && auth.style.display !== 'none') {
+        startAuthCongreTransition();
+        return;
+      }
       showView('view-congres');
     };
 

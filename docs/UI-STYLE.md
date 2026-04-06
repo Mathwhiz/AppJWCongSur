@@ -206,6 +206,13 @@ con pickers custom via `upgradeInputs(container)` de `ui-utils.js`.
 - **modales:** `uiSlideUp` 0.18s — translateY(12px) → 0
 - **bottom sheets:** `bsSlideUp` 0.22s cubic-bezier(.22,.68,0,1.2)
 - **toast in/out:** translateY(16px→0) / translateY(0→8px)
+- **transiciones del onboarding en `index.html`:** usar animaciones custom más lentas (`~0.72s`) cuando cambian las pantallas de welcome, selector de congregación y auth
+
+Patrón para transiciones entre pantallas de cover:
+- superponer temporalmente ambas vistas con `.view.intro-layer`
+- animar el contenedor interno (`.wrap`, `.auth-screen`) en vez de la `.view` completa
+- no reactivar `showView()` en mitad del cruce visual, porque genera sensación de refresh o salto de layout
+- usar desplazamientos claros y únicos por flujo: vertical para welcome → congregación, horizontal para congregación ↔ auth
 
 No agregar animaciones nuevas sin razón — el sistema ya tiene las necesarias.
 

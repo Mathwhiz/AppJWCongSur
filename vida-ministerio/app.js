@@ -1,5 +1,5 @@
-import { db } from '../firebase.js';
-import '../auth.js';
+import { db } from '../shared/firebase.js';
+import '../shared/auth.js';
 import {
   collection, doc, getDoc, getDocs, setDoc, deleteDoc, addDoc, updateDoc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -256,7 +256,20 @@ window.goToCover = function() {
   showView('view-cover');
 };
 
+function _canBypassVMPin() {
+  const u = window.currentUser;
+  if (!u) return false;
+  const roles = u.appRoles || (u.appRol ? [u.appRol] : []);
+  return roles.some(r => ['admin_general', 'admin_congre', 'encargado_vm'].includes(r));
+}
+
 window.goToPin = function() {
+  if (_canBypassVMPin()) {
+    modoEncargado = true;
+    document.getElementById('pin-modal-vm').style.display = 'none';
+    goToMenuEnc();
+    return;
+  }
   pinBuffer = '';
   updatePinDots();
   document.getElementById('pin-error').textContent = '';

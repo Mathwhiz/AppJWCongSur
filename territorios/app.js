@@ -1,5 +1,5 @@
-import { db } from '../firebase.js';
-import '../auth.js';
+import { db } from '../shared/firebase.js';
+import '../shared/auth.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit, Timestamp,
@@ -7,10 +7,6 @@ import {
 
 await window.authGuard('acceso_territorios');
 
-// Fuerza recarga si la página viene del caché (back/forward)
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) window.location.reload();
-});
 
 // ── congreId viene de sessionStorage (seteado en index.html al elegir congregación) ──
 if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
@@ -504,7 +500,17 @@ function _applyGrupoColorToBtn(btn, id) {
 
 cargarPins();
 
+function _canBypassGrupoPin(grupoId) {
+  const u = window.currentUser;
+  if (!u) return false;
+  const roles = u.appRoles || (u.appRol ? [u.appRol] : []);
+  if (roles.some(r => ['admin_general', 'admin_congre'].includes(r))) return true;
+  if (roles.includes('encargado_grupo') && String(u.grupoEncargado) === String(grupoId)) return true;
+  return false;
+}
+
 function openPin() {
+  if (_canBypassGrupoPin(selectedGrupo)) { goToModo(); return; }
   pinGrupo = selectedGrupo;
   pinBuffer = '';
   updatePinDots();
@@ -1688,11 +1694,12 @@ async function refreshChatNotas() {
     const snap = await getDocs(query(notasColByScope(chatScope), orderBy('createdAt', 'desc'), limit(80)));
     hide('chat-loading');
     const misIds = getMisIds();
+    const currentUid = window.currentUser?.uid || null;
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const list = document.getElementById('chat-list');
     if (!items.length) { show('chat-empty'); list.innerHTML = ''; return; }
     list.innerHTML = items.map(n => {
-      const esMio = misIds.includes(n.id);
+      const esMio = (currentUid && n.ownerUid === currentUid) || misIds.includes(n.id);
       const fecha = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
       const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
       const acciones = esMio ? `
@@ -1729,6 +1736,7 @@ async function sendChatNota(btnEl) {
       createdAt: Timestamp.now(),
       canal: chatScope,
       grupo: chatScope === 'grupo' ? String(selectedGrupo) : 'C',
+      ownerUid: window.currentUser?.uid || null,
     });
     addMiId(ref.id);
     document.getElementById('chat-mensaje').value = '';

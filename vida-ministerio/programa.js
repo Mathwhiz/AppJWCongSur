@@ -1,5 +1,5 @@
-import { db } from '../firebase.js';
-import '../auth.js';
+import { db } from '../shared/firebase.js';
+import '../shared/auth.js';
 import {
   collection, doc, getDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";

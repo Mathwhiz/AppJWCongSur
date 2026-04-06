@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administrador — Ziv</title>
-  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1a1c1f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ziv">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="../shared/styles-base.css">
   <link rel="stylesheet" href="/hermanos/styles.css?v=2.0">
 </head>
@@ -81,9 +81,59 @@
         </div>
       </button>
 
+      <button class="cs-module-card" style="--card-hover-border:rgba(29,158,117,0.55);--card-hover-bg:#0f1e1a;--card-hover-shadow:0 6px 24px rgba(0,0,0,0.35),0 0 0 1px rgba(29,158,117,0.55),0 4px 20px rgba(29,158,117,0.12);" onclick="goToResponsabilidades()">
+        <div class="cs-module-card-icon" style="background:rgba(29,158,117,0.12);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="cs-module-card-title" style="color:#2dbd8e;">Responsabilidades</div>
+          <div class="cs-module-card-sub">Cargos y encargados de la congregación</div>
+        </div>
+      </button>
+
       <a href="../index.html#menu" class="cs-back-btn">← Volver al módulo</a>
 
     </div>
+  </div>
+
+  <!-- ── RESPONSABILIDADES ── -->
+  <div id="view-responsabilidades" class="view">
+    <div class="main-header">
+      <div>
+        <div class="main-title" style="color:#D85A30;">Responsabilidades</div>
+        <div class="main-sub js-congre">—</div>
+      </div>
+    </div>
+
+    <div id="resp-loading" class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-txt">Cargando…</div>
+    </div>
+
+    <div id="resp-content" style="display:none;">
+
+      <div class="resp-section">
+        <div class="resp-section-title">Encargados</div>
+        <div id="resp-encargados-list"></div>
+      </div>
+
+      <div class="resp-section">
+        <div class="resp-section-title">Categorías</div>
+        <div id="resp-categorias-list"></div>
+      </div>
+
+      <div class="resp-section">
+        <div class="resp-section-title">Precursores</div>
+        <div id="resp-precursores-list"></div>
+      </div>
+
+    </div>
+
+    <a href="#" class="cs-back-btn" onclick="showView('view-menu');return false;">← Volver</a>
+    <div style="height:4rem;"></div>
   </div>
 
   <!-- ── MAIN: LISTA ── -->
@@ -126,6 +176,16 @@
         <option value="REVISTAS">Revistas</option>
         <option value="PUBLICACIONES">Publicaciones</option>
         <!-- conductores de grupo y fijos: se insertan por buildConductorUI() -->
+      </optgroup>
+      <optgroup label="Congregación">
+        <option value="SUPERINTENDENTE_SERVICIO">Sup. de Servicio</option>
+        <option value="ENCARGADO_ASIGNACIONES">Enc. Asignaciones</option>
+        <option value="ENCARGADO_VM">Enc. V y M</option>
+        <option value="ENCARGADO_CONFERENCIAS">Enc. Conferencias</option>
+        <option value="ANCIANO">Anciano</option>
+        <option value="SIERVO_MINISTERIAL">Siervo ministerial</option>
+        <option value="PRECURSOR_REGULAR">Precursor regular</option>
+        <option value="PRECURSOR_AUXILIAR">Precursor auxiliar</option>
       </optgroup>
       <optgroup label="Vida y Ministerio">
         <option value="VM_PRESIDENTE">Presidente VM</option>
@@ -324,7 +384,7 @@
 </div><!-- /.app -->
 
 <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');</script>
-<script src="../ui-utils.js?v=1.4"></script>
+<script src="../shared/ui-utils.js?v=1.4"></script>
 <script type="module" src="/hermanos/app.js"></script>
 </body>
 </html>

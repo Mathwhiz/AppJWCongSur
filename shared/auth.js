@@ -1,5 +1,5 @@
 // auth.js — Autenticación y perfiles de usuario
-// Importar en cada página con: import './auth.js' (o '../auth.js' desde módulos)
+// Importar en cada página con: import './shared/auth.js' (raíz) o '../shared/auth.js' (módulos)
 // Expone en window: waitForAuth, currentUser, hasPermission, authGuard,
 //                   signInWithGoogle, signInAnonymousUser, linkWithGoogle,
 //                   signOutUser, updateUserProfile
@@ -24,6 +24,34 @@ import { PERMISOS } from './auth-config.js';
 let _user      = null;   // { ...campos Firestore, _firebaseUser }
 let _authReady = false;
 const _waiters = [];     // resolvers en espera de que auth esté listo
+
+function normalizeAppRoles(data) {
+  if (Array.isArray(data?.appRoles)) return data.appRoles;
+  if (typeof data?.appRoles === 'string' && data.appRoles.trim()) return [data.appRoles.trim()];
+  if (data?.appRol) return [data.appRol];
+  return ['publicador'];
+}
+
+// ── Caché de sesión (sessionStorage) ─────────────────────────────
+// Permite que authGuard resuelva inmediatamente en cada cambio de página
+// sin esperar el getDoc de Firestore. Se invalida al cerrar la pestaña.
+function _getCachedUser(uid) {
+  try {
+    const raw = sessionStorage.getItem('_zivUserCache');
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    return cached.uid === uid ? cached : null;
+  } catch { return null; }
+}
+function _setCachedUser(user) {
+  try {
+    const { _firebaseUser, ...data } = user; // no serializar el objeto Firebase
+    sessionStorage.setItem('_zivUserCache', JSON.stringify(data));
+  } catch {}
+}
+function _clearUserCache() {
+  sessionStorage.removeItem('_zivUserCache');
+}
 
 // ── Normalización de strings para matching ────────────────────────
 function normalize(str) {
@@ -69,8 +97,10 @@ async function loadOrCreateUser(fbUser) {
 
   if (snap.exists()) {
     const data = snap.data();
-    console.log('[auth] usuario cargado:', { uid: fbUser.uid, appRol: data.appRol, matchEstado: data.matchEstado, primerLogin: data.primerLogin });
-    return { ...data, _firebaseUser: fbUser };
+    // Normalizar a array (backward compat con appRol string legacy)
+    const appRoles = normalizeAppRoles(data);
+    console.log('[auth] usuario cargado:', { uid: fbUser.uid, appRoles, matchEstado: data.matchEstado, primerLogin: data.primerLogin });
+    return { ...data, appRoles, _firebaseUser: fbUser };
   }
 
   // Sesión anónima — doc mínimo, sin matching, sin perfil obligatorio
@@ -85,6 +115,7 @@ async function loadOrCreateUser(fbUser) {
       matchedPublisherId: null,
       congregacionId:    sessionStorage.getItem('congreId') || null,
       appRol:            'anonimo',
+      appRoles:          ['anonimo'],
       matchEstado:       'anonimo',
       isAnonymous:       true,
       primerLogin:       false,
@@ -123,6 +154,7 @@ async function loadOrCreateUser(fbUser) {
     matchedPublisherId,
     congregacionId:    congreId || null,
     appRol,
+    appRoles:          [appRol],
     matchEstado,
     isAnonymous:       false,
     primerLogin:       true,
@@ -136,14 +168,34 @@ async function loadOrCreateUser(fbUser) {
 
 // ── Listener principal de Auth ────────────────────────────────────
 onAuthStateChanged(auth, async (fbUser) => {
+  // Fast path: si hay caché válido, resolver waiters sin esperar Firestore
+  // Esto elimina el delay visible al navegar entre páginas dentro de la sesión.
+  if (fbUser && !_authReady) {
+    const cached = _getCachedUser(fbUser.uid);
+    if (cached) {
+      _user = { ...cached, _firebaseUser: fbUser };
+      _authReady = true;
+      _waiters.forEach(r => r(_user));
+      _waiters.length = 0;
+      if (typeof window.updateSessionHeader === 'function') window.updateSessionHeader(_user);
+    }
+  }
+
   try {
-    _user = fbUser ? await loadOrCreateUser(fbUser) : null;
+    if (fbUser) {
+      _user = await loadOrCreateUser(fbUser);
+      _setCachedUser(_user);
+    } else {
+      _user = null;
+      _clearUserCache();
+    }
   } catch (err) {
     console.error('[auth] Error al cargar usuario — authGuard bloqueará el acceso:', err);
-    _user = null;
+    // Si se resolvió desde caché, no nullear _user (datos stale > sin acceso)
+    if (!_authReady) _user = null;
   } finally {
     _authReady = true;
-    _waiters.forEach(resolve => resolve(_user));
+    _waiters.forEach(resolve => resolve(_user)); // no-op si ya se resolvió desde caché
     _waiters.length = 0;
     if (typeof window.updateSessionHeader === 'function') window.updateSessionHeader(_user);
     window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: _user } }));
@@ -165,7 +217,8 @@ Object.defineProperty(window, 'currentUser', { get: () => _user });
  */
 window.hasPermission = (feature) => {
   if (!_user) return false;
-  return (PERMISOS[_user.appRol] || []).includes(feature);
+  const roles = normalizeAppRoles(_user);
+  return roles.some(r => (PERMISOS[r] || []).includes(feature));
 };
 
 /**
@@ -236,6 +289,7 @@ window.linkWithGoogle = async () => {
     matchedPublisherId,
     congregacionId:    congreId || null,
     appRol,
+    appRoles:          [appRol],
     matchEstado,
     isAnonymous:       false,
     primerLogin:       true,
@@ -245,6 +299,7 @@ window.linkWithGoogle = async () => {
   const ref = doc(db, 'usuarios', fbUser.uid);
   await updateDoc(ref, updates);
   Object.assign(_user, updates, { _firebaseUser: fbUser });
+  _setCachedUser(_user);
 
   if (typeof window.updateSessionHeader === 'function') window.updateSessionHeader(_user);
   window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: _user } }));
@@ -254,6 +309,7 @@ window.linkWithGoogle = async () => {
 /** Cierra sesión. */
 window.signOutUser = async () => {
   _user = null;
+  _clearUserCache();
   await signOut(auth);
 };
 
@@ -266,4 +322,5 @@ window.updateUserProfile = async (data) => {
   const ref = doc(db, 'usuarios', _user.uid);
   await updateDoc(ref, data);
   Object.assign(_user, data);
+  _setCachedUser(_user);
 };

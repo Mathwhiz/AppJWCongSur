@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conferencias — Ziv</title>
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a1c1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ziv">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="../shared/styles-base.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      background-color: #1a1c1f;
+      background-image:
+        radial-gradient(ellipse at 30% 20%, rgba(13,182,204,0.11) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 80%, rgba(13,182,204,0.07) 0%, transparent 50%);
+      color: #e8e8e8;
+    }
+    .cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      max-width: 340px;
+      width: 100%;
+    }
+    .mod-icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 22px;
+      background: rgba(13,182,204,0.1);
+      border: 1px solid rgba(13,182,204,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(13,182,204,0); }
+      50%       { box-shadow: 0 0 24px 4px rgba(13,182,204,0.16); }
+    }
+    .mod-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #e8e8e8;
+      margin-bottom: 6px;
+    }
+    .mod-sub {
+      font-size: 13px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+      margin-bottom: 32px;
+    }
+    .wip-card {
+      background: #1e2023;
+      border: 0.5px solid #2e2e2e;
+      border-radius: 16px;
+      padding: 20px 24px;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+    .wip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0DB6CC;
+      background: rgba(13,182,204,0.1);
+      border: 0.5px solid rgba(13,182,204,0.28);
+      border-radius: 20px;
+      padding: 4px 10px;
+      margin-bottom: 14px;
+    }
+    .wip-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: 8px;
+    }
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #888;
+    }
+    .feature-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(13,182,204,0.5);
+      flex-shrink: 0;
+    }
+    .back-btn {
+      font-size: 13px;
+      color: #555;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .back-btn:hover { color: #aaa; background: rgba(255,255,255,0.05); }
+  </style>
+</head>
+<body>
+<div class="cover">
+  <div class="mod-icon-wrap">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#0DB6CC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="9" cy="7" r="4" stroke="#0DB6CC" stroke-width="1.6"/>
+      <path d="M23 11l-4 4-2-2" stroke="#0DB6CC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="mod-title">Conferencias</div>
+  <div class="mod-sub">Próximamente</div>
+
+  <div class="wip-card">
+    <div class="wip-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      En desarrollo
+    </div>
+    <div class="wip-title">¿Qué va a incluir?</div>
+    <ul class="feature-list">
+      <li>Discursos del fin de semana en la congregación</li>
+      <li>Arreglar oradores entrantes</li>
+      <li>Coordinar salidas de ancianos a otras congregaciones</li>
+      <li>Historial de conferencias</li>
+    </ul>
+  </div>
+
+  <a href="../index.html#menu" class="back-btn">← Volver al módulo</a>
+</div>
+
+<script type="module" src="../shared/auth.js"></script>
+</body>
+</html>

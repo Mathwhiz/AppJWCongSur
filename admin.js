@@ -1,5 +1,5 @@
-import { db } from './firebase.js';
-import './auth.js';
+import { db } from './shared/firebase.js';
+import './shared/auth.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, writeBatch, Timestamp,
   query, where,
@@ -7,20 +7,54 @@ import {
 
 // ── Super-admin PIN ──
 let ADMIN_PIN = null;
+let _adminAuthOk = false;
+
+function setAdminAuthStatus(text, showButton = false) {
+  const el = document.getElementById('admin-auth-status');
+  const btn = document.getElementById('admin-auth-btn');
+  if (el) el.innerHTML = text;
+  if (btn) btn.style.display = showButton ? '' : 'none';
+}
 
 (async function loadAdminPin() {
+  await window.waitForAuth();
+  const user = window.currentUser;
+  if (!user) {
+    setAdminAuthStatus('Necesitás iniciar sesión con una cuenta de <strong>admin general</strong>.', true);
+    return;
+  }
+  if (!window.hasPermission('acceso_admin')) {
+    setAdminAuthStatus(`La cuenta <strong>${user.email || user.displayName || 'actual'}</strong> no tiene permiso de admin.`, false);
+    return;
+  }
+
   try {
     const snap = await getDoc(doc(db, 'config', 'superadmin'));
     if (snap.exists() && snap.data().pin) {
       ADMIN_PIN = snap.data().pin;
+      _adminAuthOk = true;
+      setAdminAuthStatus(`Sesión activa: <strong>${user.email || user.displayName || user.uid}</strong>`, false);
     } else {
+      _adminAuthOk = false;
+      setAdminAuthStatus(`Sesión activa: <strong>${user.email || user.displayName || user.uid}</strong>`, false);
       document.getElementById('pin-error').textContent =
         'Falta crear config/superadmin → { pin } en Firestore';
     }
   } catch(e) {
+    _adminAuthOk = false;
+    setAdminAuthStatus(`Sesión activa: <strong>${user.email || user.displayName || user.uid}</strong>`, false);
     document.getElementById('pin-error').textContent = 'Error al conectar con Firestore';
   }
 })();
+
+window.adminSignIn = async function() {
+  try {
+    await window.signInWithGoogle();
+    window.location.reload();
+  } catch (err) {
+    setAdminAuthStatus(`No se pudo iniciar sesión: <strong>${err.message}</strong>`, true);
+  }
+};
 
 // ─────────────────────────────────────────
 //   PIN
@@ -47,6 +81,12 @@ function updatePinDots() {
 }
 
 function checkPin() {
+  if (!_adminAuthOk) {
+    document.getElementById('pin-error').textContent = 'Primero iniciá sesión con una cuenta admin.';
+    pinBuffer = '';
+    updatePinDots();
+    return;
+  }
   if (ADMIN_PIN === null) {
     document.getElementById('pin-error').textContent = 'PIN no cargado, revisá la configuración en Firestore';
     pinBuffer = '';
@@ -912,7 +952,7 @@ async function resolverMatch(uid, pubId, pubNombre) {
   const ok = await uiConfirm({ title: 'Confirmar match', msg: `¿Vincular este usuario con "${pubNombre}"?`, confirmText: 'Confirmar', type: 'info' });
   if (!ok) return;
   try {
-    await updateDoc(doc(db, 'usuarios', uid), { matchedPublisherId: pubId, matchEstado: 'ok', appRol: 'publicador' });
+    await updateDoc(doc(db, 'usuarios', uid), { matchedPublisherId: pubId, matchEstado: 'ok', appRol: 'publicador', appRoles: ['publicador'] });
     matchesList = matchesList.filter(m => m.uid !== uid);
     renderMatchesList();
     uiToast('Match confirmado', 'success');
@@ -925,7 +965,7 @@ async function marcarSinMatch(uid) {
   const ok = await uiConfirm({ title: 'Sin match', msg: 'El usuario recibirá acceso básico como publicador sin vincular a nadie.', confirmText: 'Confirmar', type: 'warn' });
   if (!ok) return;
   try {
-    await updateDoc(doc(db, 'usuarios', uid), { matchedPublisherId: null, matchEstado: 'sin_match', appRol: 'publicador' });
+    await updateDoc(doc(db, 'usuarios', uid), { matchedPublisherId: null, matchEstado: 'sin_match', appRol: 'publicador', appRoles: ['publicador'] });
     matchesList = matchesList.filter(m => m.uid !== uid);
     renderMatchesList();
     uiToast('Marcado sin match', 'success');
@@ -938,22 +978,24 @@ async function marcarSinMatch(uid) {
 //   USUARIOS POR CONGREGACIÓN
 // ─────────────────────────────────────────
 const ROL_LABELS = {
-  publicador:             'Publicador',
-  precursor_auxiliar:     'Precursor auxiliar',
-  precursor_regular:      'Precursor regular',
-  siervo_ministerial:     'Siervo ministerial',
-  anciano:                'Anciano',
-  encargado_grupo:        'Encargado de grupo',
-  encargado_asignaciones: 'Encargado de asignaciones',
-  encargado_vm:           'Encargado de VM',
-  admin_congre:           'Admin congregación',
-  pendiente:              'Pendiente (sin acceso)',
+  publicador:               'Publicador',
+  precursor_auxiliar:       'Precursor auxiliar',
+  precursor_regular:        'Precursor regular',
+  siervo_ministerial:       'Siervo ministerial',
+  anciano:                  'Anciano',
+  encargado_grupo:          'Encargado de grupo',
+  encargado_asignaciones:   'Encargado de asignaciones',
+  encargado_vm:             'Encargado de VM',
+  encargado_conferencias:   'Encargado de conferencias',
+  admin_congre:             'Admin congregación',
+  pendiente:                'Pendiente (sin acceso)',
 };
 
 const ROLES_ASIGNABLES = [
   'publicador', 'precursor_auxiliar', 'precursor_regular',
   'siervo_ministerial', 'anciano', 'encargado_grupo',
-  'encargado_asignaciones', 'encargado_vm', 'admin_congre', 'pendiente',
+  'encargado_asignaciones', 'encargado_vm', 'encargado_conferencias',
+  'admin_congre', 'pendiente',
 ];
 
 // Estado de la vista de usuarios (necesario para refrescar tras vincular)
@@ -1000,10 +1042,13 @@ async function openUsuarios(congreId, congreNombre) {
       const vincularBtn = u.matchEstado !== 'ok'
         ? `<button class="btn-vincular" onclick="abrirVincularModal('${u.uid}','${(u.displayName||'').replace(/'/g,"\\'")}')">🔗 Vincular</button>`
         : '';
-      const opts = ROLES_ASIGNABLES.map(r =>
-        `<option value="${r}" ${r === u.appRol ? 'selected' : ''}>${ROL_LABELS[r]}</option>`
+      const nameSafe  = (u.displayName || '').replace(/'/g, "\\'");
+      const roles     = u.appRoles || (u.appRol ? [u.appRol] : ['publicador']);
+      const rolesStr  = roles.join(',');
+      const grupoEnc  = u.grupoEncargado || '';
+      const rolesPills = roles.map(r =>
+        `<span style="font-size:10px;color:#9b8fdd;background:rgba(127,119,221,0.12);border:0.5px solid rgba(127,119,221,0.25);border-radius:6px;padding:2px 7px;">${ROL_LABELS[r] || r}</span>`
       ).join('');
-      const nameSafe = (u.displayName || '').replace(/'/g, "\\'");
       return `
         <div class="usuario-row">
           <div class="usuario-avatar">${ini}</div>
@@ -1012,10 +1057,11 @@ async function openUsuarios(congreId, congreNombre) {
             <div style="font-size:11px;color:#666;margin-top:1px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
               <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email || 'Sin email'}</span>${badge}${vincularBtn}
             </div>
-            <select class="rol-select" data-prev="${u.appRol}"
-              onchange="cambiarRol('${u.uid}','${nameSafe}',this)">
-              ${opts}
-            </select>
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px;">
+              ${rolesPills}
+              <button onclick="abrirRolesModal('${u.uid}','${nameSafe}','${rolesStr}','${grupoEnc}')"
+                style="font-size:11px;color:#888;background:#2a2a2a;border:0.5px solid #3a3a3a;border-radius:7px;padding:3px 9px;cursor:pointer;">✏ Editar roles</button>
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -1116,21 +1162,106 @@ async function confirmarVinculo(pubId, pubNombre) {
   }
 }
 
-async function cambiarRol(uid, nombre, selectEl) {
-  const nuevoRol = selectEl.value;
-  const prevRol  = selectEl.dataset.prev;
-  selectEl.disabled = true;
+// ─────────────────────────────────────────
+//   MODAL EDITAR ROLES (multi-rol)
+// ─────────────────────────────────────────
+let _rolesUid    = null;
+let _rolesNombre = null;
+
+function cerrarRolesModal() {
+  const m = document.getElementById('roles-modal');
+  if (m) m.remove();
+}
+
+// Muestra/oculta el selector de grupo cuando se marca encargado_grupo
+window.toggleEncargadoGrupoSel = function() {
+  const checked = !!document.querySelector('#roles-cb-list input[value="encargado_grupo"]:checked');
+  const wrap    = document.getElementById('roles-grupo-wrap');
+  if (wrap) wrap.style.display = checked ? '' : 'none';
+};
+
+async function abrirRolesModal(uid, nombre, rolesStr, grupoEncargado) {
+  cerrarRolesModal();
+  _rolesUid    = uid;
+  _rolesNombre = nombre;
+
+  const currentRoles = rolesStr ? rolesStr.split(',').filter(Boolean) : ['publicador'];
+
+  const checkboxes = ROLES_ASIGNABLES.map(r => `
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #2a2a2a;cursor:pointer;">
+      <input type="checkbox" value="${r}" ${currentRoles.includes(r) ? 'checked' : ''}
+        onchange="toggleEncargadoGrupoSel()"
+        style="width:16px;height:16px;accent-color:#7F77DD;flex-shrink:0;cursor:pointer;">
+      <span style="font-size:13px;color:#ddd;">${ROL_LABELS[r] || r}</span>
+    </label>`).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'roles-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:#232628;border:0.5px solid #3a3a3a;border-radius:16px;padding:20px;width:100%;max-width:340px;">
+      <div style="font-size:15px;font-weight:600;color:#eee;margin-bottom:2px;">Roles</div>
+      <div style="font-size:12px;color:#666;margin-bottom:14px;">${nombre}</div>
+      <div id="roles-cb-list" style="max-height:300px;overflow-y:auto;">${checkboxes}</div>
+      <div id="roles-grupo-wrap" style="display:${currentRoles.includes('encargado_grupo') ? '' : 'none'};margin-top:12px;">
+        <div style="font-size:12px;color:#888;margin-bottom:6px;">Grupo asignado</div>
+        <select id="roles-grupo-sel" style="width:100%;padding:8px 10px;background:#1a1c1f;border:0.5px solid #3a3a3a;border-radius:8px;color:#ddd;font-size:13px;">
+          <option value="">— Cargando grupos… —</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button onclick="cerrarRolesModal()" style="flex:1;padding:10px;background:#2a2a2a;border:0.5px solid #3a3a3a;border-radius:10px;color:#aaa;font-size:13px;cursor:pointer;">Cancelar</button>
+        <button onclick="confirmarRolesModal()" style="flex:2;padding:10px;background:#7F77DD;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Guardar</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) cerrarRolesModal(); });
+  document.body.appendChild(modal);
+
+  // Cargar grupos de Firestore para el selector de encargado_grupo
   try {
-    await updateDoc(doc(db, 'usuarios', uid), { appRol: nuevoRol });
-    selectEl.dataset.prev = nuevoRol;
-    uiToast(`${nombre || 'Usuario'} → ${ROL_LABELS[nuevoRol]}`, 'success');
+    const snap   = await getDocs(collection(db, 'congregaciones', _usuariosCongreId, 'grupos'));
+    const grupos = snap.docs.map(d => d.data()).filter(g => g.id).sort((a, b) => {
+      const an = parseInt(a.id), bn = parseInt(b.id);
+      return (!isNaN(an) && !isNaN(bn)) ? an - bn : String(a.id).localeCompare(String(b.id));
+    });
+    const sel = document.getElementById('roles-grupo-sel');
+    if (sel) {
+      sel.innerHTML = '<option value="">— Elegir grupo —</option>' +
+        grupos.map(g => `<option value="${g.id}" ${String(g.id) === String(grupoEncargado) ? 'selected' : ''}>${g.label || 'Grupo ' + g.id}</option>`).join('');
+    }
   } catch (err) {
-    uiToast('Error al guardar: ' + err.message, 'error');
-    selectEl.value = prevRol;
-  } finally {
-    selectEl.disabled = false;
+    const sel = document.getElementById('roles-grupo-sel');
+    if (sel) sel.innerHTML = '<option value="">Error al cargar grupos</option>';
   }
 }
+
+window.confirmarRolesModal = async function() {
+  const checked   = document.querySelectorAll('#roles-cb-list input[type="checkbox"]:checked');
+  const newRoles  = Array.from(checked).map(cb => cb.value);
+  if (newRoles.length === 0) { uiToast('Seleccioná al menos un rol', 'error'); return; }
+
+  let grupoEncargado = null;
+  if (newRoles.includes('encargado_grupo')) {
+    grupoEncargado = document.getElementById('roles-grupo-sel')?.value || null;
+    if (!grupoEncargado) { uiToast('Seleccioná el grupo del encargado', 'error'); return; }
+  }
+
+  const uid    = _rolesUid;
+  const nombre = _rolesNombre;
+  cerrarRolesModal();
+
+  try {
+    await updateDoc(doc(db, 'usuarios', uid), {
+      appRoles:       newRoles,
+      appRol:         newRoles[0], // backward compat
+      grupoEncargado: grupoEncargado,
+    });
+    uiToast(`${nombre || 'Usuario'} → ${newRoles.map(r => ROL_LABELS[r] || r).join(', ')}`, 'success');
+    openUsuarios(_usuariosCongreId, _usuariosCongreNombre);
+  } catch (err) {
+    uiToast('Error al guardar: ' + err.message, 'error');
+  }
+};
 
 // ── Exponer al HTML ──
 window.pinPress          = pinPress;
@@ -1160,7 +1291,8 @@ window.openMatches       = openMatches;
 window.resolverMatch     = resolverMatch;
 window.marcarSinMatch    = marcarSinMatch;
 window.openUsuarios      = openUsuarios;
-window.cambiarRol        = cambiarRol;
+window.abrirRolesModal   = abrirRolesModal;
+window.cerrarRolesModal  = cerrarRolesModal;
 window.abrirVincularModal  = abrirVincularModal;
 window.cerrarVincularModal = cerrarVincularModal;
 window.filtrarVincPubs     = filtrarVincPubs;

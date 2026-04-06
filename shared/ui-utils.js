@@ -652,16 +652,22 @@ else document.addEventListener('DOMContentLoaded', insertThemeToggle);
 .cs-nav-icon-asign { --nav-c: #378ADD; --nav-c-dim: rgba(55,138,221,0.2);  background: rgba(55,138,221,0.13);  border: 1px solid rgba(55,138,221,0.22); }
 .cs-nav-icon-herm  { --nav-c: #D85A30; --nav-c-dim: rgba(216,90,48,0.2);   background: rgba(216,90,48,0.13);   border: 1px solid rgba(216,90,48,0.22); }
 .cs-nav-icon-vm    { --nav-c: #EF9F27; --nav-c-dim: rgba(239,159,39,0.2);  background: rgba(239,159,39,0.13);  border: 1px solid rgba(239,159,39,0.22); }
+.cs-nav-icon-pred  { --nav-c: #E05277; --nav-c-dim: rgba(224,82,119,0.2);  background: rgba(224,82,119,0.13);  border: 1px solid rgba(224,82,119,0.22); }
+.cs-nav-icon-conf  { --nav-c: #0DB6CC; --nav-c-dim: rgba(13,182,204,0.2);  background: rgba(13,182,204,0.13);  border: 1px solid rgba(13,182,204,0.22); }
 
 .cs-nav-card-terr:hover  { border-color: rgba(151,196,89,0.55);  background: #1e2810; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(151,196,89,0.55),  0 4px 20px rgba(151,196,89,0.12); }
 .cs-nav-card-asign:hover { border-color: rgba(55,138,221,0.55);  background: #101e28; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(55,138,221,0.55),  0 4px 20px rgba(55,138,221,0.12); }
 .cs-nav-card-herm:hover  { border-color: rgba(216,90,48,0.55);   background: #2a1711; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(216,90,48,0.55),   0 4px 20px rgba(216,90,48,0.12); }
 .cs-nav-card-vm:hover    { border-color: rgba(239,159,39,0.55);  background: #272010; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(239,159,39,0.55),  0 4px 20px rgba(239,159,39,0.12); }
+.cs-nav-card-pred:hover  { border-color: rgba(224,82,119,0.55);  background: #2a1018; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(224,82,119,0.55),  0 4px 20px rgba(224,82,119,0.12); }
+.cs-nav-card-conf:hover  { border-color: rgba(13,182,204,0.55);  background: #091e22; box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(13,182,204,0.55),  0 4px 20px rgba(13,182,204,0.12); }
 
 body.light-mode .cs-nav-card-terr:hover  { border-color: rgba(151,196,89,0.55); background: #f1f8e8; box-shadow: 0 8px 26px rgba(93,130,53,0.18), 0 0 0 1px rgba(151,196,89,0.5); }
 body.light-mode .cs-nav-card-asign:hover { border-color: rgba(55,138,221,0.52); background: #ebf5ff; box-shadow: 0 8px 26px rgba(43,114,191,0.16), 0 0 0 1px rgba(55,138,221,0.5); }
 body.light-mode .cs-nav-card-herm:hover  { border-color: rgba(216,90,48,0.52);  background: #fff0ea; box-shadow: 0 8px 26px rgba(174,76,41,0.16), 0 0 0 1px rgba(216,90,48,0.5); }
 body.light-mode .cs-nav-card-vm:hover    { border-color: rgba(239,159,39,0.52); background: #fff7e8; box-shadow: 0 8px 26px rgba(195,131,34,0.16), 0 0 0 1px rgba(239,159,39,0.5); }
+body.light-mode .cs-nav-card-pred:hover  { border-color: rgba(224,82,119,0.52); background: #fff0f4; box-shadow: 0 8px 26px rgba(180,66,95,0.16), 0 0 0 1px rgba(224,82,119,0.5); }
+body.light-mode .cs-nav-card-conf:hover  { border-color: rgba(13,182,204,0.52); background: #e8f9fc; box-shadow: 0 8px 26px rgba(10,146,163,0.16), 0 0 0 1px rgba(13,182,204,0.5); }
 
 .cs-nav-title { font-size: 21px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
 .cs-nav-sub   { font-size: 14px; color: var(--text-muted); }
@@ -732,7 +738,7 @@ window.CS_LOGO_SVG = `<svg class="cs-logo-svg" width="80" height="80" viewBox="0
 /* Helper para insertar el logo donde haya .cs-logo-placeholder */
 window.insertLogos = function() {
   document.querySelectorAll('.cs-logo-placeholder').forEach(el => {
-    el.innerHTML = '<img src="/icon-192.png" width="120" height="120" style="border-radius:26px;display:block;" alt="Ziv">';
+    el.innerHTML = '<img src="/assets/icon-192.png" width="120" height="120" style="border-radius:26px;display:block;" alt="Ziv">';
   });
 };
 document.addEventListener('DOMContentLoaded', insertLogos);
@@ -1020,29 +1026,10 @@ window.uiConductorPicker = function({ conductores = [], value = '', label = 'Ele
       return conductores.filter(c => c.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
     }
 
-    function render() {
+    function renderList() {
       const lista = filtered();
-      overlay.innerHTML = `
-        <div class="bs-card">
-          <div class="bs-handle"></div>
-          <div class="bs-header">
-            <div class="bs-title">${label}</div>
-            <button class="bs-close-btn">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-          <div class="cp-search-wrap">
-            <span class="cp-search-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <input class="cp-search-input" type="text" placeholder="Buscar..." value="${query}" autocomplete="off">
-          </div>
-          <div class="cp-list">
+      const listEl = overlay.querySelector('.cp-list');
+      listEl.innerHTML = `
             <button class="cp-sin-asignar" data-clear>
               <span class="cp-sin-asignar-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1067,32 +1054,49 @@ window.uiConductorPicker = function({ conductores = [], value = '', label = 'Ele
                     </span>
                   </button>`;
                 }).join('')
-            }
-          </div>
-        </div>`;
-
-      // Búsqueda
-      const searchInput = overlay.querySelector('.cp-search-input');
-      searchInput.addEventListener('input', e => { query = e.target.value; render(); });
-      // Foco automático (pequeño delay para que el DOM esté listo)
-      setTimeout(() => searchInput.focus(), 80);
+            }`;
 
       // Sin asignar
-      overlay.querySelector('[data-clear]').onclick = () => { overlay.remove(); resolve(''); };
-
+      listEl.querySelector('[data-clear]').onclick = () => { overlay.remove(); resolve(''); };
       // Items
-      overlay.querySelectorAll('.cp-item').forEach(btn => {
-        btn.onclick = () => {
-          sel = btn.dataset.name;
-          overlay.remove();
-          resolve(sel);
-        };
+      listEl.querySelectorAll('.cp-item').forEach(btn => {
+        btn.onclick = () => { sel = btn.dataset.name; overlay.remove(); resolve(sel); };
       });
-
-      overlay.querySelector('.bs-close-btn').onclick = () => { overlay.remove(); resolve(null); };
-      overlay.addEventListener('click', e => { if (e.target===overlay){overlay.remove();resolve(null);} });
     }
-    render();
+
+    // Construir estructura una sola vez — el input NO se re-crea en cada búsqueda
+    overlay.innerHTML = `
+      <div class="bs-card">
+        <div class="bs-handle"></div>
+        <div class="bs-header">
+          <div class="bs-title">${label}</div>
+          <button class="bs-close-btn">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="cp-search-wrap">
+          <span class="cp-search-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <input class="cp-search-input" type="text" placeholder="Buscar..." autocomplete="off">
+        </div>
+        <div class="cp-list"></div>
+      </div>`;
+
+    // Búsqueda: listener una sola vez, solo actualiza la lista
+    const searchInput = overlay.querySelector('.cp-search-input');
+    searchInput.addEventListener('input', e => { query = e.target.value; renderList(); });
+    setTimeout(() => searchInput.focus(), 80);
+
+    overlay.querySelector('.bs-close-btn').onclick = () => { overlay.remove(); resolve(null); };
+    overlay.addEventListener('click', e => { if (e.target===overlay){overlay.remove();resolve(null);} });
+
+    renderList();
   });
 };
 

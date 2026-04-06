@@ -1,0 +1,242 @@
+:root { --spinner-color: #E05277; }
+body { font-family: system-ui, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+
+.view { display: none; animation: fadeIn 0.2s ease; }
+.view.active { display: block; }
+
+/* ── Back button ── */
+.cs-back-btn {
+  display: block; text-align: center; margin-top: 24px;
+  font-size: 14px; color: var(--text-muted); text-decoration: none;
+  transition: color 0.15s;
+}
+.cs-back-btn:hover { color: var(--text-secondary); }
+
+/* ─────────────────────────────────────────
+   NO-AUTH VIEW
+───────────────────────────────────────── */
+.noauth-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 3rem 2rem;
+  max-width: 340px; margin: 0 auto;
+  min-height: 100vh; justify-content: center;
+}
+.noauth-icon {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: rgba(224,82,119,0.1); border: 1px solid rgba(224,82,119,0.22);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.noauth-title {
+  font-size: 20px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.noauth-msg {
+  font-size: 14px; color: var(--text-muted); line-height: 1.65;
+  margin-bottom: 28px;
+}
+
+/* ─────────────────────────────────────────
+   APP VIEW — HEADER
+───────────────────────────────────────── */
+.pred-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px 10px;
+  max-width: 480px; margin: 0 auto;
+}
+.pred-header-title {
+  font-size: 18px; font-weight: 700; color: var(--text-primary);
+}
+.pred-back-link {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bg-card); border: 1px solid var(--border-primary);
+  color: var(--text-secondary); text-decoration: none; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.pred-back-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ── App body ── */
+.pred-body { padding: 0 16px 60px; max-width: 480px; margin: 0 auto; }
+
+/* ── Cards ── */
+.pred-card {
+  background: var(--bg-card); border: 1px solid var(--border-primary);
+  border-radius: 16px; padding: 20px; margin-bottom: 12px;
+}
+
+/* ─────────────────────────────────────────
+   BUTTONS
+───────────────────────────────────────── */
+.pred-btn {
+  border: none; cursor: pointer; border-radius: 12px;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  padding: 11px 22px; transition: opacity 0.15s, background 0.15s;
+}
+.pred-btn:active { opacity: 0.78; }
+
+.pred-btn-primary { background: #E05277; color: #fff; }
+.pred-btn-primary:hover { background: #c8415e; }
+
+.pred-btn-ghost {
+  background: var(--bg-primary); border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+.pred-btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ─────────────────────────────────────────
+   TIMER
+───────────────────────────────────────── */
+.timer-display {
+  font-size: 52px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--text-primary); text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Courier New', monospace;
+  margin-bottom: 20px;
+  transition: color 0.2s;
+}
+.timer-display.running { color: #E05277; }
+
+.timer-btns {
+  display: flex; gap: 10px; justify-content: center;
+  margin-bottom: 14px;
+}
+
+.timer-add-wrap { text-align: center; }
+.timer-add-btn {
+  font-size: 14px; padding: 9px 20px; border-radius: 10px;
+  background: rgba(224,82,119,0.1); border: 1px solid rgba(224,82,119,0.3);
+  color: #E05277; cursor: pointer; font-family: inherit; font-weight: 600;
+  transition: background 0.15s;
+}
+.timer-add-btn:hover { background: rgba(224,82,119,0.18); }
+
+/* ─────────────────────────────────────────
+   MONTH CARD
+───────────────────────────────────────── */
+.month-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.month-nav-label {
+  font-size: 16px; font-weight: 600; color: var(--text-primary);
+}
+.month-nav-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--bg-primary); border: 1px solid var(--border-light);
+  color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.month-nav-btn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-primary); }
+.month-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ── Stat rows ── */
+.stat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-top: 1px solid var(--border-primary);
+}
+.stat-label-text { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+
+.tiempo-row { display: flex; align-items: center; gap: 10px; }
+.stat-value-text { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.tiempo-edit-btn {
+  font-size: 12px; padding: 4px 10px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border-light);
+  color: var(--text-muted); cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.tiempo-edit-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+.stat-counter-wrap { display: flex; align-items: center; gap: 14px; }
+.counter-btn {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: var(--bg-primary); border: 1px solid var(--border-light);
+  color: var(--text-secondary); font-size: 20px; font-weight: 400;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; line-height: 1; font-family: inherit;
+}
+.counter-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.counter-val {
+  font-size: 18px; font-weight: 600; min-width: 26px;
+  text-align: center; color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────
+   HISTORY
+───────────────────────────────────────── */
+.hist-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px;
+}
+.hist-card {
+  background: var(--bg-card); border: 1px solid var(--border-primary);
+  border-radius: 16px; overflow: hidden;
+}
+.hist-header {
+  display: flex; align-items: center; padding: 8px 14px;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+}
+.hist-header-cell {
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.hist-header-cell:first-child { flex: 1; }
+.hist-header-cell:not(:first-child) { min-width: 54px; text-align: right; }
+
+.hist-row {
+  display: flex; align-items: center;
+  padding: 11px 14px; border-bottom: 1px solid var(--border-primary);
+}
+.hist-row:last-child { border-bottom: none; }
+.hist-mes { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.hist-val {
+  min-width: 54px; text-align: right;
+  font-size: 13px; color: var(--text-secondary);
+}
+.hist-val-dim { font-size: 11px; color: var(--text-muted); }
+.hist-empty {
+  padding: 28px 14px; text-align: center;
+  font-size: 13px; color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────
+   EDIT TIME MODAL
+───────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-card {
+  background: var(--bg-modal); border: 1px solid var(--border-primary);
+  border-radius: 18px; padding: 24px 20px;
+  width: 100%; max-width: 290px;
+}
+.modal-title {
+  font-size: 17px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 20px; text-align: center;
+}
+.edit-time-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 22px;
+}
+.edit-time-field { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.edit-time-field label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.edit-time-input {
+  width: 82px; padding: 10px 6px; border-radius: 10px; text-align: center;
+  background: var(--bg-input); border: 1px solid var(--border-input);
+  color: var(--text-primary); font-size: 24px; font-weight: 600;
+  font-family: inherit; outline: none;
+  -moz-appearance: textfield;
+}
+.edit-time-input::-webkit-inner-spin-button,
+.edit-time-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.edit-time-input:focus { border-color: #E05277; }
+.edit-time-sep {
+  font-size: 26px; font-weight: 300; color: var(--text-muted); padding-top: 18px;
+}
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions .pred-btn { flex: 1; }

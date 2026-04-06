@@ -3,9 +3,9 @@ const CACHE = 'ziv-v2';
 // Archivos estáticos que se pre-cachean al instalar
 const SHELL = [
   '/',
-  '/firebase.js',
-  '/ui-utils.js',
-  '/favicon.svg',
+  '/shared/firebase.js',
+  '/shared/ui-utils.js',
+  '/assets/favicon.svg',
   '/admin.js',
   '/territorios/index.html',
   '/territorios/app.js',
@@ -16,6 +16,8 @@ const SHELL = [
   '/vida-ministerio/app.js',
   '/vida-ministerio/programa.html',
   '/vida-ministerio/programa.js',
+  '/predicacion/index.html',
+  '/conferencias/index.html',
 ];
 
 // Instalar: pre-cachear la app shell

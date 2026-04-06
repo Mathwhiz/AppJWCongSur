@@ -1,12 +1,11 @@
-import { db } from '../firebase.js';
-import '../auth.js';
+import { db } from '../shared/firebase.js';
+import '../shared/auth.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, orderBy, limit, Timestamp
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 await window.authGuard('acceso_hermanos');
 
-window.addEventListener('pageshow', e => { if (e.persisted) window.location.reload(); });
 if (!sessionStorage.getItem('congreId')) window.location.href = '../index.html';
 
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || '';
@@ -51,8 +50,24 @@ const ROLES_VM = [
 let ROLES_ASIGN = [...ROLES_ASIGN_BASE, ...ROLES_CONDUCTOR_FIJO];
 let TODOS_LOS_ROLES = [...ROLES_ASIGN, ...ROLES_VM];
 
+// Roles de congregación — solo para display y para la vista Responsabilidades
+// No se agregan al modal de hermano (son exclusivos de esa vista)
+const LABELS_CONGRE = {
+  SUPERINTENDENTE_SERVICIO: 'Sup. de Servicio',
+  ENCARGADO_ASIGNACIONES:   'Enc. Asignaciones',
+  ENCARGADO_VM:             'Enc. V y M',
+  ENCARGADO_CONFERENCIAS:   'Enc. Conferencias',
+  ANCIANO:                  'Anciano',
+  SIERVO_MINISTERIAL:       'Siervo ministerial',
+  PRECURSOR_REGULAR:        'Precursor regular',
+  PRECURSOR_AUXILIAR:       'Precursor auxiliar',
+};
+const CONGRE_ROLE_IDS = new Set(Object.keys(LABELS_CONGRE));
+
 function rolLabel(id) {
-  return TODOS_LOS_ROLES.find(r => r.id === id)?.label || id;
+  return TODOS_LOS_ROLES.find(r => r.id === id)?.label
+    || LABELS_CONGRE[id]
+    || id;
 }
 
 // Construye los checkboxes de conductores de grupo en el modal y en el select de filtro
@@ -62,6 +77,7 @@ function buildConductorUI(grupos) {
   const lista = numGrupos.length
     ? numGrupos
     : [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }];
+  gruposGlobales = lista;
 
   const rolGrupos = lista.map(g => ({
     id:    `CONDUCTOR_GRUPO_${g.id}`,
@@ -94,6 +110,8 @@ function buildConductorUI(grupos) {
 //   ESTADO
 // ─────────────────────────────────────────
 let publicadores    = [];
+let gruposGlobales  = [];     // grupos numéricos (no 'C'), cargados en init
+let _respPubs       = [];     // cache de publicadores para la vista Responsabilidades
 let pinEncargado    = null;
 let pinBuffer       = '';
 let editandoId      = null;
@@ -141,6 +159,13 @@ function pubCol() {
 // ─────────────────────────────────────────
 //   INIT — cargar config + grupos
 // ─────────────────────────────────────────
+function _canBypassHermanosPin() {
+  const u = window.currentUser;
+  if (!u) return false;
+  const roles = u.appRoles || (u.appRol ? [u.appRol] : []);
+  return roles.some(r => ['admin_general', 'admin_congre', 'encargado_asignaciones', 'encargado_vm'].includes(r));
+}
+
 (async function init() {
   try {
     const [congreSnap, gruposSnap] = await Promise.all([
@@ -167,6 +192,11 @@ function pubCol() {
   } catch(e) {
     console.error('Error cargando config:', e);
     buildConductorUI([]); // fallback: muestra grupos 1-4
+  } finally {
+    if (_canBypassHermanosPin()) {
+      hidePinModal();
+      showView('view-menu');
+    }
   }
 })();
 
@@ -226,6 +256,185 @@ window.goToHermanos = function() {
   cargarYMostrar();
 };
 
+window.goToResponsabilidades = async function() {
+  showView('view-responsabilidades');
+  await cargarResponsabilidades();
+};
+
+// ─────────────────────────────────────────
+//   RESPONSABILIDADES
+// ─────────────────────────────────────────
+
+// Roles encargados fijos (1 persona por rol)
+const RESP_ENCARGADOS_FIJOS = [
+  { id: 'SUPERINTENDENTE_SERVICIO', label: 'Sup. de Servicio' },
+  { id: 'ENCARGADO_ASIGNACIONES',   label: 'Enc. Asignaciones' },
+  { id: 'ENCARGADO_VM',             label: 'Enc. V y M' },
+  { id: 'ENCARGADO_CONFERENCIAS',   label: 'Enc. Conferencias' },
+];
+
+// Roles categoría (varias personas por rol)
+const RESP_CATEGORIAS = [
+  { id: 'ANCIANO',           label: 'Ancianos' },
+  { id: 'SIERVO_MINISTERIAL',label: 'Siervos ministeriales' },
+];
+const RESP_PRECURSORES = [
+  { id: 'PRECURSOR_REGULAR',  label: 'Precursores regulares' },
+  { id: 'PRECURSOR_AUXILIAR', label: 'Precursores auxiliares' },
+];
+
+async function cargarResponsabilidades() {
+  const loading = document.getElementById('resp-loading');
+  const content = document.getElementById('resp-content');
+  if (loading) loading.style.display = '';
+  if (content) content.style.display = 'none';
+  try {
+    const snap = await getDocs(pubCol());
+    _respPubs = snap.docs
+      .map(d => ({ id: d.id, ...d.data(), roles: d.data().roles || [] }))
+      .sort((a, b) => norm(a.nombre).localeCompare(norm(b.nombre)));
+    renderResponsabilidades();
+  } catch(e) {
+    uiToast('Error al cargar: ' + e.message, 'error');
+  } finally {
+    if (loading) loading.style.display = 'none';
+    if (content) content.style.display = '';
+  }
+}
+
+function renderResponsabilidades() {
+  // Encargados: roles fijos + conductores de grupo (dinámicos)
+  const grupos = gruposGlobales.length
+    ? gruposGlobales
+    : [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }];
+  const encargados = [
+    ...RESP_ENCARGADOS_FIJOS,
+    ...grupos.map(g => ({ id: `CONDUCTOR_GRUPO_${g.id}`, label: `Encargado Grupo ${g.id}` })),
+  ];
+
+  const encEl = document.getElementById('resp-encargados-list');
+  if (encEl) {
+    encEl.innerHTML = encargados.map(rol => {
+      const holder = _respPubs.find(p => (p.roles||[]).includes(rol.id));
+      return `<div class="resp-row" onclick="cambiarEncargado('${rol.id}','${esc(rol.label)}')">
+        <div class="resp-row-label">${esc(rol.label)}</div>
+        <div class="resp-row-value">
+          <span class="${holder ? 'resp-assigned-name' : 'resp-unassigned'}">${holder ? esc(holder.nombre) : 'Sin asignar'}</span>
+          <svg class="resp-row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const catEl = document.getElementById('resp-categorias-list');
+  if (catEl) catEl.innerHTML = RESP_CATEGORIAS.map(renderCategoriaBlock).join('');
+
+  const precEl = document.getElementById('resp-precursores-list');
+  if (precEl) precEl.innerHTML = RESP_PRECURSORES.map(renderCategoriaBlock).join('');
+}
+
+function renderCategoriaBlock(cat) {
+  const holders = _respPubs.filter(p => (p.roles||[]).includes(cat.id));
+  const chips = holders.map(p =>
+    `<span class="resp-chip" onclick="quitarCategoriaRol('${cat.id}','${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">
+      ${esc(p.nombre)}<span class="resp-chip-x"> ×</span>
+    </span>`
+  ).join('');
+  return `<div class="resp-categoria-block">
+    <div class="resp-categoria-header">
+      <span class="resp-categoria-title">${esc(cat.label)}</span>
+      <button class="resp-agregar-btn" onclick="agregarCategoriaRol('${cat.id}','${esc(cat.label)}')">+ Agregar</button>
+    </div>
+    <div class="resp-chips-row">
+      ${chips || '<span class="resp-empty">Ninguno asignado</span>'}
+    </div>
+  </div>`;
+}
+
+window.cambiarEncargado = async function(rolId, rolLabelText) {
+  const conductores = _respPubs.map(p => p.nombre);
+  const current = _respPubs.find(p => (p.roles||[]).includes(rolId));
+  const result = await uiConductorPicker({
+    conductores: ['— Sin asignar —', ...conductores],
+    value: current?.nombre || '— Sin asignar —',
+    label: rolLabelText,
+    color: '#D85A30',
+  });
+  if (result === null) return; // cancelado
+
+  const isClear = !result || result === '— Sin asignar —';
+  const newPub = isClear ? null : _respPubs.find(p => p.nombre === result);
+
+  try {
+    // Quitar el rol del que lo tenía antes
+    for (const p of _respPubs.filter(p => (p.roles||[]).includes(rolId))) {
+      if (!newPub || p.id !== newPub.id) {
+        const newRoles = p.roles.filter(r => r !== rolId);
+        await updateDoc(doc(pubCol(), p.id), { roles: newRoles });
+        p.roles = newRoles;
+      }
+    }
+    // Asignar al nuevo
+    if (newPub && !(newPub.roles||[]).includes(rolId)) {
+      const newRoles = [...(newPub.roles||[]), rolId];
+      await updateDoc(doc(pubCol(), newPub.id), { roles: newRoles });
+      newPub.roles = newRoles;
+    }
+    uiToast('Guardado', 'success');
+    renderResponsabilidades();
+  } catch(e) {
+    uiToast('Error: ' + e.message, 'error');
+  }
+};
+
+window.agregarCategoriaRol = async function(rolId, rolLabelText) {
+  const disponibles = _respPubs.filter(p => !(p.roles||[]).includes(rolId));
+  if (!disponibles.length) {
+    await uiAlert('Todos los hermanos ya tienen este rol asignado.');
+    return;
+  }
+  const result = await uiConductorPicker({
+    conductores: disponibles.map(p => p.nombre),
+    value: '',
+    label: `Agregar — ${rolLabelText}`,
+    color: '#D85A30',
+  });
+  if (!result) return;
+  const pub = _respPubs.find(p => p.nombre === result);
+  if (!pub) return;
+  try {
+    const newRoles = [...(pub.roles||[]), rolId];
+    await updateDoc(doc(pubCol(), pub.id), { roles: newRoles });
+    pub.roles = newRoles;
+    uiToast('Agregado', 'success');
+    renderResponsabilidades();
+  } catch(e) {
+    uiToast('Error: ' + e.message, 'error');
+  }
+};
+
+window.quitarCategoriaRol = async function(rolId, pubId, nombre) {
+  const ok = await uiConfirm({
+    title: 'Quitar rol',
+    msg: `¿Quitar a ${nombre} de esta categoría?`,
+    confirmText: 'Quitar', cancelText: 'Cancelar', type: 'warn',
+  });
+  if (!ok) return;
+  const pub = _respPubs.find(p => p.id === pubId);
+  if (!pub) return;
+  try {
+    const newRoles = (pub.roles||[]).filter(r => r !== rolId);
+    await updateDoc(doc(pubCol(), pubId), { roles: newRoles });
+    pub.roles = newRoles;
+    uiToast('Quitado', 'success');
+    renderResponsabilidades();
+  } catch(e) {
+    uiToast('Error: ' + e.message, 'error');
+  }
+};
+
 // ─────────────────────────────────────────
 //   CARGAR PUBLICADORES
 // ─────────────────────────────────────────
@@ -260,11 +469,13 @@ function renderLista(lista) {
     return;
   }
   el.innerHTML = lista.map(h => {
-    const asignRoles = (h.roles || []).filter(r => !r.startsWith('VM_'));
-    const vmRoles    = (h.roles || []).filter(r => r.startsWith('VM_'));
+    const congreRoles = (h.roles || []).filter(r => CONGRE_ROLE_IDS.has(r));
+    const asignRoles  = (h.roles || []).filter(r => !r.startsWith('VM_') && !CONGRE_ROLE_IDS.has(r));
+    const vmRoles     = (h.roles || []).filter(r => r.startsWith('VM_'));
     const chips = [
-      ...asignRoles.map(r => `<span class="chip chip-asign">${esc(rolLabel(r))}</span>`),
-      ...vmRoles.map(r    => `<span class="chip chip-vm">${esc(rolLabel(r))}</span>`),
+      ...congreRoles.map(r => `<span class="chip chip-congre">${esc(rolLabel(r))}</span>`),
+      ...asignRoles.map(r  => `<span class="chip chip-asign">${esc(rolLabel(r))}</span>`),
+      ...vmRoles.map(r     => `<span class="chip chip-vm">${esc(rolLabel(r))}</span>`),
     ].join('');
     const sexoChip = h.sexo === 'H'
       ? `<span class="chip-sexo chip-sexo-h" onclick="event.stopPropagation();toggleSexo('${h.id}','H')" title="Hombre — clic para cambiar">♂</span>`
@@ -785,10 +996,11 @@ async function refreshChatNotas() {
     const snap = await getDocs(query(chatNotasCol(), orderBy('createdAt', 'desc'), limit(80)));
     if (loadEl) loadEl.style.display = 'none';
     const misIds = getMisIdsAdmin();
+    const currentUid = window.currentUser?.uid || null;
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (!items.length) { if(emptyEl) emptyEl.style.display=''; return; }
     listEl.innerHTML = items.map(n => {
-      const esMio = misIds.includes(n.id);
+      const esMio = (currentUid && n.ownerUid === currentUid) || misIds.includes(n.id);
       const fecha = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
       const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
       const acciones = esMio ? `<div class="chat-item-actions"><button class="chat-btn-edit" onclick="abrirEditNota('${n.id}',${JSON.stringify(n.texto||'').replace(/</g,'\\u003c')})">Editar</button><button class="chat-btn-del" onclick="eliminarNota('${n.id}')">Eliminar</button></div>` : '';
@@ -810,6 +1022,7 @@ window.sendChatNota = async function(btnEl) {
       autor: CHAT_AUTOR, texto,
       createdAt: Timestamp.now(),
       canal: 'congregacion', grupo: 'C',
+      ownerUid: window.currentUser?.uid || null,
     });
     addMiIdAdmin(ref.id);
     document.getElementById('chat-mensaje').value = '';

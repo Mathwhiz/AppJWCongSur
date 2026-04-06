@@ -1,5 +1,5 @@
-import { db } from '../firebase.js';
-import '../auth.js';
+import { db } from '../shared/firebase.js';
+import '../shared/auth.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   setDoc, query, where, orderBy
@@ -7,9 +7,6 @@ import {
 
 await window.authGuard('acceso_asignaciones');
 
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) window.location.reload();
-});
 
 if (!sessionStorage.getItem('congreId')) { window.location.href = '../index.html'; }
 const CONGRE_ID     = sessionStorage.getItem('congreId')     || 'sur';
@@ -411,9 +408,19 @@ function checkPin() {
 }
 function pinCancel() { hide('pin-modal'); pinBuffer = ''; }
 
+function _canBypassPin() {
+  const u = window.currentUser;
+  if (!u) return false;
+  const roles = u.appRoles || (u.appRol ? [u.appRol] : []);
+  return roles.some(r => ['admin_general', 'admin_congre', 'encargado_asignaciones', 'encargado_vm'].includes(r));
+}
+
 /* ─── Navegación ─── */
 function goToCover() { showView('view-cover'); }
-function goToPin()   { openPin(); }
+function goToPin() {
+  if (_canBypassPin()) { esEncargado = true; goToEncargado(); return; }
+  openPin();
+}
 async function cerrarSesionEncargado() {
   const ok = await uiConfirm({
     title: '¿Cerrar sesión?',
