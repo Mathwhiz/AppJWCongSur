@@ -524,7 +524,8 @@ body.light-mode .section-sub   { color: #67626f; }
   .plan-titulo { font-size: 24px; font-weight: 600; }
   #salidas-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
   #salidas-container .salida-card-v2 { margin-bottom: 0; }
-  .plan-progress-wrap,
+  #salidas-container .plan-progress-wrap,
+  #salidas-container .salida-card-new { grid-column: 1 / -1; }
   .plan-footer,
   .salida-count { max-width: 960px; margin-left: auto; margin-right: auto; }
   .plan-footer { margin-top: 16px; }
