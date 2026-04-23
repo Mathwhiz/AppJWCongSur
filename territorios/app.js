@@ -455,7 +455,7 @@ function renderGrupoButtons() {
       const btn = document.createElement('button');
       btn.className = 'grupo-btn';
       btn.dataset.grupo = g.id;
-      btn.style.flex = '1';
+      btn.style.flex = '0 1 calc(33.33% - 7px)';
       btn.innerHTML = `<div class="gbcard-badge">${g.id}</div><div class="gbcard-check">✓</div>`;
       btn.onclick = () => selectGrupo(btn, g.id, true);
       _applyGrupoColorToBtn(btn, g.id);
