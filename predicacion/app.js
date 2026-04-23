@@ -174,6 +174,9 @@ let _timerInterval = null;
 let _timerStart    = 0;
 let _timerAccum    = 0;
 let _timerRunning  = false;
+let _timerInicioTs = null; // timestamp real del inicio de la sesión activa
+
+let _grupoId = null; // grupoId del publicador vinculado
 
 // Debounce para contadores
 let _saveTimeout = null;
@@ -243,17 +246,20 @@ async function init(uid) {
   showView('view-app');
   renderMonthLabel();
 
-  // Sincronizar roles del publicador vinculado (fallback si appRoles no está actualizado)
-  if ((!_esPrecursorRegular || !_esPrecursorAuxiliar) && _user?.matchedPublisherId && _user?.congregacionId) {
+  // Sincronizar roles y grupoId del publicador vinculado
+  if (_user?.matchedPublisherId && _user?.congregacionId) {
     try {
       const pubSnap = await getDoc(doc(db, 'congregaciones', _user.congregacionId, 'publicadores', _user.matchedPublisherId));
       if (pubSnap.exists()) {
-        const pubRoles = pubSnap.data().roles || [];
+        const pubData = pubSnap.data();
+        const pubRoles = pubData.roles || [];
         if (pubRoles.includes('PRECURSOR_REGULAR'))  _esPrecursorRegular  = true;
         if (pubRoles.includes('PRECURSOR_AUXILIAR'))  _esPrecursorAuxiliar = true;
+        _grupoId = pubData.grupoId || null;
       }
     } catch {}
   }
+  cargarSalidasSemana();
 
   // Meta mensual personal (guardada en el doc del usuario)
   _metaMensualPersonal = typeof _user?.metaMensualHoras === 'number' ? _user.metaMensualHoras : null;
@@ -1064,10 +1070,28 @@ function tickTimer() {
   }
 }
 
+function _timerUpdateQuickBtns() {
+  const qb = document.getElementById('timer-quick-btns');
+  if (qb) qb.style.display = _timerRunning ? '' : 'none';
+}
+
+function _timerUpdateLabel() {
+  const lbl = document.getElementById('timer-label');
+  if (!lbl) return;
+  if (_timerInicioTs) {
+    const h = _timerInicioTs.getHours();
+    const m = String(_timerInicioTs.getMinutes()).padStart(2, '0');
+    lbl.textContent = `Iniciado a las ${h}:${m}`;
+  } else {
+    lbl.textContent = '';
+  }
+}
+
 window.timerToggle = function() {
   const toggleBtn = document.getElementById('timer-toggle-btn');
   const display   = document.getElementById('timer-display');
   if (!_timerRunning) {
+    if (!_timerInicioTs) _timerInicioTs = new Date();
     _timerRunning  = true;
     _timerStart    = Date.now();
     _timerInterval = setInterval(tickTimer, 1000);
@@ -1082,10 +1106,13 @@ window.timerToggle = function() {
     display.classList.remove('running');
     tickTimer();
   }
+  _timerUpdateQuickBtns();
+  _timerUpdateLabel();
 };
 
 window.timerReset = function() {
-  _timerRunning = false;
+  _timerRunning  = false;
+  _timerInicioTs = null;
   clearInterval(_timerInterval);
   _timerInterval = null;
   _timerAccum    = 0;
@@ -1094,6 +1121,8 @@ window.timerReset = function() {
   document.getElementById('timer-display').classList.remove('running');
   document.getElementById('timer-toggle-btn').textContent = 'Iniciar';
   document.getElementById('timer-add-wrap').style.display = 'none';
+  _timerUpdateQuickBtns();
+  _timerUpdateLabel();
 };
 
 window.timerAgregarAlMes = async function() {
@@ -1107,3 +1136,113 @@ window.timerAgregarAlMes = async function() {
   await cargarHistorial();
   toast(`${fmtTiempo(mins)} agregados — ${fmtFecha(fechaHoy())}`);
 };
+
+// ─────────────────────────────────────────
+//   SALIDAS DEL GRUPO (esta semana)
+// ─────────────────────────────────────────
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DIAS_LARGO  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function _lunesDeHoy() {
+  const d = new Date();
+  const day = d.getDay(); // 0=Dom
+  const diff = (day === 0) ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function _domingoDeHoy() {
+  const lunes = _lunesDeHoy();
+  const dom = new Date(lunes);
+  dom.setDate(dom.getDate() + 6);
+  return dom;
+}
+
+function _isoFecha(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function cargarSalidasSemana() {
+  const wrap = document.getElementById('salidas-semana-wrap');
+  if (!wrap) return;
+
+  // Sin grupo vinculado → mensaje
+  if (!_grupoId) {
+    wrap.innerHTML = `<div class="salidas-semana-empty">
+      Tu perfil no tiene un grupo asignado.<br>El encargado puede vincularte desde el panel de administración.
+    </div>`;
+    return;
+  }
+
+  const lunes  = _isoFecha(_lunesDeHoy());
+  const domingo = _isoFecha(_domingoDeHoy());
+
+  try {
+    const congreId = _user?.congregacionId;
+    if (!congreId) throw new Error('Sin congregación');
+
+    const snap = await getDocs(
+      collection(db, 'congregaciones', congreId, 'salidas')
+    );
+
+    // Filtrar por grupoId y fechas de esta semana
+    const salidaItems = []; // { fecha, hora, terr, enc, tipo }
+    snap.forEach(d => {
+      const data = d.data();
+      if (String(data.grupoId) !== String(_grupoId)) return;
+      (data.salidas || []).forEach(s => {
+        if (!s.fecha) return;
+        if (s.fecha >= lunes && s.fecha <= domingo) {
+          salidaItems.push(s);
+        }
+      });
+    });
+
+    if (salidaItems.length === 0) {
+      wrap.innerHTML = `<div class="salidas-semana-empty">
+        No hay salidas registradas para tu grupo esta semana.
+      </div>`;
+      return;
+    }
+
+    // Ordenar por fecha y hora
+    salidaItems.sort((a, b) => {
+      const fa = a.fecha + (a.hora || '');
+      const fb = b.fecha + (b.hora || '');
+      return fa.localeCompare(fb);
+    });
+
+    // Agrupar por fecha
+    const porFecha = {};
+    salidaItems.forEach(s => {
+      if (!porFecha[s.fecha]) porFecha[s.fecha] = [];
+      porFecha[s.fecha].push(s);
+    });
+
+    let html = '';
+    Object.keys(porFecha).sort().forEach(fecha => {
+      const d = new Date(fecha + 'T12:00:00');
+      const diaNum  = d.getDate();
+      const diaNom  = DIAS_LARGO[d.getDay()];
+      const esHoy   = fecha === fechaHoy();
+      html += `<div class="salidas-dia-label">${diaNom} ${diaNum}${esHoy ? ' · <span style="color:#E05277">Hoy</span>' : ''}</div>`;
+      porFecha[fecha].forEach(s => {
+        const horaFmt = s.hora ? s.hora.replace('.', ':') : '—';
+        const esTel   = s.tipo === 'tel';
+        const terrTxt = esTel ? 'Telefónica' : (s.terr && s.terr !== '—' ? `Territorio ${s.terr}` : 'Sin territorio');
+        const encTxt  = (!esTel && s.enc && s.enc !== '—') ? `<div class="sc-pred-tipo">${s.enc}</div>` : '';
+        html += `
+          <div class="salida-card-pred ${esTel ? 'tipo-tel' : ''}">
+            <div class="sc-pred-hora">${horaFmt} <span style="font-size:12px;font-weight:400;color:var(--text-muted);">· ${esTel ? 'Telefónica' : 'Campo'}</span></div>
+            <div class="sc-pred-meta">${terrTxt}${s.cond && s.cond !== '—' ? ` · ${s.cond}` : ''}</div>
+            ${encTxt}
+          </div>`;
+      });
+    });
+
+    wrap.innerHTML = html;
+  } catch (err) {
+    wrap.innerHTML = `<div class="salidas-semana-empty">Error al cargar salidas.</div>`;
+    console.error('[predicacion] cargarSalidasSemana:', err);
+  }
+}

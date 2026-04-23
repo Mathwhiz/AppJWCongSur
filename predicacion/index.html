@@ -58,6 +58,7 @@
   <!-- Tabs -->
   <div class="tabs-bar">
     <button class="tab-btn active" id="tab-btn-tiempo" onclick="switchTab('tiempo')">Tiempo</button>
+    <button class="tab-btn" id="tab-btn-salidas" onclick="switchTab('salidas')">Salidas</button>
     <button class="tab-btn" id="tab-btn-contactos" onclick="switchTab('contactos')">Revisitas y estudios</button>
     <button class="tab-btn" id="tab-btn-metas" onclick="switchTab('metas')">Metas e Historial</button>
   </div>
@@ -69,12 +70,25 @@
       <!-- Cronómetro -->
       <div class="pred-card">
         <div class="timer-display" id="timer-display">00:00:00</div>
+        <div class="timer-label" id="timer-label"></div>
         <div class="timer-btns">
           <button class="pred-btn pred-btn-primary" id="timer-toggle-btn" onclick="timerToggle()">Iniciar</button>
           <button class="pred-btn pred-btn-ghost" onclick="timerReset()">Reiniciar</button>
         </div>
         <div id="timer-add-wrap" class="timer-add-wrap" style="display:none;">
           <button class="timer-add-btn" id="timer-add-btn" onclick="timerAgregarAlMes()">+ Agregar al mes</button>
+        </div>
+        <div id="timer-quick-btns" class="timer-quick-btns" style="display:none;">
+          <button class="timer-quick-card" onclick="abrirContacto('revisita', null)">
+            <span class="timer-quick-icon">📖</span>
+            <span class="timer-quick-name">Revisita</span>
+            <span class="timer-quick-sub">Agregar contacto</span>
+          </button>
+          <button class="timer-quick-card" onclick="abrirContacto('estudio', null)">
+            <span class="timer-quick-icon">📚</span>
+            <span class="timer-quick-name">Estudio</span>
+            <span class="timer-quick-sub">Nuevo estudio</span>
+          </button>
         </div>
       </div>
 
@@ -153,6 +167,15 @@
 
     </div>
   </div><!-- /tab-tiempo -->
+
+  <!-- ── Tab: Salidas del grupo ── -->
+  <div class="tab-panel" id="tab-salidas">
+    <div class="pred-body">
+      <div id="salidas-semana-wrap">
+        <div class="loading-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div><!-- /tab-salidas -->
 
   <!-- ── Tab: Revisitas y estudios ── -->
   <div class="tab-panel" id="tab-contactos">
