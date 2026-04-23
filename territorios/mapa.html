@@ -485,6 +485,19 @@ async function initMap() {
     applyCityViewport(null, false);
   }
 
+  // Zoom a territorio(s) específico(s) si viene el param terrid (ej: desde Predicación)
+  if (_terrIdParam && _modoParam === 'full') {
+    const ids = String(_terrIdParam).split(',').map(s => s.trim()).filter(Boolean);
+    const terrLayers = allLayers.filter(l =>
+      ids.some(id => String(l.numero).replace(/[A-Za-z]+$/, '') === String(id).replace(/[A-Za-z]+$/, ''))
+    );
+    if (terrLayers.length) {
+      const b = terrLayers[0].polygon.getBounds();
+      terrLayers.slice(1).forEach(l => b.extend(l.polygon.getBounds()));
+      setTimeout(() => map.flyToBounds(b, { padding: [50, 50], maxZoom: 17, duration: 0.8 }), 300);
+    }
+  }
+
   // Leyenda según modo
   const legend = document.getElementById('map-legend');
   if (isPublicMapMode()) {

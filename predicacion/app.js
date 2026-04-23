@@ -176,7 +176,8 @@ let _timerAccum    = 0;
 let _timerRunning  = false;
 let _timerInicioTs = null; // timestamp real del inicio de la sesión activa
 
-let _grupoId = null; // grupoId del publicador vinculado
+let _grupoId    = null; // grupoId del publicador vinculado
+let _grupoColor = null; // color hex del grupo
 
 // Debounce para contadores
 let _saveTimeout = null;
@@ -258,6 +259,13 @@ async function init(uid) {
         _grupoId = pubData.grupoId || null;
       }
     } catch {}
+    // Cargar color del grupo
+    if (_grupoId && _user?.congregacionId) {
+      try {
+        const grupoSnap = await getDoc(doc(db, 'congregaciones', _user.congregacionId, 'grupos', String(_grupoId)));
+        if (grupoSnap.exists()) _grupoColor = grupoSnap.data().color || null;
+      } catch {}
+    }
   }
   cargarSalidasSemana();
 
@@ -1227,15 +1235,32 @@ async function cargarSalidasSemana() {
       const esHoy   = fecha === fechaHoy();
       html += `<div class="salidas-dia-label">${diaNom} ${diaNum}${esHoy ? ' · <span style="color:#E05277">Hoy</span>' : ''}</div>`;
       porFecha[fecha].forEach(s => {
-        const horaFmt = s.hora ? s.hora.replace('.', ':') : '—';
-        const esTel   = s.tipo === 'tel';
-        const terrTxt = esTel ? 'Telefónica' : (s.terr && s.terr !== '—' ? `Territorio ${s.terr}` : 'Sin territorio');
-        const encTxt  = (!esTel && s.enc && s.enc !== '—') ? `<div class="sc-pred-tipo">${s.enc}</div>` : '';
+        const horaFmt     = s.hora ? s.hora.replace('.', ':') : '—';
+        const esTel       = s.tipo === 'tel';
+        const terrTxt     = esTel ? 'Telefónica' : (s.terr && s.terr !== '—' ? `Territorio ${s.terr}` : 'Sin territorio');
+        const encTxt      = (!esTel && s.enc && s.enc !== '—') ? `<div class="sc-pred-enc">${s.enc}</div>` : '';
+        const borderColor = esTel ? '#1D9E75' : (_grupoColor || '#E05277');
+        const hasTerr     = !esTel && s.terr && s.terr !== '—';
+        const congreId    = _user?.congregacionId || sessionStorage.getItem('congreId') || '';
+        const mapaUrl     = `../territorios/mapa.html?modo=full&congre=${congreId}&terrid=${encodeURIComponent(String(s.terr || ''))}`;
+        const mapBtn      = hasTerr
+          ? `<a href="${mapaUrl}" target="_blank" class="sc-pred-map-btn" title="Ver en mapa">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                 <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                 <line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+               </svg>
+             </a>`
+          : '';
         html += `
-          <div class="salida-card-pred ${esTel ? 'tipo-tel' : ''}">
-            <div class="sc-pred-hora">${horaFmt} <span style="font-size:12px;font-weight:400;color:var(--text-muted);">· ${esTel ? 'Telefónica' : 'Campo'}</span></div>
-            <div class="sc-pred-meta">${terrTxt}${s.cond && s.cond !== '—' ? ` · ${s.cond}` : ''}</div>
-            ${encTxt}
+          <div class="salida-card-pred" style="border-left-color:${borderColor}">
+            <div class="sc-pred-row">
+              <div class="sc-pred-content">
+                <div class="sc-pred-hora">${horaFmt} <span class="sc-pred-tipobadge">${esTel ? 'Telefónica' : 'Campo'}</span></div>
+                <div class="sc-pred-meta">${terrTxt}${s.cond && s.cond !== '—' ? ` · ${s.cond}` : ''}</div>
+                ${encTxt}
+              </div>
+              ${mapBtn}
+            </div>
           </div>`;
       });
     });

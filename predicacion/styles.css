@@ -157,10 +157,23 @@ body { font-family: system-ui, sans-serif; background: var(--bg-primary); color:
   border-left: 3px solid #E05277;
   border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
 }
-.salida-card-pred.tipo-tel { border-left-color: #1D9E75; }
-.sc-pred-hora { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.sc-pred-meta { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.sc-pred-tipo { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.sc-pred-row { display: flex; align-items: center; gap: 10px; }
+.sc-pred-content { flex: 1; min-width: 0; }
+.sc-pred-hora { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.sc-pred-tipobadge {
+  font-size: 11px; font-weight: 500; color: var(--text-muted);
+  background: rgba(255,255,255,0.06); border-radius: 4px;
+  padding: 1px 6px; margin-left: 4px; vertical-align: middle;
+}
+.sc-pred-meta { font-size: 15px; font-weight: 500; color: var(--text-secondary); margin-top: 3px; }
+.sc-pred-enc  { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.sc-pred-map-btn {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,0.06); color: var(--text-muted);
+  text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.sc-pred-map-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
 .timer-add-wrap { text-align: center; }
 .manual-actions { margin-bottom: 12px; }
 .timer-add-btn {
