@@ -17,6 +17,7 @@ opcional "Guardar también en planilla" del módulo de asignaciones).
 @docs/asignaciones.md
 @docs/hermanos.md
 @docs/vida-ministerio.md
+@docs/predicacion.md
 @docs/ui-utils.md
 @docs/pendientes.md
 @docs/no-hacer.md

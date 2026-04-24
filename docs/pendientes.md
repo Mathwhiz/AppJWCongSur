@@ -1,5 +1,12 @@
 ## Ideas pendientes (futuro)
 
+### Módulo Predicación (✅ implementado — ver `docs/predicacion.md`)
+Cronómetro, registro de tiempo por día (predicación + LDC), revisitas y estudios, metas,
+historial con arrastre de minutos, resumen WhatsApp, tab de salidas del grupo de la semana,
+mapa overlay con territorios filtrados y zoom automático.
+
+---
+
 ### Módulo Conferencias (PRÓXIMO — alta prioridad)
 Gestión de arreglos de discursos del fin de semana (sábados).
 

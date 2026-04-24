@@ -115,7 +115,9 @@ El ID de congregación es un slug legible (ej: `"sur"`, `"norte"`), elegido al c
 │   ├── app.js
 │   └── styles.css
 ├── predicacion/
-│   └── index.html          # Placeholder "En desarrollo" — módulo de tiempos, revisitas, estudios
+│   ├── index.html          # Módulo personal de predicación (cronómetro, salidas del grupo, revisitas, estudios)
+│   ├── app.js              # Lógica principal (100% Firestore, requiere auth Google)
+│   └── styles.css
 ├── conferencias/
 │   └── index.html          # Placeholder "En desarrollo" — arreglos de discursos del fin de semana
 └── tools/                  # Scripts de migración y sync (conservar como referencia)
