@@ -1398,12 +1398,106 @@ async function goToInfoGrupo() {
     configData      = await fetchConfig(selectedGrupo);
     hide('info-loading'); show('info-content');
     renderInfoGrid();
+    const btnInf = document.getElementById('btn-informe-super');
+    if (btnInf) btnInf.style.display = 'block';
   } catch(err) {
     hide('info-loading');
     document.getElementById('info-error').innerHTML = `<div class="error-wrap">Error: ${err.message}.</div>`;
     show('info-error');
   }
 }
+
+async function goToInforme() {
+  hide('view-info'); show('view-informe');
+  show('informe-loading'); hide('informe-content');
+
+  // Determinar período: últimas dos visitas del superintendente
+  const especSnap = await getDocs(collection(db, 'congregaciones', CONGRE_ID, 'semanasEspeciales'));
+  const superFechas = [];
+  especSnap.forEach(d => { if (d.data().tipo === 'superintendente') superFechas.push(d.id); });
+  superFechas.sort();
+
+  const hoy = window.fmtDateLocal(new Date());
+  let desdeISO, hastaISO;
+  if (superFechas.length >= 2) {
+    desdeISO = superFechas[superFechas.length - 2];
+    hastaISO = superFechas[superFechas.length - 1];
+  } else if (superFechas.length === 1) {
+    desdeISO = superFechas[0]; hastaISO = hoy;
+  } else {
+    const d = new Date(); d.setMonth(d.getMonth() - 6);
+    desdeISO = window.fmtDateLocal(d); hastaISO = hoy;
+  }
+
+  // Territorios del grupo ordenados por número
+  const terrIds = Object.keys(territoriosData).sort((a, b) => {
+    const na = parseInt(a), nb = parseInt(b);
+    return na !== nb ? na - nb : a.localeCompare(b);
+  });
+
+  // Cargar historial completo de cada territorio y filtrar por período
+  const informeData = [];
+  for (const id of terrIds) {
+    const snap = await getDocs(query(histCol(id), orderBy('fechaInicio', 'desc')));
+    const entries = [];
+    snap.forEach(d => {
+      const e = d.data();
+      let fi = e.fechaInicio?.toDate ? window.fmtDateLocal(e.fechaInicio.toDate()) : (e.fechaInicio || '');
+      let ff = e.fechaFin?.toDate   ? window.fmtDateLocal(e.fechaFin.toDate())     : (e.fechaFin   || null);
+      if (fi && fi >= desdeISO) entries.push({ fechaInicio: fi, fechaFin: ff, conductor: e.conductor || '—' });
+    });
+    const t = territoriosData[id];
+    informeData.push({ id, nombre: t?.nombre || `Territorio ${id}`, tipo: configData[id] || 'normal', entries });
+  }
+
+  // Render cabecera
+  const grupoLabel   = selectedGrupo === 'C' ? 'Congregación' : `Grupo ${selectedGrupo}`;
+  const totalTerr    = informeData.length;
+  const trabajados   = informeData.filter(t => t.entries.length > 0).length;
+  const sinActividad = totalTerr - trabajados;
+  document.getElementById('informe-meta').innerHTML = `
+    <div class="informe-titulo-print">${CONGRE_NOMBRE} · ${grupoLabel}</div>
+    <div class="informe-periodo">Del ${formatShortFull(desdeISO)} al ${formatShortFull(hastaISO)}</div>
+    <div class="informe-resumen">
+      <span>${totalTerr} territorios</span><span class="informe-sep">·</span>
+      <span class="informe-ok">${trabajados} trabajados</span><span class="informe-sep">·</span>
+      <span class="${sinActividad > 0 ? 'informe-warn' : ''}">${sinActividad} sin actividad</span>
+    </div>`;
+
+  // Render territorios
+  const lista = document.getElementById('informe-lista');
+  lista.innerHTML = '';
+  informeData.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'informe-terr-card' + (t.entries.length === 0 ? ' sin-act' : '');
+    const displayNum = t.nombre.replace(/^Territorio\s+/, '');
+    const countTxt   = t.entries.length === 0 ? '—' : `${t.entries.length}× en el período`;
+    let entriesHTML  = t.entries.length === 0
+      ? `<div class="informe-sin-act-txt">Sin actividad en el período</div>`
+      : t.entries.map((e, i) => {
+          const bullet = i === t.entries.length - 1 ? '└' : '├';
+          const fin    = e.fechaFin ? formatShortFull(e.fechaFin) : 'En curso';
+          return `<div class="informe-entry">
+            <span class="informe-bullet">${bullet}</span>
+            <span class="informe-entry-fecha">${formatShortFull(e.fechaInicio)} → ${fin}</span>
+            <span class="informe-entry-sep">·</span>
+            <span class="informe-entry-cond">${e.conductor}</span>
+          </div>`;
+        }).join('');
+    card.innerHTML = `
+      <div class="informe-terr-header">
+        <span class="informe-terr-num">Territorio ${displayNum}</span>
+        <span class="informe-terr-count">${countTxt}</span>
+      </div>
+      ${entriesHTML}`;
+    lista.appendChild(card);
+  });
+
+  hide('informe-loading'); show('informe-content');
+}
+
+window.goToInforme = goToInforme;
+window.descargarInformePDF = function() { window.print(); };
 
 function daysColor(dias) {
   if (dias === null || dias === undefined) return '#555';

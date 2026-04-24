@@ -568,3 +568,112 @@ body.light-mode .section-sub   { color: #67626f; }
   .btn-home { width: 52px; height: 52px; border-radius: 12px; top: 66px; }
   .btn-mapa-float { width: 52px; height: 52px; border-radius: 12px; top: 66px; right: 78px; font-size: 9px; }
 }
+
+
+/* ── Informe para el Super ── */
+.btn-informe-super {
+  width: 100%; margin-top: 10px; margin-bottom: 0;
+  padding: 11px 16px; border-radius: 10px; border: 1px solid rgba(29,158,117,0.4);
+  background: rgba(29,158,117,0.1); color: #5DCAA5;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-informe-super:hover { background: rgba(29,158,117,0.2); }
+
+#view-informe { padding: 0; }
+.informe-nav {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 0.5px solid #2e2e2e;
+  background: #1a1c1f; position: sticky; top: 0; z-index: 10;
+}
+.informe-back-btn {
+  background: #2a2a2a; border: 0.5px solid #444; color: #ccc;
+  border-radius: 8px; padding: 6px 12px; font-size: 13px;
+  cursor: pointer; font-family: inherit; flex-shrink: 0;
+}
+.informe-nav-title { font-size: 14px; font-weight: 600; color: #ddd; }
+
+#informe-meta { padding: 16px 16px 0; }
+.informe-titulo-print { font-size: 18px; font-weight: 700; color: #eee; }
+.informe-periodo { font-size: 13px; color: #999; margin-top: 2px; }
+.informe-resumen {
+  display: flex; flex-wrap: wrap; gap: 4px 8px;
+  font-size: 13px; color: #bbb; margin-top: 8px;
+  padding: 8px 12px; background: #232628; border-radius: 8px;
+}
+.informe-sep { color: #555; }
+.informe-ok   { color: #5DCAA5; }
+.informe-warn { color: #EF9F27; }
+
+#informe-lista { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.informe-terr-card {
+  border-radius: 10px; border: 1px solid #2e2e2e;
+  background: #232628; padding: 10px 12px;
+}
+.informe-terr-card.sin-act { border-color: rgba(239,159,39,0.25); background: rgba(239,159,39,0.05); }
+.informe-terr-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4px;
+}
+.informe-terr-num   { font-size: 14px; font-weight: 700; color: #eee; }
+.informe-terr-count { font-size: 11px; color: #888; }
+.informe-terr-card.sin-act .informe-terr-count { color: #EF9F27; }
+.informe-sin-act-txt { font-size: 13px; color: #EF9F27; padding-left: 4px; }
+.informe-entry {
+  display: flex; align-items: baseline; gap: 6px;
+  font-size: 13px; line-height: 1.6;
+}
+.informe-bullet     { color: #555; font-family: monospace; flex-shrink: 0; }
+.informe-entry-fecha { color: #ccc; }
+.informe-entry-sep  { color: #555; }
+.informe-entry-cond { color: #999; flex: 1; }
+
+.informe-pdf-wrap {
+  padding: 16px; display: flex; justify-content: center;
+}
+.btn-pdf {
+  padding: 12px 32px; border-radius: 10px; border: none;
+  background: #1D9E75; color: #fff;
+  font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-pdf:hover { background: #178c65; }
+
+/* ── Print ── */
+@media print {
+  .view { display: none !important; }
+  #view-informe { display: block !important; padding: 0; }
+  .no-print { display: none !important; }
+  #chat-fab, #chat-overlay, .session-chip, .session-menu,
+  .btn-home, .btn-mapa-float { display: none !important; }
+
+  body { background: #fff !important; color: #111 !important; padding: 0 !important; }
+  @page { size: A4; margin: 2cm; }
+
+  .informe-titulo-print { font-size: 18pt; font-weight: 700; color: #000; }
+  .informe-periodo      { font-size: 11pt; color: #555; margin-top: 2px; }
+  .informe-resumen {
+    font-size: 11pt; color: #333; background: #f4f4f4 !important;
+    border-radius: 6px; padding: 6px 10px; margin-top: 8px;
+  }
+  .informe-ok   { color: #0a7a52 !important; }
+  .informe-warn { color: #b06000 !important; }
+  .informe-sep  { color: #aaa !important; }
+
+  #informe-meta  { padding: 0 0 12px; }
+  #informe-lista { padding: 0; gap: 4px; }
+
+  .informe-terr-card {
+    background: #fff !important; border: 0.5pt solid #ccc !important;
+    padding: 8px 10px; break-inside: avoid;
+  }
+  .informe-terr-card.sin-act { border-color: #f0b540 !important; background: #fffbf0 !important; }
+  .informe-terr-num   { color: #000 !important; font-size: 12pt; }
+  .informe-terr-count { color: #666 !important; font-size: 9pt; }
+  .informe-sin-act-txt { color: #b06000 !important; font-size: 11pt; }
+  .informe-entry      { font-size: 11pt; }
+  .informe-bullet     { color: #999 !important; }
+  .informe-entry-fecha { color: #222 !important; }
+  .informe-entry-sep  { color: #bbb !important; }
+  .informe-entry-cond { color: #444 !important; }
+}

@@ -233,7 +233,29 @@
       </div>
       <div class="info-grid" id="info-grid"></div>
     </div>
+    <button class="btn-informe-super" id="btn-informe-super" style="display:none;" onclick="goToInforme()">
+      📋 Informe para el Super
+    </button>
     <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="goToModo()">← Volver</button>
+  </div>
+
+  <!-- ── INFORME PARA EL SUPER ── -->
+  <div id="view-informe" class="view" style="display:none;">
+    <div class="informe-nav no-print">
+      <button class="informe-back-btn" onclick="goToInfoGrupo()">← Volver</button>
+      <span class="informe-nav-title">Informe para el Super</span>
+    </div>
+    <div id="informe-loading" class="loading-wrap" style="display:none;">
+      <div class="spinner"></div>
+      <div class="loading-txt">Cargando historial...</div>
+    </div>
+    <div id="informe-content" style="display:none;">
+      <div id="informe-meta"></div>
+      <div id="informe-lista"></div>
+      <div class="informe-pdf-wrap no-print">
+        <button class="btn-pdf" onclick="descargarInformePDF()">📄 Descargar PDF</button>
+      </div>
+    </div>
   </div>
 
   <!-- ── MODAL TERRITORIO ── -->
