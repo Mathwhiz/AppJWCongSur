@@ -2328,9 +2328,7 @@ window.s89Compartir = async function(idx) {
   }
 };
 
-window.s89Imprimir = function() {
-  const slips = window._s89Slips;
-  if (!slips?.length) return;
+function s89GenerarHtml(slips, { autoPrint = false } = {}) {
   const e = t => (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const chk = sel => sel ? '✓' : '';
   const slipHtml = s => `
@@ -2369,7 +2367,7 @@ window.s89Imprimir = function() {
       &nbsp;Sala auxiliar núm. 2
     </div>
   </div>
-  <div style="margin-top:auto;padding-top:4mm;border-top:0.5px solid #ccc;font-size:7.5pt;line-height:1.35;margin-top:8mm;">
+  <div style="padding-top:4mm;border-top:0.5px solid #ccc;font-size:7.5pt;line-height:1.35;margin-top:8mm;">
     <b>Nota al estudiante:</b> En la <i>Guía de actividades</i> encontrará la información
     que necesita para su intervención. Repase también las indicaciones que se describen en las
     <i>Instrucciones para la reunión Vida y Ministerio Cristianos</i> (S-38).
@@ -2379,8 +2377,9 @@ window.s89Imprimir = function() {
 
   const paginas = [];
   for (let i = 0; i < slips.length; i += 4) paginas.push(slips.slice(i, i + 4));
+  const printScript = autoPrint ? `<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>` : '';
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>S-89</title>
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>S-89</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Times New Roman',Times,serif; background:#fff; color:#000; }
@@ -2389,12 +2388,32 @@ body { font-family:'Times New Roman',Times,serif; background:#fff; color:#000; }
 @media print { @page { size:A4; margin:0; } body { margin:0; } }
 </style></head><body>
 ${paginas.map(p => `<div class="pagina">${p.map(slipHtml).join('')}</div>`).join('')}
-<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
+${printScript}
 </body></html>`;
+}
 
+window.s89Imprimir = function() {
+  const slips = window._s89Slips;
+  if (!slips?.length) return;
+  const html = s89GenerarHtml(slips, { autoPrint: true });
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
+};
+
+window.s89Descargar = function() {
+  const slips = window._s89Slips;
+  if (!slips?.length) return;
+  const html = s89GenerarHtml(slips);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const fecha = slips[0]?.fecha?.replace(/\//g, '-') || 'asignaciones';
+  a.href     = url;
+  a.download = `s89-${fecha}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  uiToast('Archivo descargado — abrilo en el navegador para imprimir o guardar como PDF', 'success', 4000);
 };
 
 window.generarS89Semana = function() {

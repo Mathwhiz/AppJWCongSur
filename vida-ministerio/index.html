@@ -431,13 +431,32 @@
 <!-- ── S-89 Overlay ──────────────────────────────── -->
 <div id="s89-overlay" style="display:none; position:fixed; inset:0; z-index:900; background:#111315; overflow-y:auto; -webkit-overflow-scrolling:touch;">
   <div style="max-width:480px; margin:0 auto; padding:0 16px 32px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0 10px; position:sticky; top:0; background:#111315; z-index:1; border-bottom:1px solid #2a2a2a; margin-bottom:20px;">
+
+    <!-- Header sticky -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0 10px; position:sticky; top:0; background:#111315; z-index:1; border-bottom:1px solid #2a2a2a; margin-bottom:16px;">
       <div id="s89-titulo" style="font-size:16px; font-weight:700; color:#e8e8e8;"></div>
       <div style="display:flex; gap:8px;">
         <button style="background:#232628; border:1px solid #3a3a3a; color:#ccc; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer;" onclick="window.s89Imprimir()">🖨 Imprimir</button>
         <button style="background:#232628; border:1px solid #3a3a3a; color:#ccc; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer;" onclick="window.cerrarS89()">✕</button>
       </div>
     </div>
+
+    <!-- Botón de descarga grande -->
+    <button onclick="window.s89Descargar()" style="
+      width:100%; padding:16px; margin-bottom:20px;
+      background:linear-gradient(135deg,#5B8DDE,#3A6BC4);
+      border:none; border-radius:14px; cursor:pointer;
+      color:#fff; font-size:17px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      box-shadow:0 4px 16px rgba(91,141,222,0.35);
+      transition: transform 0.1s, box-shadow 0.1s;
+    " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Descargar todos los S-89
+    </button>
+
     <div id="s89-lista"></div>
   </div>
 </div>
