@@ -245,12 +245,9 @@ def main():
         if "joyas" in t:
             t["joyas"]["pubId"] = pid(data["tesoros_joyas"])
         if "lecturaBiblica" in t:
-            t["lecturaBiblica"]["pubId"]     = pid(data["tesoros_lectura_sp"])
-            t["lecturaBiblica"]["ayudante"]  = None
-            sa = t["lecturaBiblica"].get("salaAux")
-            if sa is not None:
-                t["lecturaBiblica"]["salaAux"]["pubId"]    = pid(data["tesoros_lectura_sa"])
-                t["lecturaBiblica"]["salaAux"]["ayudante"] = None
+            t["lecturaBiblica"]["pubId"]    = pid(data["tesoros_lectura_sp"])
+            # SA: se guarda en el campo "ayudante" cuando tieneAuxiliar
+            t["lecturaBiblica"]["ayudante"] = pid(data["tesoros_lectura_sa"])
         updates["tesoros"] = t
 
         # ── Ministerio ───────────────────────────────────────────────────────

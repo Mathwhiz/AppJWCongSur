@@ -347,6 +347,142 @@ body { font-family: system-ui, sans-serif; background: var(--bg-primary); color:
 .btn-sheets-sm:hover { background: rgba(29,158,117,0.2); }
 .btn-sheets-sm:disabled { opacity: 0.5; cursor: default; }
 
+/* ── S-89 Slip (réplica exacta del formulario) ── */
+.s89-wrap {
+  margin-bottom: 24px;
+}
+.s89-persona-label {
+  font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 8px; padding-left: 2px;
+}
+.s89-slip {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 14px 16px 12px;
+  font-family: 'Times New Roman', Times, serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.s89-slip-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1.35;
+  margin-bottom: 14px;
+  letter-spacing: 0.01em;
+}
+.s89-campo {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  gap: 4px;
+}
+.s89-etiqueta {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.s89-linea {
+  flex: 1;
+  border-bottom: 1.5px solid #000;
+  font-size: 12px;
+  padding-bottom: 1px;
+  padding-left: 4px;
+  min-width: 0;
+  word-break: break-word;
+  font-weight: 400;
+}
+.s89-se-en {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+.s89-opciones { margin-left: 6px; }
+.s89-opcion {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.s89-caja {
+  width: 13px; height: 13px;
+  border: 1.5px solid #000;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: sans-serif;
+}
+.s89-nota {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 0.5px solid #ccc;
+  font-size: 9px;
+  line-height: 1.4;
+  color: #222;
+}
+.s89-codigo {
+  font-size: 8px;
+  color: #666;
+  margin-top: 6px;
+  font-family: sans-serif;
+}
+.s89-btn-wa {
+  width: 100%;
+  margin-top: 8px;
+  background: #25D366;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+.s89-btn-wa:hover { background: #1ebe5a; }
+.s89-btn-img {
+  width: 100%;
+  margin-top: 6px;
+  background: #232628;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.s89-btn-img:hover { background: #2d3033; }
+
+/* ── S-89 print ── */
+@media print {
+  body > *:not(#s89-print-area) { display: none !important; }
+  #s89-print-area {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .s89-print-slip {
+    padding: 10mm 8mm;
+    border: 0.5px dashed #aaa;
+    break-inside: avoid;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 10pt;
+  }
+  @page { size: A4; margin: 0; }
+}
+
 /* ── Programa público (read-only) ── */
 .pub-seccion {
   background: var(--bg-card); border: 0.5px solid var(--border-primary); border-radius: 12px;

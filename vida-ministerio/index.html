@@ -428,6 +428,20 @@
     </div>
   </div>
 
+<!-- ── S-89 Overlay ──────────────────────────────── -->
+<div id="s89-overlay" style="display:none; position:fixed; inset:0; z-index:900; background:#111315; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+  <div style="max-width:480px; margin:0 auto; padding:0 16px 32px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0 10px; position:sticky; top:0; background:#111315; z-index:1; border-bottom:1px solid #2a2a2a; margin-bottom:20px;">
+      <div id="s89-titulo" style="font-size:16px; font-weight:700; color:#e8e8e8;"></div>
+      <div style="display:flex; gap:8px;">
+        <button style="background:#232628; border:1px solid #3a3a3a; color:#ccc; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer;" onclick="window.s89Imprimir()">🖨 Imprimir</button>
+        <button style="background:#232628; border:1px solid #3a3a3a; color:#ccc; border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer;" onclick="window.cerrarS89()">✕</button>
+      </div>
+    </div>
+    <div id="s89-lista"></div>
+  </div>
+</div>
+
 </div><!-- /app-inner -->
 
 <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');</script>

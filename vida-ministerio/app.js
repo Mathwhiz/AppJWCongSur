@@ -2168,12 +2168,12 @@ window.exportarMesImagen = async function(mesISO) {
 // ─────────────────────────────────────────
 
 function s89FechaReunion(semana) {
-  // La reunión VM es miércoles (+2), excepto semana de superintendente → martes (+1)
+  // Reunión VM: miércoles (+2); semana de superintendente → martes (+1)
   const offset = semana.tipoEspecial === 'superintendente' ? 1 : 2;
   const d = new Date(semana.fecha + 'T12:00:00');
   d.setDate(d.getDate() + offset);
-  const pad = n => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 
 function s89SlipsDeSemana(semana) {
@@ -2183,19 +2183,14 @@ function s89SlipsDeSemana(semana) {
   const add = (pubId, ayudanteId, intervencion, sala) => {
     const nombre = nombreDePub(pubId);
     if (!nombre) return;
-    slips.push({
-      nombre,
-      ayudante: nombreDePub(ayudanteId) || '',
-      fecha,
-      intervencion,
-      sala,           // 'principal' | 'auxiliar'
-    });
+    slips.push({ nombre, ayudante: nombreDePub(ayudanteId) || '', fecha, intervencion, sala });
   };
 
-  // Lectura Bíblica → intervención 3 (nunca tiene ayudante en el slip)
+  // Lectura Bíblica → intervención 3
+  // SP: pubId; SA: ayudante (así lo almacena el app cuando tieneAuxiliar)
   add(semana.tesoros?.lecturaBiblica?.pubId, null, 3, 'principal');
   if (tieneAuxiliar) {
-    add(semana.tesoros?.lecturaBiblica?.salaAux?.pubId, null, 3, 'auxiliar');
+    add(semana.tesoros?.lecturaBiblica?.ayudante, null, 3, 'auxiliar');
   }
 
   // Seamos Mejores Maestros → intervenciones 4, 5, 6 …
@@ -2211,130 +2206,213 @@ function s89SlipsDeSemana(semana) {
   return slips;
 }
 
-function s89AbrirVentana(slips, titulo) {
+function s89SlipHtml(s, idx) {
+  const e  = t => (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const chk = sel => sel
+    ? '<div class="s89-caja" style="background:#000;color:#fff;font-weight:900;">✓</div>'
+    : '<div class="s89-caja"></div>';
+
+  return `
+<div class="s89-wrap">
+  <div class="s89-persona-label">${e(s.nombre)}${s.sala === 'auxiliar' ? ' · Sala auxiliar' : ''}</div>
+  <div class="s89-slip" id="s89-slip-${idx}">
+    <div class="s89-slip-titulo">Asignación para la reunión<br>Vida y Ministerio Cristianos</div>
+    <div class="s89-campo">
+      <span class="s89-etiqueta">Nombre:</span>
+      <span class="s89-linea">${e(s.nombre)}</span>
+    </div>
+    <div class="s89-campo">
+      <span class="s89-etiqueta">Ayudante:</span>
+      <span class="s89-linea">${e(s.ayudante)}</span>
+    </div>
+    <div class="s89-campo">
+      <span class="s89-etiqueta">Fecha:</span>
+      <span class="s89-linea">${e(s.fecha)}</span>
+    </div>
+    <div class="s89-campo">
+      <span class="s89-etiqueta">Intervención núm.:</span>
+      <span class="s89-linea">${s.intervencion}</span>
+    </div>
+    <div class="s89-se-en">Se presentará en:</div>
+    <div class="s89-opciones">
+      <div class="s89-opcion">${chk(s.sala==='principal')} Sala principal</div>
+      <div class="s89-opcion">${chk(s.sala==='auxiliar')} Sala auxiliar núm. 1</div>
+      <div class="s89-opcion">${chk(false)} Sala auxiliar núm. 2</div>
+    </div>
+    <div class="s89-nota">
+      <b>Nota al estudiante:</b> En la <i>Guía de actividades</i>
+      encontrará la información que necesita para su intervención.
+      Repase también las indicaciones que se describen en las
+      <i>Instrucciones para la reunión Vida y Ministerio Cristianos</i> (S-38).
+    </div>
+    <div class="s89-codigo">S-89-S 11/23</div>
+  </div>
+  <button class="s89-btn-wa" onclick="window.s89Whatsapp(${idx})">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.856L.054 23.447a.5.5 0 00.603.61l5.7-1.493A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.814 9.814 0 01-5.032-1.387l-.36-.214-3.733.979.996-3.638-.235-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+    Enviar por WhatsApp
+  </button>
+  <button class="s89-btn-img" onclick="window.s89Compartir(${idx})">
+    📷 Compartir imagen
+  </button>
+</div>`;
+}
+
+function s89MostrarOverlay(slips, titulo) {
   if (!slips.length) {
     uiToast('No hay hermanos asignados en Lectura ni Ministerio', 'error');
     return;
   }
+  document.getElementById('s89-titulo').textContent = titulo;
+  document.getElementById('s89-lista').innerHTML = slips.map((s, i) => s89SlipHtml(s, i)).join('');
+  // Guardar slips en variable accesible para los botones
+  window._s89Slips = slips;
+  document.getElementById('s89-overlay').style.display = 'block';
+  document.getElementById('s89-overlay').scrollTop = 0;
+}
 
-  const e = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+window.cerrarS89 = function() {
+  document.getElementById('s89-overlay').style.display = 'none';
+};
 
+window.s89Whatsapp = function(idx) {
+  const s = window._s89Slips?.[idx];
+  if (!s) return;
+  const sala = s.sala === 'auxiliar' ? 'Sala auxiliar núm. 1' : 'Sala principal';
+  const ayLine = s.ayudante ? `\n👤 Ayudante: ${s.ayudante}` : '';
+  const texto = [
+    `Hola *${s.nombre}*! 👋`,
+    ``,
+    `Tenés asignación en la reunión *Vida y Ministerio Cristianos* del *${s.fecha}*:`,
+    ``,
+    `📌 Intervención núm. ${s.intervencion}${ayLine}`,
+    `📍 Se presentará en: *${sala}*`,
+    ``,
+    `Repasá tu *Guía de actividades* para prepararte. 📖`,
+  ].join('\n');
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+};
+
+window.s89Compartir = async function(idx) {
+  const el = document.getElementById(`s89-slip-${idx}`);
+  if (!el || typeof html2canvas === 'undefined') {
+    uiToast('html2canvas no disponible', 'error');
+    return;
+  }
+  uiLoading.show('Generando imagen…');
+  try {
+    const canvas = await html2canvas(el, {
+      scale: 3,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+    });
+    canvas.toBlob(async blob => {
+      uiLoading.hide();
+      const s = window._s89Slips?.[idx];
+      const nombre = s?.nombre?.split(' ')[0] || 'S89';
+      const file = new File([blob], `s89-${nombre}.jpg`, { type: 'image/jpeg' });
+      if (navigator.canShare?.({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: `S-89 – ${s?.nombre}` }); return; }
+        catch { /* cancelado por el usuario */ return; }
+      }
+      // Fallback: descargar
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = file.name;
+      a.click();
+    }, 'image/jpeg', 0.96);
+  } catch(err) {
+    uiLoading.hide();
+    uiToast('Error al generar imagen', 'error');
+    console.error(err);
+  }
+};
+
+window.s89Imprimir = function() {
+  const slips = window._s89Slips;
+  if (!slips?.length) return;
+  const e = t => (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const chk = sel => sel ? '✓' : '';
   const slipHtml = s => `
-<div class="slip">
-  <div class="slip-titulo">ASIGNACIÓN PARA LA REUNIÓN<br>VIDA Y MINISTERIO CRISTIANOS</div>
-  <div class="campo"><span class="etq">Nombre:</span><span class="lin">${e(s.nombre)}</span></div>
-  <div class="campo"><span class="etq">Ayudante:</span><span class="lin">${e(s.ayudante)}</span></div>
-  <div class="campo"><span class="etq">Fecha:</span><span class="lin">${e(s.fecha)}</span></div>
-  <div class="campo"><span class="etq">Intervención núm.:</span><span class="lin">${s.intervencion}</span></div>
-  <div class="se-en">Se presentará en:</div>
-  <div class="opciones">
-    <div class="opcion"><span class="caja">${s.sala === 'principal' ? '&#x2713;' : '&#x25A1;'}</span> Sala principal</div>
-    <div class="opcion"><span class="caja">${s.sala === 'auxiliar'  ? '&#x2713;' : '&#x25A1;'}</span> Sala auxiliar núm. 1</div>
+<div class="s89-print-slip">
+  <div style="font-size:11pt;font-weight:700;text-align:center;text-transform:uppercase;line-height:1.3;margin-bottom:5mm;">
+    Asignación para la reunión<br>Vida y Ministerio Cristianos
   </div>
-  <div class="nota"><b>Nota al estudiante:</b> En la <i>Guía de actividades</i> encontrará la información que necesita para su intervención. Repase también las indicaciones que se describen en las <i>Instrucciones para la reunión Vida y Ministerio Cristianos</i> (S-38).</div>
-  <div class="codigo">S-89-S 11/23</div>
+  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
+    <b style="white-space:nowrap;font-size:10pt;">Nombre:</b>
+    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.nombre)}</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
+    <b style="white-space:nowrap;font-size:10pt;">Ayudante:</b>
+    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.ayudante)}</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
+    <b style="white-space:nowrap;font-size:10pt;">Fecha:</b>
+    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.fecha)}</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
+    <b style="white-space:nowrap;font-size:10pt;">Intervención núm.:</b>
+    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${s.intervencion}</span>
+  </div>
+  <div style="font-size:10pt;font-weight:700;margin-bottom:3mm;">Se presentará en:</div>
+  <div style="margin-left:6mm;font-size:10pt;">
+    <div style="margin-bottom:2.5mm;">
+      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;font-weight:900;vertical-align:middle;">${chk(s.sala==='principal')}</span>
+      &nbsp;Sala principal
+    </div>
+    <div style="margin-bottom:2.5mm;">
+      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;font-weight:900;vertical-align:middle;">${chk(s.sala==='auxiliar')}</span>
+      &nbsp;Sala auxiliar núm. 1
+    </div>
+    <div>
+      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;vertical-align:middle;"></span>
+      &nbsp;Sala auxiliar núm. 2
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:4mm;border-top:0.5px solid #ccc;font-size:7.5pt;line-height:1.35;margin-top:8mm;">
+    <b>Nota al estudiante:</b> En la <i>Guía de actividades</i> encontrará la información
+    que necesita para su intervención. Repase también las indicaciones que se describen en las
+    <i>Instrucciones para la reunión Vida y Ministerio Cristianos</i> (S-38).
+  </div>
+  <div style="font-size:7pt;color:#666;margin-top:3mm;">S-89-S 11/23</div>
 </div>`;
 
-  // Agrupar en páginas de 4 slips (grilla 2×2)
   const paginas = [];
   for (let i = 0; i < slips.length; i += 4) paginas.push(slips.slice(i, i + 4));
 
-  const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>${e(titulo)}</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>S-89</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: serif; background: #fff; color: #000; }
-.pagina {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 210mm;
-  margin: 0 auto;
-  page-break-after: always;
-}
-.slip {
-  padding: 8mm 7mm 5mm;
-  border: 0.5px dashed #aaa;
-  display: flex;
-  flex-direction: column;
-  min-height: 148mm;
-}
-.slip-titulo {
-  font-size: 12pt;
-  font-weight: bold;
-  text-align: center;
-  text-transform: uppercase;
-  line-height: 1.3;
-  margin-bottom: 7mm;
-}
-.campo {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  margin-bottom: 5mm;
-}
-.etq { font-size: 10pt; font-weight: bold; white-space: nowrap; }
-.lin {
-  flex: 1;
-  border-bottom: 1px solid #000;
-  font-size: 10pt;
-  padding-bottom: 1px;
-  min-width: 0;
-  word-break: break-word;
-}
-.se-en { font-size: 10pt; font-weight: bold; margin-bottom: 3mm; }
-.opciones { margin-left: 8mm; }
-.opcion { font-size: 10pt; margin-bottom: 2.5mm; display: flex; align-items: center; gap: 5px; }
-.caja { font-size: 13pt; line-height: 1; }
-.nota {
-  margin-top: auto;
-  padding-top: 4mm;
-  font-size: 7.5pt;
-  line-height: 1.35;
-}
-.codigo { font-size: 7pt; margin-top: 3mm; color: #666; }
-@media print {
-  @page { size: A4; margin: 0; }
-  body { margin: 0; }
-}
-</style>
-</head>
-<body>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Times New Roman',Times,serif; background:#fff; color:#000; }
+.pagina { display:grid; grid-template-columns:1fr 1fr; width:210mm; margin:0 auto; page-break-after:always; }
+.s89-print-slip { padding:8mm 7mm 5mm; border:0.5px dashed #aaa; display:flex; flex-direction:column; min-height:148mm; }
+@media print { @page { size:A4; margin:0; } body { margin:0; } }
+</style></head><body>
 ${paginas.map(p => `<div class="pagina">${p.map(slipHtml).join('')}</div>`).join('')}
-<script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
-</body>
-</html>`;
+<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
+</body></html>`;
 
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
-}
+};
 
 window.generarS89Semana = function() {
   if (!semanaData) return;
   const slips = s89SlipsDeSemana(semanaData);
   const d = new Date(semanaData.fecha + 'T12:00:00');
-  const titulo = `S-89 — Semana ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-  s89AbrirVentana(slips, titulo);
+  const titulo = `S-89 — ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  s89MostrarOverlay(slips, titulo);
 };
 
 window.generarS89 = function(mesISO) {
-  // Toma las semanas del mes desde el cache semanasLista
   const semanas = semanasLista
-    .filter(s => s.fecha && s.fecha.startsWith(mesISO))
+    .filter(s => s.fecha?.startsWith(mesISO))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
-
-  if (!semanas.length) {
-    uiToast('No hay semanas cargadas para ese mes', 'error');
-    return;
-  }
-
+  if (!semanas.length) { uiToast('No hay semanas cargadas para ese mes', 'error'); return; }
   const slips = semanas.flatMap(s89SlipsDeSemana);
   const [anio, mes] = mesISO.split('-');
-  const titulo = `S-89 — ${MESES_ES[Number(mes)-1]} ${anio}`;
-  s89AbrirVentana(slips, titulo);
+  s89MostrarOverlay(slips, `S-89 — ${MESES_ES[Number(mes)-1]} ${anio}`);
 };
 
 window.exportarSemanaActualASheets = function() {
