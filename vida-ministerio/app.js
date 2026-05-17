@@ -2401,19 +2401,63 @@ window.s89Imprimir = function() {
   win.document.close();
 };
 
-window.s89Descargar = function() {
+window.s89Descargar = async function() {
   const slips = window._s89Slips;
   if (!slips?.length) return;
-  const html = s89GenerarHtml(slips);
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const fecha = slips[0]?.fecha?.replace(/\//g, '-') || 'asignaciones';
-  a.href     = url;
-  a.download = `s89-${fecha}.html`;
-  a.click();
-  URL.revokeObjectURL(url);
-  uiToast('Archivo descargado — abrilo en el navegador para imprimir o guardar como PDF', 'success', 4000);
+
+  uiLoading.show('Generando PDF…');
+  const tempStyle = document.createElement('style');
+  const container = document.createElement('div');
+
+  try {
+    // Cargar jsPDF si todavía no está
+    if (!window.jspdf) {
+      await new Promise((res, rej) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        sc.onload = res; sc.onerror = rej;
+        document.head.appendChild(sc);
+      });
+    }
+
+    // Parsear el HTML del print e inyectarlo en el documento vivo
+    // (html2canvas no funciona dentro de iframes)
+    const parsed = new DOMParser().parseFromString(s89GenerarHtml(slips), 'text/html');
+    tempStyle.textContent = Array.from(parsed.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    document.head.appendChild(tempStyle);
+
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;';
+    Array.from(parsed.querySelectorAll('.pagina')).forEach(p => container.appendChild(document.adoptNode(p)));
+    document.body.appendChild(container);
+
+    await new Promise(r => setTimeout(r, 300)); // esperar layout
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageEls = container.querySelectorAll('.pagina');
+
+    for (let i = 0; i < pageEls.length; i++) {
+      if (i > 0) pdf.addPage();
+      const canvas = await html2canvas(pageEls[i], {
+        scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+      });
+      // Mantener proporción real del canvas sobre la página A4
+      const pxToMm = 210 / canvas.width;
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, canvas.height * pxToMm);
+    }
+
+    const fecha = slips[0]?.fecha?.replace(/\//g, '-') || 'vm';
+    pdf.save(`s89-${fecha}.pdf`);
+    uiToast('PDF descargado ✓', 'success');
+
+  } catch(err) {
+    console.error('s89Descargar:', err);
+    uiToast('Error al generar PDF', 'error');
+  } finally {
+    if (tempStyle.parentNode) document.head.removeChild(tempStyle);
+    if (container.parentNode) document.body.removeChild(container);
+    uiLoading.hide();
+  }
 };
 
 window.generarS89Semana = function() {
