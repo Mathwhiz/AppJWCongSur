@@ -2330,61 +2330,60 @@ window.s89Compartir = async function(idx) {
 
 function s89GenerarHtml(slips, { autoPrint = false } = {}) {
   const e = t => (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const chk = sel => sel ? '✓' : '';
+  const caja = sel => `<span style="display:inline-block;width:16px;height:16px;border:1.5px solid #000;text-align:center;line-height:14px;font-size:13px;font-weight:900;vertical-align:middle;font-family:sans-serif;">${sel ? '✓' : ''}</span>`;
+
   const slipHtml = s => `
 <div class="s89-print-slip">
-  <div style="font-size:11pt;font-weight:700;text-align:center;text-transform:uppercase;line-height:1.3;margin-bottom:5mm;">
+  <div style="font-size:15pt;font-weight:700;text-align:center;text-transform:uppercase;line-height:1.35;margin-bottom:9mm;letter-spacing:0.01em;">
     Asignación para la reunión<br>Vida y Ministerio Cristianos
   </div>
-  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
-    <b style="white-space:nowrap;font-size:10pt;">Nombre:</b>
-    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.nombre)}</span>
+  <div style="display:flex;align-items:flex-end;gap:4px;margin-bottom:7mm;">
+    <b style="white-space:nowrap;font-size:13pt;">Nombre:</b>
+    <span style="flex:1;border-bottom:1.5px solid #000;font-size:13pt;padding-left:4px;">${e(s.nombre)}</span>
   </div>
-  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
-    <b style="white-space:nowrap;font-size:10pt;">Ayudante:</b>
-    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.ayudante)}</span>
+  <div style="display:flex;align-items:flex-end;gap:4px;margin-bottom:7mm;">
+    <b style="white-space:nowrap;font-size:13pt;">Ayudante:</b>
+    <span style="flex:1;border-bottom:1.5px solid #000;font-size:13pt;padding-left:4px;">${e(s.ayudante)}</span>
   </div>
-  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
-    <b style="white-space:nowrap;font-size:10pt;">Fecha:</b>
-    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${e(s.fecha)}</span>
+  <div style="display:flex;align-items:flex-end;gap:4px;margin-bottom:7mm;">
+    <b style="white-space:nowrap;font-size:13pt;">Fecha:</b>
+    <span style="flex:1;border-bottom:1.5px solid #000;font-size:13pt;padding-left:4px;">${e(s.fecha)}</span>
   </div>
-  <div style="display:flex;align-items:flex-end;gap:3px;margin-bottom:4mm;">
-    <b style="white-space:nowrap;font-size:10pt;">Intervención núm.:</b>
-    <span style="flex:1;border-bottom:1px solid #000;font-size:10pt;padding-left:3px;">${s.intervencion}</span>
+  <div style="display:flex;align-items:flex-end;gap:4px;margin-bottom:7mm;">
+    <b style="white-space:nowrap;font-size:13pt;">Intervención núm.:</b>
+    <span style="flex:1;border-bottom:1.5px solid #000;font-size:13pt;padding-left:4px;">${s.intervencion}</span>
   </div>
-  <div style="font-size:10pt;font-weight:700;margin-bottom:3mm;">Se presentará en:</div>
-  <div style="margin-left:6mm;font-size:10pt;">
-    <div style="margin-bottom:2.5mm;">
-      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;font-weight:900;vertical-align:middle;">${chk(s.sala==='principal')}</span>
-      &nbsp;Sala principal
-    </div>
-    <div style="margin-bottom:2.5mm;">
-      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;font-weight:900;vertical-align:middle;">${chk(s.sala==='auxiliar')}</span>
-      &nbsp;Sala auxiliar núm. 1
-    </div>
-    <div>
-      <span style="display:inline-block;width:12px;height:12px;border:1.5px solid #000;text-align:center;line-height:10px;font-size:10px;vertical-align:middle;"></span>
-      &nbsp;Sala auxiliar núm. 2
-    </div>
+  <div style="font-size:13pt;font-weight:700;margin-bottom:5mm;">Se presentará en:</div>
+  <div style="margin-left:8mm;font-size:13pt;">
+    <div style="margin-bottom:4mm;">${caja(s.sala==='principal')}&nbsp;&nbsp;Sala principal</div>
+    <div style="margin-bottom:4mm;">${caja(s.sala==='auxiliar')}&nbsp;&nbsp;Sala auxiliar núm. 1</div>
+    <div>${caja(false)}&nbsp;&nbsp;Sala auxiliar núm. 2</div>
   </div>
-  <div style="padding-top:4mm;border-top:0.5px solid #ccc;font-size:7.5pt;line-height:1.35;margin-top:8mm;">
+  <div style="padding-top:5mm;border-top:0.5px solid #bbb;font-size:9.5pt;line-height:1.45;margin-top:auto;">
     <b>Nota al estudiante:</b> En la <i>Guía de actividades</i> encontrará la información
     que necesita para su intervención. Repase también las indicaciones que se describen en las
     <i>Instrucciones para la reunión Vida y Ministerio Cristianos</i> (S-38).
   </div>
-  <div style="font-size:7pt;color:#666;margin-top:3mm;">S-89-S 11/23</div>
+  <div style="font-size:8pt;color:#555;margin-top:4mm;">S-89-S 11/23</div>
 </div>`;
 
+  // 2 por página (en vez de 4) → tamaño mucho más cercano al original
   const paginas = [];
-  for (let i = 0; i < slips.length; i += 4) paginas.push(slips.slice(i, i + 4));
+  for (let i = 0; i < slips.length; i += 2) paginas.push(slips.slice(i, i + 2));
   const printScript = autoPrint ? `<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>` : '';
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>S-89</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Times New Roman',Times,serif; background:#fff; color:#000; }
-.pagina { display:grid; grid-template-columns:1fr 1fr; width:210mm; margin:0 auto; page-break-after:always; }
-.s89-print-slip { padding:8mm 7mm 5mm; border:0.5px dashed #aaa; display:flex; flex-direction:column; min-height:148mm; }
+.pagina { width:210mm; margin:0 auto; page-break-after:always; }
+.s89-print-slip {
+  padding:14mm 16mm 10mm;
+  border-bottom:1px dashed #aaa;
+  display:flex; flex-direction:column;
+  min-height:148mm;
+}
+.s89-print-slip:last-child { border-bottom:none; }
 @media print { @page { size:A4; margin:0; } body { margin:0; } }
 </style></head><body>
 ${paginas.map(p => `<div class="pagina">${p.map(slipHtml).join('')}</div>`).join('')}
