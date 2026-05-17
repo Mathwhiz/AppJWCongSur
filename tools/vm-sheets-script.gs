@@ -1,5 +1,5 @@
 /**
- * Apps Script — Vida y Ministerio (v2.5)
+ * Apps Script — Vida y Ministerio (v2.6)
  * SETUP: Implementar → Gestionar implementaciones → editar → Nueva versión → Implementar
  */
 
@@ -33,18 +33,36 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput('VM Sheets Script v2.4 — OK')
+  return ContentService.createTextOutput('VM Sheets Script v2.6 — OK')
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
 function _getOrCreateSheet(ss, nombre) {
   var sheet = ss.getSheetByName(nombre);
-  if (!sheet) sheet = ss.insertSheet(nombre);
-  return sheet;
+  if (sheet) return sheet;
+
+  // Buscar hoja del mismo mes con año distinto (ej: "Julio 25" → renombrar a "Julio 26")
+  var parts = nombre.match(/^(.+?)\s+(\d{2})$/);
+  if (parts) {
+    var mesNombre = parts[1];
+    var sheets = ss.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      var sName  = sheets[i].getName();
+      var sMatch = sName.match(/^(.+?)\s+(\d{2})$/);
+      if (sMatch && sMatch[1] === mesNombre && sMatch[2] !== parts[2]) {
+        sheets[i].setName(nombre);
+        // Limpiar todo: contenido, formato y merges del año anterior
+        try { sheets[i].clear(); } catch(e) {}
+        return sheets[i];
+      }
+    }
+  }
+
+  return ss.insertSheet(nombre);
 }
 
 function _setEncargadoAux(sheet, nombre) {
-  while (sheet.getLastRow() < 2) sheet.appendRow(['']);
+  // getRange escribe directo aunque la hoja esté vacía (Sheets auto-expande)
   sheet.getRange(2, 1).setValue(nombre ? 'Sala Auxiliar: ' + nombre : 'Sala Auxiliar: ');
 }
 
@@ -94,6 +112,8 @@ function _reemplazarSemana(sheet, filas) {
   var startRow = startIdx >= 0 ? startIdx + 3 : lastRow + 1;
   if (startIdx >= 0) {
     var existingCount = endIdx - startIdx + 1;
+    // Romper merges ANTES de manipular filas (deleteRows falla con merges activos)
+    try { sheet.getRange(startRow, 1, existingCount, 3).breakApart(); } catch(e) {}
     if (existingCount > filas.length)
       sheet.deleteRows(startRow + filas.length, existingCount - filas.length);
     else if (existingCount < filas.length)

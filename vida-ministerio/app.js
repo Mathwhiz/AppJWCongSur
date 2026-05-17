@@ -840,6 +840,10 @@ function renderSemanas(semanas) {
   }).join('');
 }
 
+window.eliminarSemanaActual = function() {
+  if (semanaData?.fecha) eliminarSemana(semanaData.fecha);
+};
+
 window.eliminarSemana = async function(fecha) {
   const ok = await uiConfirm({
     title: 'Eliminar semana',
